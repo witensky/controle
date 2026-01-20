@@ -19,8 +19,8 @@ import {
   Radar,
   BarChart as BarChartIcon,
   Activity,
-  // Fix: Import missing TrendingUp icon
-  TrendingUp
+  TrendingUp,
+  Banknote
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -61,9 +61,29 @@ const workIntensityData = [
   { name: 'Const.', hours: 10 }, { name: 'Pénal', hours: 6 },
 ];
 
+const LiquidPurse: React.FC<{ percentage: number }> = ({ percentage }) => {
+  return (
+    <div className="relative w-12 h-16 bg-slate-900/80 rounded-xl border border-white/10 overflow-hidden shadow-inner shrink-0">
+      <div 
+        className="absolute bottom-0 left-0 w-full transition-all duration-1000 ease-in-out bg-emerald-500/50"
+        style={{ height: `${percentage}%` }}
+      >
+        <div className="absolute -top-3 left-0 w-[200%] h-6 bg-emerald-400/30 animate-wave opacity-50" 
+             style={{ animation: 'wave 3s infinite linear' }} />
+      </div>
+      <div className="absolute top-1.5 left-1.5 w-0.5 h-4 bg-white/10 rounded-full blur-[0.5px]" />
+      <style>{`
+        @keyframes wave {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [showReports, setShowReports] = useState(false);
-  const [activityInput, setActivityInput] = useState('');
   const [quickTaskInput, setQuickTaskInput] = useState('');
   
   const [tasks, setTasks] = useState<DashboardTask[]>([
@@ -71,6 +91,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     { id: '2', text: "Séance Sport Push Day", completed: true },
     { id: '3', text: "Lecture Bible Matthieu 5", completed: false },
   ]);
+
+  const totalBudget = 3500;
+  const remaining = 1070;
+  const budgetPercentage = Math.round((remaining / totalBudget) * 100);
 
   const pendingTasksCount = tasks.filter(t => !t.completed).length;
   const taskProgress = tasks.length > 0 ? Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100) : 0;
@@ -102,97 +126,86 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <Calendar size={14} className="text-amber-500" />
             <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Lundi 14 Octobre 2024</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight italic uppercase">Command <span className="text-amber-500">Center</span></h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight italic uppercase leading-none">Command <span className="text-amber-500">Center</span></h1>
         </div>
         <button onClick={() => setShowReports(true)} className="bg-amber-500 text-slate-950 px-6 py-4 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20">
           <FileBarChart size={18} /> Rapports Détaillés
         </button>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {categories.map((cat) => (
-          <div key={cat.label} onClick={() => onNavigate(cat.label.toUpperCase() as AppView)} className="glass rounded-[2rem] p-6 border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all relative">
-            {cat.badge !== undefined && cat.badge > 0 && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg animate-pulse">{cat.badge}</div>
-            )}
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{cat.label}</p>
-              <h4 className={`text-2xl font-black ${cat.color}`}>{cat.valueLabel || `${cat.value}%`}</h4>
+      {/* Main Grid: Status + Finance Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {categories.map((cat) => (
+            <div key={cat.label} onClick={() => onNavigate(cat.label.toUpperCase() as AppView)} className="glass rounded-[1.5rem] p-5 border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all relative group overflow-hidden">
+               <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/5 blur-3xl rounded-full group-hover:bg-white/10 transition-all" />
+              {cat.badge !== undefined && cat.badge > 0 && (
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg animate-pulse">{cat.badge}</div>
+              )}
+              <div>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">{cat.label}</p>
+                <h4 className={`text-xl font-black ${cat.color} italic tracking-tighter`}>{cat.valueLabel || `${cat.value}%`}</h4>
+              </div>
+              <div className={`w-10 h-10 rounded-xl ${cat.bg} flex items-center justify-center ${cat.color}`}><cat.icon size={20} /></div>
             </div>
-            <div className={`w-12 h-12 rounded-xl ${cat.bg} flex items-center justify-center ${cat.color}`}><cat.icon size={24} /></div>
-          </div>
-        ))}
-      </div>
-
-      {/* Primary Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="glass rounded-[2.5rem] p-8 border-white/5 relative overflow-hidden group">
-          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
-            <TrendingUp size={16} className="text-amber-500" /> Tendance de Maîtrise
-          </h3>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={masteryData}>
-                <defs>
-                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="day" hide />
-                <Tooltip contentStyle={{backgroundColor: '#0f172a', border: 'none', borderRadius: '12px'}} />
-                <Area type="monotone" dataKey="score" stroke="#fbbf24" strokeWidth={4} fill="url(#colorScore)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          ))}
         </div>
 
-        {/* New Chart 1: Radar Focus */}
-        <div className="glass rounded-[2.5rem] p-8 border-white/5">
-          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
-            <Radar size={16} className="text-blue-500" /> Distribution du Focus
+        {/* REMAINING BUDGET WIDGET - Styled for Dashboard */}
+        <div onClick={() => onNavigate('FINANCE')} className="glass rounded-[1.5rem] p-5 border-emerald-500/20 bg-emerald-500/[0.03] shadow-xl flex items-center gap-4 cursor-pointer hover:bg-emerald-500/[0.06] transition-all">
+          <LiquidPurse percentage={budgetPercentage} />
+          <div className="flex-1">
+            <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1 italic">Reste à Vivre</p>
+            <h4 className="text-xl font-black text-white italic tracking-tighter leading-none mb-2">
+              {remaining.toLocaleString()} <span className="text-[10px] text-emerald-400 not-italic">DH</span>
+            </h4>
+            <div className="w-12 h-1 bg-slate-900 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500" style={{ width: `${budgetPercentage}%` }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Analytics Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="glass rounded-[2rem] p-7 border-white/5 bg-[#0f172a]/60 shadow-xl">
+          <h3 className="text-[10px] font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2 italic">
+            <Radar size={14} className="text-blue-500" /> Focus Area Matrix
           </h3>
-          <div className="h-[250px] w-full flex items-center justify-center">
+          <div className="h-[180px] w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={focusData}>
                 <PolarGrid stroke="#1e293b" />
-                <PolarAngleAxis dataKey="subject" tick={{fill: '#475569', fontSize: 10}} />
-                <RadarArea name="Niveau" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.5} />
+                <PolarAngleAxis dataKey="subject" tick={{fill: '#475569', fontSize: 8, fontWeight: '900'}} />
+                <RadarArea name="Niveau" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* Secondary Charts Row (New) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* New Chart 2: Energy curve */}
-        <div className="glass rounded-[2.5rem] p-8 border-white/5">
-          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
-            <Activity size={16} className="text-emerald-500" /> Potentiel Cognitif Journalier
+        <div className="glass rounded-[2rem] p-7 border-white/5 bg-[#0f172a]/60 shadow-xl">
+          <h3 className="text-[10px] font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2 italic">
+            <Activity size={14} className="text-emerald-500" /> Courbe d'Énergie
           </h3>
-          <div className="h-[200px] w-full">
+          <div className="h-[180px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={energyData}>
-                <XAxis dataKey="time" axisLine={false} tick={{fill: '#475569', fontSize: 10}} />
-                <Tooltip contentStyle={{backgroundColor: '#0f172a', border: 'none', borderRadius: '12px'}} />
-                <Line type="step" dataKey="level" stroke="#10b981" strokeWidth={4} dot={{r: 4}} />
+                <XAxis dataKey="time" axisLine={false} tick={{fill: '#475569', fontSize: 8}} />
+                <Line type="step" dataKey="level" stroke="#10b981" strokeWidth={3} dot={{r: 3, fill: '#10b981'}} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* New Chart 3: Work intensity */}
-        <div className="glass rounded-[2.5rem] p-8 border-white/5">
-          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
-            <BarChartIcon size={16} className="text-rose-500" /> Intensité de Travail (H)
+        <div className="glass rounded-[2rem] p-7 border-white/5 bg-[#0f172a]/60 shadow-xl">
+          <h3 className="text-[10px] font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2 italic">
+            <BarChartIcon size={14} className="text-rose-500" /> Intensité de Travail
           </h3>
-          <div className="h-[200px] w-full">
+          <div className="h-[180px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={workIntensityData}>
-                <XAxis dataKey="name" axisLine={false} tick={{fill: '#475569', fontSize: 10}} />
-                <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
+                <XAxis dataKey="name" axisLine={false} tick={{fill: '#475569', fontSize: 8, fontWeight: '700'}} />
+                <Bar dataKey="hours" radius={[4, 4, 0, 0]} barSize={15}>
                   {workIntensityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#f43f5e' : '#334155'} />
                   ))}
@@ -203,37 +216,60 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Mission Control Widget */}
-      <div className="glass rounded-[2.5rem] p-8 border-white/5">
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="font-black text-white uppercase text-sm italic flex items-center gap-3">
-            <LayoutList size={20} className="text-amber-500" /> Mission Control
+      {/* Primary Mastery Trend */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass rounded-[2rem] p-8 border-white/5 relative overflow-hidden group">
+          <h3 className="text-[10px] font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2 italic">
+            <TrendingUp size={16} className="text-amber-500" /> Tendance de Maîtrise
           </h3>
-          <div className="text-right">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{taskProgress}% ACCOMPLI</span>
-            <div className="w-32 h-1.5 bg-slate-900 rounded-full mt-1 overflow-hidden">
-              <div className="h-full bg-amber-500 shadow-[0_0_10px_#fbbf24]" style={{ width: `${taskProgress}%` }} />
-            </div>
+          <div className="h-[220px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={masteryData}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" hide />
+                <Area type="monotone" dataKey="score" stroke="#fbbf24" strokeWidth={4} fill="url(#colorScore)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
-        <div className="flex gap-2 mb-6">
-          <input 
-            type="text" value={quickTaskInput} onChange={(e) => setQuickTaskInput(e.target.value)}
-            placeholder="Nouvelle mission..." className="flex-1 bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
-          />
-          <button onClick={handleAddQuickTask} className="w-12 bg-white text-slate-950 rounded-xl flex items-center justify-center hover:bg-amber-500 transition-all"><Plus size={18} /></button>
-        </div>
-        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-          {tasks.map(t => (
-            <div key={t.id} className="flex items-center justify-between p-4 bg-slate-950 border border-white/5 rounded-xl">
-              <div className="flex items-center gap-3">
-                <button onClick={() => toggleTask(t.id)} className={`w-5 h-5 rounded border-2 transition-all ${t.completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-800'}`}>
-                  {t.completed && <CheckCircle2 size={12} className="text-slate-950" />}
-                </button>
-                <span className={`text-xs font-bold ${t.completed ? 'text-slate-600 line-through italic' : 'text-slate-200'}`}>{t.text}</span>
+
+        {/* Mission Control Widget */}
+        <div className="glass rounded-[2rem] p-8 border-white/5 bg-slate-900/20 shadow-xl">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="font-black text-white uppercase text-[10px] italic flex items-center gap-3">
+              <LayoutList size={18} className="text-amber-500" /> Mission Control
+            </h3>
+            <div className="text-right">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{taskProgress}% ACCOMPLI</span>
+              <div className="w-24 h-1 bg-slate-900 rounded-full mt-1 overflow-hidden">
+                <div className="h-full bg-amber-500 shadow-[0_0_8px_#fbbf24]" style={{ width: `${taskProgress}%` }} />
               </div>
             </div>
-          ))}
+          </div>
+          <div className="flex gap-2 mb-6 p-2 bg-slate-950/50 rounded-xl border border-white/5">
+            <input 
+              type="text" value={quickTaskInput} onChange={(e) => setQuickTaskInput(e.target.value)}
+              placeholder="Mission tactique..." className="flex-1 bg-transparent border-none px-3 py-1 text-xs text-white outline-none placeholder:text-slate-700 font-bold"
+            />
+            <button onClick={handleAddQuickTask} className="w-8 h-8 bg-white text-slate-950 rounded-lg flex items-center justify-center hover:bg-amber-500 transition-all"><Plus size={16} /></button>
+          </div>
+          <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+            {tasks.map(t => (
+              <div key={t.id} className="flex items-center justify-between p-3 bg-slate-950 border border-white/5 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => toggleTask(t.id)} className={`w-4 h-4 rounded border-2 transition-all ${t.completed ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_8px_#10b981]' : 'border-slate-800'}`}>
+                    {t.completed && <CheckCircle2 size={10} className="text-slate-950" />}
+                  </button>
+                  <span className={`text-[11px] font-bold ${t.completed ? 'text-slate-600 line-through italic' : 'text-slate-200'}`}>{t.text}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
