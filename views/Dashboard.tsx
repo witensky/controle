@@ -1,9 +1,6 @@
 
 import React, { useState } from 'react';
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertCircle, 
   Calendar, 
   CheckCircle2,
   ChevronRight,
@@ -11,16 +8,24 @@ import {
   Bell,
   Target,
   Zap,
-  Info,
   Send,
-  Dumbbell,
   Wallet,
   FileBarChart,
-  ArrowLeft
+  ArrowLeft,
+  PieChart as PieChartIcon,
+  Plus,
+  Trash2,
+  LayoutList,
+  Radar,
+  BarChart as BarChartIcon,
+  Activity,
+  // Fix: Import missing TrendingUp icon
+  TrendingUp
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
+  BarChart, Bar, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar as RadarArea,
+  LineChart, Line
 } from 'recharts';
 import { AppView, UserStats } from '../types';
 import Reports from './Reports';
@@ -29,206 +34,206 @@ interface DashboardProps {
   onNavigate: (view: AppView) => void;
 }
 
+interface DashboardTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 const masteryData = [
-  { day: 'Lun', score: 65, discipline: 70 },
-  { day: 'Mar', score: 72, discipline: 75 },
-  { day: 'Mer', score: 85, discipline: 80 },
-  { day: 'Jeu', score: 78, discipline: 82 },
-  { day: 'Ven', score: 90, discipline: 88 },
-  { day: 'Sam', score: 95, discipline: 92 },
-  { day: 'Dim', score: 91, discipline: 91 },
+  { day: 'Lun', score: 65 }, { day: 'Mar', score: 72 }, { day: 'Mer', score: 85 },
+  { day: 'Jeu', score: 78 }, { day: 'Ven', score: 90 }, { day: 'Sam', score: 95 }, { day: 'Dim', score: 91 },
+];
+
+const focusData = [
+  { subject: 'Finance', value: 80 }, { subject: 'Droit', value: 95 },
+  { subject: 'Sport', value: 70 }, { subject: 'Langues', value: 50 },
+  { subject: 'Bible', value: 85 }, { subject: 'Mental', value: 60 },
+];
+
+const energyData = [
+  { time: '06h', level: 95 }, { time: '09h', level: 85 }, { time: '12h', level: 60 },
+  { time: '15h', level: 75 }, { time: '18h', level: 90 }, { time: '21h', level: 50 },
+];
+
+const workIntensityData = [
+  { name: 'Oblig.', hours: 12 }, { name: 'Admin.', hours: 8 },
+  { name: 'Const.', hours: 10 }, { name: 'Pénal', hours: 6 },
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [showReports, setShowReports] = useState(false);
   const [activityInput, setActivityInput] = useState('');
-  const [activities, setActivities] = useState([
-    { text: "Révision intensive Contrats", time: "14:30" },
-    { text: "Séance Push Day validée", time: "17:45" }
+  const [quickTaskInput, setQuickTaskInput] = useState('');
+  
+  const [tasks, setTasks] = useState<DashboardTask[]>([
+    { id: '1', text: "Synthèse Droit des Obligations", completed: false },
+    { id: '2', text: "Séance Sport Push Day", completed: true },
+    { id: '3', text: "Lecture Bible Matthieu 5", completed: false },
   ]);
 
-  if (showReports) {
-    return (
-      <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-        <button 
-          onClick={() => setShowReports(false)}
-          className="flex items-center gap-2 text-slate-500 hover:text-white mb-8 transition-colors group"
-        >
-          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-xs font-bold uppercase tracking-widest">Retour au Dashboard</span>
-        </button>
-        <Reports />
-      </div>
-    );
-  }
+  const pendingTasksCount = tasks.filter(t => !t.completed).length;
+  const taskProgress = tasks.length > 0 ? Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100) : 0;
 
-  const handleLogActivity = () => {
-    if (!activityInput.trim()) return;
-    const now = new Date();
-    const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-    setActivities([{ text: activityInput, time }, ...activities]);
-    setActivityInput('');
+  const handleAddQuickTask = () => {
+    if (!quickTaskInput.trim()) return;
+    setTasks([...tasks, { id: Date.now().toString(), text: quickTaskInput, completed: false }]);
+    setQuickTaskInput('');
   };
 
-  const stats: UserStats = {
-    finance: 82,
-    studies: 65,
-    discipline: 91,
-    mental: 70,
-    spiritual: 88,
-    languages: 45
+  const toggleTask = (id: string) => {
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
-
-  const currentDate = new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date());
 
   const categories = [
-    { label: 'Finance', value: stats.finance, color: 'text-amber-500', bg: 'bg-amber-500/20', icon: TrendingUp },
-    { label: 'Études', value: stats.studies, color: 'text-blue-500', bg: 'bg-blue-500/20', icon: Target },
-    { label: 'Discipline', value: stats.discipline, color: 'text-emerald-500', bg: 'bg-emerald-500/20', icon: Zap },
-    { label: 'Mental', value: stats.mental, color: 'text-indigo-500', bg: 'bg-indigo-500/20', icon: Info },
-    { label: 'Spirituel', value: stats.spiritual, color: 'text-purple-500', bg: 'bg-purple-500/20', icon: Bell },
-    { label: 'Sport', value: 75, color: 'text-rose-500', bg: 'bg-rose-500/20', icon: Dumbbell },
+    { label: 'Finance', value: 82, color: 'text-amber-500', bg: 'bg-amber-500/20', icon: Wallet },
+    { label: 'Études', value: 65, color: 'text-blue-500', bg: 'bg-blue-500/20', icon: Target },
+    { label: 'Discipline', value: 91, valueLabel: `${pendingTasksCount} Tâches`, color: 'text-emerald-500', bg: 'bg-emerald-500/20', icon: Zap, badge: pendingTasksCount },
   ];
+
+  if (showReports) return <Reports />;
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Calendar size={14} className="text-amber-500" />
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400 capitalize">{currentDate}</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Lundi 14 Octobre 2024</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Bonjour, <span className="text-amber-500">Witensky</span></h1>
-          <p className="text-slate-400 font-medium italic">"La discipline est le pont entre tes objectifs et tes accomplissements."</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight italic uppercase">Command <span className="text-amber-500">Center</span></h1>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowReports(true)}
-            className="bg-amber-500 text-slate-950 px-6 py-4 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-amber-500/20"
-          >
-            <FileBarChart size={18} />
-            Analytique Globale
-          </button>
-        </div>
+        <button onClick={() => setShowReports(true)} className="bg-amber-500 text-slate-950 px-6 py-4 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-500/20">
+          <FileBarChart size={18} /> Rapports Détaillés
+        </button>
       </div>
 
-      {/* Activity Logger */}
-      <div className="glass rounded-[2rem] p-6 border-amber-500/20 bg-amber-500/5">
-        <h3 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em] mb-4">Qu'as-tu accompli aujourd'hui ?</h3>
-        <div className="flex gap-4">
-          <input 
-            type="text" 
-            value={activityInput}
-            onChange={(e) => setActivityInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleLogActivity()}
-            placeholder="Ex: Révisé 2h de droit civil..." 
-            className="flex-1 bg-slate-950/80 border border-white/10 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:border-amber-500 transition-all text-white"
-          />
-          <button 
-            onClick={handleLogActivity}
-            className="w-14 h-14 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-amber-500/20"
-          >
-            <Send size={20} />
-          </button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-           {activities.slice(0, 3).map((act, i) => (
-             <div key={i} className="bg-white/5 border border-white/5 px-4 py-2 rounded-xl flex items-center gap-3">
-                <span className="text-[10px] font-black text-amber-500">{act.time}</span>
-                <span className="text-[11px] font-medium text-slate-300">{act.text}</span>
-             </div>
-           ))}
-        </div>
-      </div>
-
-      {/* Primary Trend Graph */}
-      <div className="glass rounded-[2.5rem] p-8 border-white/5 relative overflow-hidden group animate-in slide-in-from-bottom-4 duration-700">
-        <div className="flex justify-between items-center mb-8 relative z-10">
-          <div>
-            <h3 className="text-lg font-black text-white tracking-tight uppercase">Tendance de Maîtrise</h3>
-          </div>
-          <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/5">
-            <button className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all bg-amber-500 text-slate-950`}>Semaine</button>
-          </div>
-        </div>
-        
-        <div className="h-[250px] w-full relative z-10">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={masteryData}>
-              <defs>
-                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10}} dy={10} />
-              <YAxis hide />
-              <Tooltip 
-                contentStyle={{backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px'}}
-              />
-              <Area type="monotone" dataKey="score" stroke="#fbbf24" strokeWidth={4} fillOpacity={1} fill="url(#colorScore)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
+      {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-6 gap-4">
-           {categories.map((cat) => (
-             <div 
-              key={cat.label} 
-              className="glass rounded-3xl p-5 border-white/5 text-center group transition-all hover:bg-white/5 hover:scale-105 active:scale-95 cursor-pointer"
-              onClick={() => onNavigate(cat.label.toUpperCase() as AppView)}
-            >
-               <div className={`w-12 h-12 mx-auto rounded-full ${cat.bg} flex items-center justify-center mb-4 group-hover:bg-opacity-40 transition-all`}>
-                 <cat.icon className={cat.color} size={20} />
-               </div>
-               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">{cat.label}</h4>
-               <span className={`text-sm font-black ${cat.color}`}>{cat.value}%</span>
-             </div>
-           ))}
+        {categories.map((cat) => (
+          <div key={cat.label} onClick={() => onNavigate(cat.label.toUpperCase() as AppView)} className="glass rounded-[2rem] p-6 border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all relative">
+            {cat.badge !== undefined && cat.badge > 0 && (
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black shadow-lg animate-pulse">{cat.badge}</div>
+            )}
+            <div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{cat.label}</p>
+              <h4 className={`text-2xl font-black ${cat.color}`}>{cat.valueLabel || `${cat.value}%`}</h4>
+            </div>
+            <div className={`w-12 h-12 rounded-xl ${cat.bg} flex items-center justify-center ${cat.color}`}><cat.icon size={24} /></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Primary Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="glass rounded-[2.5rem] p-8 border-white/5 relative overflow-hidden group">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
+            <TrendingUp size={16} className="text-amber-500" /> Tendance de Maîtrise
+          </h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={masteryData}>
+                <defs>
+                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" hide />
+                <Tooltip contentStyle={{backgroundColor: '#0f172a', border: 'none', borderRadius: '12px'}} />
+                <Area type="monotone" dataKey="score" stroke="#fbbf24" strokeWidth={4} fill="url(#colorScore)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Urgent Alerts */}
-        <div className="md:col-span-1 glass rounded-[2rem] p-8 border-rose-500/20 bg-rose-500/[0.02]">
-           <h3 className="font-bold text-rose-500 tracking-tight flex items-center gap-2 uppercase text-xs mb-8">
-              <Bell size={16} /> Alertes
-           </h3>
-           <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex gap-4">
-                 <AlertCircle className="text-rose-500 shrink-0" size={16} />
-                 <p className="text-[10px] text-slate-400 leading-relaxed">Examen Droit dans <span className="text-white font-bold">5 jours</span>. Régularité : 45%.</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-4">
-                 <Wallet className="text-amber-500 shrink-0" size={16} />
-                 <p className="text-[10px] text-slate-400 leading-relaxed">Renouvellement Bourse AMCI dans <span className="text-white font-bold">12 jours</span>.</p>
-              </div>
-           </div>
+        {/* New Chart 1: Radar Focus */}
+        <div className="glass rounded-[2.5rem] p-8 border-white/5">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
+            <Radar size={16} className="text-blue-500" /> Distribution du Focus
+          </h3>
+          <div className="h-[250px] w-full flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={focusData}>
+                <PolarGrid stroke="#1e293b" />
+                <PolarAngleAxis dataKey="subject" tick={{fill: '#475569', fontSize: 10}} />
+                <RadarArea name="Niveau" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.5} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Charts Row (New) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* New Chart 2: Energy curve */}
+        <div className="glass rounded-[2.5rem] p-8 border-white/5">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
+            <Activity size={16} className="text-emerald-500" /> Potentiel Cognitif Journalier
+          </h3>
+          <div className="h-[200px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={energyData}>
+                <XAxis dataKey="time" axisLine={false} tick={{fill: '#475569', fontSize: 10}} />
+                <Tooltip contentStyle={{backgroundColor: '#0f172a', border: 'none', borderRadius: '12px'}} />
+                <Line type="step" dataKey="level" stroke="#10b981" strokeWidth={4} dot={{r: 4}} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Tasks */}
-        <div className="md:col-span-2 glass rounded-[2rem] p-8 border-white/5">
-           <div className="flex justify-between items-center mb-8">
-             <h3 className="font-bold text-white tracking-tight flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-amber-500" /> Objectifs
-             </h3>
-             <span className="text-[10px] font-bold text-slate-500 uppercase">4 / 6 Complétés</span>
-           </div>
-           <div className="space-y-3">
-              {["Droit Civil", "Séance Sport", "Lecture Bible"].map((task, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-950 border border-white/5">
-                  <span className="text-sm font-medium text-slate-100">{task}</span>
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                </div>
-              ))}
-           </div>
+        {/* New Chart 3: Work intensity */}
+        <div className="glass rounded-[2.5rem] p-8 border-white/5">
+          <h3 className="text-xs font-black text-white uppercase tracking-widest mb-8 flex items-center gap-2">
+            <BarChartIcon size={16} className="text-rose-500" /> Intensité de Travail (H)
+          </h3>
+          <div className="h-[200px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={workIntensityData}>
+                <XAxis dataKey="name" axisLine={false} tick={{fill: '#475569', fontSize: 10}} />
+                <Bar dataKey="hours" radius={[6, 6, 0, 0]}>
+                  {workIntensityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#f43f5e' : '#334155'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Mission Control Widget */}
+      <div className="glass rounded-[2.5rem] p-8 border-white/5">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="font-black text-white uppercase text-sm italic flex items-center gap-3">
+            <LayoutList size={20} className="text-amber-500" /> Mission Control
+          </h3>
+          <div className="text-right">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{taskProgress}% ACCOMPLI</span>
+            <div className="w-32 h-1.5 bg-slate-900 rounded-full mt-1 overflow-hidden">
+              <div className="h-full bg-amber-500 shadow-[0_0_10px_#fbbf24]" style={{ width: `${taskProgress}%` }} />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 mb-6">
+          <input 
+            type="text" value={quickTaskInput} onChange={(e) => setQuickTaskInput(e.target.value)}
+            placeholder="Nouvelle mission..." className="flex-1 bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+          />
+          <button onClick={handleAddQuickTask} className="w-12 bg-white text-slate-950 rounded-xl flex items-center justify-center hover:bg-amber-500 transition-all"><Plus size={18} /></button>
+        </div>
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+          {tasks.map(t => (
+            <div key={t.id} className="flex items-center justify-between p-4 bg-slate-950 border border-white/5 rounded-xl">
+              <div className="flex items-center gap-3">
+                <button onClick={() => toggleTask(t.id)} className={`w-5 h-5 rounded border-2 transition-all ${t.completed ? 'bg-emerald-500 border-emerald-500' : 'border-slate-800'}`}>
+                  {t.completed && <CheckCircle2 size={12} className="text-slate-950" />}
+                </button>
+                <span className={`text-xs font-bold ${t.completed ? 'text-slate-600 line-through italic' : 'text-slate-200'}`}>{t.text}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

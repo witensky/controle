@@ -22,11 +22,10 @@ const LanguagesView: React.FC = () => {
              <Globe className="text-orange-500" size={18} />
              <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em]">MASTERY OF LANGUAGES</span>
            </div>
-           <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic italic">POLYGLOTTE & <span className="text-orange-500">PRÉCIS</span></h2>
+           <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic">POLYGLOTTE & <span className="text-orange-500 font-outfit">PRÉCIS</span></h2>
         </div>
-        {/* Tabs style updated based on screenshot */}
         <div className="flex gap-2 p-1.5 bg-slate-900/50 rounded-2xl border border-blue-500/20">
-           {['ANGLAIS', 'ESPAGNOL', 'ARABE'].map(lang => (
+           {['ANGLAIS', 'FRANÇAIS', 'ARABE'].map(lang => (
              <button 
                 key={lang} 
                 onClick={() => setActiveLang(lang)}
