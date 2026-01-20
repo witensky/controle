@@ -12,7 +12,8 @@ import {
   X,
   Cross,
   Dumbbell,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  FileBarChart
 } from 'lucide-react';
 import { AppView } from './types';
 import Dashboard from './views/Dashboard';
@@ -58,7 +59,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 flex flex-col md:flex-row font-outfit">
       {/* Mobile Top Header */}
-      <header className="md:hidden flex items-center justify-between p-4 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 border-b border-white/5">
+      <header className="md:hidden flex items-center justify-between p-4 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 border-b border-white/5 print:hidden">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center font-bold text-slate-950">J&B</div>
           <span className="font-bold tracking-tighter text-lg uppercase italic">Discipline</span>
@@ -70,7 +71,7 @@ const App: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed inset-0 z-50 md:relative md:flex md:w-64 flex-col bg-slate-900 border-r border-white/5 transition-transform duration-300
+        fixed inset-0 z-50 md:relative md:flex md:w-64 flex-col bg-slate-900 border-r border-white/5 transition-transform duration-300 print:hidden
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="p-6 flex flex-col h-full">
@@ -121,8 +122,8 @@ const App: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto h-screen px-4 py-8 md:px-10 pb-24 md:pb-8">
-        <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="flex-1 overflow-y-auto h-screen px-4 py-8 md:px-10 pb-24 md:pb-8 print:p-0 print:h-auto print:overflow-visible">
+        <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 print:max-w-none">
           {view === 'DASHBOARD' && <Dashboard onNavigate={(v) => setView(v)} />}
           {view === 'FINANCE' && <Finance />}
           {view === 'DISCIPLINE' && <Discipline />}
@@ -134,8 +135,8 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation (Quick Access) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-2 z-40 border-t border-white/10">
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 glass h-20 flex items-center justify-around px-2 z-40 border-t border-white/10 print:hidden">
         {navItems.slice(0, 5).map((item) => (
            <button
             key={item.id}

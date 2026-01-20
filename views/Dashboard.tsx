@@ -14,14 +14,16 @@ import {
   Info,
   Send,
   Dumbbell,
-  // Added missing Wallet icon import
-  Wallet
+  Wallet,
+  FileBarChart,
+  ArrowLeft
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell 
 } from 'recharts';
 import { AppView, UserStats } from '../types';
+import Reports from './Reports';
 
 interface DashboardProps {
   onNavigate: (view: AppView) => void;
@@ -37,20 +39,28 @@ const masteryData = [
   { day: 'Dim', score: 91, discipline: 91 },
 ];
 
-const studyDistribution = [
-  { name: 'Droit Civil', value: 45, color: '#fbbf24' },
-  { name: 'Admin', value: 25, color: '#3b82f6' },
-  { name: 'Constit', value: 20, color: '#8b5cf6' },
-  { name: 'Langues', value: 10, color: '#f97316' },
-];
-
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const [timeFilter, setTimeFilter] = useState<'day' | 'week'>('day');
+  const [showReports, setShowReports] = useState(false);
   const [activityInput, setActivityInput] = useState('');
   const [activities, setActivities] = useState([
     { text: "Révision intensive Contrats", time: "14:30" },
     { text: "Séance Push Day validée", time: "17:45" }
   ]);
+
+  if (showReports) {
+    return (
+      <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+        <button 
+          onClick={() => setShowReports(false)}
+          className="flex items-center gap-2 text-slate-500 hover:text-white mb-8 transition-colors group"
+        >
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-xs font-bold uppercase tracking-widest">Retour au Dashboard</span>
+        </button>
+        <Reports />
+      </div>
+    );
+  }
 
   const handleLogActivity = () => {
     if (!activityInput.trim()) return;
@@ -99,20 +109,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 flex items-center gap-4 shadow-xl">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Score</span>
-              <span className="text-2xl font-black text-emerald-500">91/100</span>
-            </div>
-            <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 flex items-center justify-center relative">
-              <div className="absolute inset-0 border-4 border-emerald-500 rounded-full" style={{ clipPath: 'inset(0 0 9% 0)' }}></div>
-              <ShieldCheck className="text-emerald-500" size={20} />
-            </div>
-          </div>
+          <button 
+            onClick={() => setShowReports(true)}
+            className="bg-amber-500 text-slate-950 px-6 py-4 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-amber-500/20"
+          >
+            <FileBarChart size={18} />
+            Analytique Globale
+          </button>
         </div>
       </div>
 
-      {/* Activity Logger - NEW FIELD */}
+      {/* Activity Logger */}
       <div className="glass rounded-[2rem] p-6 border-amber-500/20 bg-amber-500/5">
         <h3 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em] mb-4">Qu'as-tu accompli aujourd'hui ?</h3>
         <div className="flex gap-4">
@@ -173,7 +180,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Interactive Category Cards */}
         <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-6 gap-4">
            {categories.map((cat) => (
              <div 

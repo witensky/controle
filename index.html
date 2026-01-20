@@ -32,6 +32,27 @@
         }
         -ms-overflow-style: none;
         scrollbar-width: none;
+
+        /* Print Media Queries */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            #root {
+                padding: 0 !important;
+            }
+            .glass {
+                background: white !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+            .recharts-cartesian-grid-horizontal line,
+            .recharts-cartesian-grid-vertical line {
+                stroke: #e2e8f0 !important;
+            }
+        }
     </style>
 <script type="importmap">
 {

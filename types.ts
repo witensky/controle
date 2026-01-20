@@ -1,5 +1,5 @@
 
-export type AppView = 'AUTH' | 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE' | 'SPORT' | 'SETTINGS';
+export type AppView = 'AUTH' | 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE' | 'SPORT' | 'SETTINGS' | 'REPORTS';
 
 export interface UserStats {
   finance: number;
@@ -39,12 +39,19 @@ export interface DailyActivity {
   timestamp: string;
 }
 
-// Added LawSubject interface for Studies view
+export type LawSubjectStatus = 'A débutER' | 'En cours' | 'Maîtrisé' | 'Révision';
+
 export interface LawSubject {
   id: string;
   name: string;
+  semester: string;
+  professor?: string;
+  examDate?: string;
+  ects?: number;
+  status: LawSubjectStatus;
   progress: number;
   stressLevel: 'low' | 'medium' | 'high';
   chaptersTotal: number;
   chaptersDone: number;
+  notes?: string;
 }
