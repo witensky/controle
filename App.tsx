@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -8,10 +8,11 @@ import {
   Languages, 
   ShieldCheck, 
   LogOut,
-  Bell,
   Menu,
   X,
-  Cross
+  Cross,
+  Dumbbell,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { AppView } from './types';
 import Dashboard from './views/Dashboard';
@@ -21,13 +22,14 @@ import Studies from './views/Studies';
 import LanguagesView from './views/LanguagesView';
 import Bible from './views/Bible';
 import Auth from './views/Auth';
+import Sport from './views/Sport';
+import Settings from './views/Settings';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>('AUTH');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Simple state management for demo
   const handleLogin = () => {
     setIsAuthenticated(true);
     setView('DASHBOARD');
@@ -47,8 +49,10 @@ const App: React.FC = () => {
     { id: 'FINANCE', icon: Wallet, label: 'Finances' },
     { id: 'DISCIPLINE', icon: Clock, label: 'Discipline' },
     { id: 'STUDIES', icon: BookOpen, label: 'Droit' },
+    { id: 'SPORT', icon: Dumbbell, label: 'Sport' },
     { id: 'LANGUAGES', icon: Languages, label: 'Langues' },
     { id: 'BIBLE', icon: Cross, label: 'Bible & Mental' },
+    { id: 'SETTINGS', icon: SettingsIcon, label: 'Paramètres' },
   ];
 
   return (
@@ -83,7 +87,7 @@ const App: React.FC = () => {
             </button>
           </div>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-2 overflow-y-auto pr-2">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -123,8 +127,10 @@ const App: React.FC = () => {
           {view === 'FINANCE' && <Finance />}
           {view === 'DISCIPLINE' && <Discipline />}
           {view === 'STUDIES' && <Studies />}
+          {view === 'SPORT' && <Sport />}
           {view === 'LANGUAGES' && <LanguagesView />}
           {view === 'BIBLE' && <Bible />}
+          {view === 'SETTINGS' && <Settings />}
         </div>
       </main>
 

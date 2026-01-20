@@ -1,5 +1,5 @@
 
-export type AppView = 'AUTH' | 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE';
+export type AppView = 'AUTH' | 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE' | 'SPORT' | 'SETTINGS';
 
 export interface UserStats {
   finance: number;
@@ -10,14 +10,36 @@ export interface UserStats {
   languages: number;
 }
 
-export interface Expense {
+export interface SettingsConfig {
+  userName: string;
+  nextExamDate: string;
+  amciRenewalDate: string;
+  sportGoalPerWeek: number;
+  notifications: {
+    bible: boolean;
+    studies: boolean;
+    finance: boolean;
+    sport: boolean;
+    discipline: boolean;
+  };
+  reminders: string; // "06:00"
+}
+
+export interface WorkoutSession {
   id: string;
-  amount: number;
-  category: string;
-  comment: string;
+  type: string;
+  duration: number;
+  intensity: number;
   date: string;
 }
 
+export interface DailyActivity {
+  id: string;
+  text: string;
+  timestamp: string;
+}
+
+// Added LawSubject interface for Studies view
 export interface LawSubject {
   id: string;
   name: string;
@@ -25,10 +47,4 @@ export interface LawSubject {
   stressLevel: 'low' | 'medium' | 'high';
   chaptersTotal: number;
   chaptersDone: number;
-}
-
-export interface LanguageWord {
-  word: string;
-  definition: string;
-  example: string;
 }

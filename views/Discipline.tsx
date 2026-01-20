@@ -9,12 +9,14 @@ import {
   ArrowRight,
   ShieldAlert,
   Dumbbell,
-  Brain
+  Brain,
+  CheckCircle2
 } from 'lucide-react';
 
 const Discipline: React.FC = () => {
   const [phase, setPhase] = useState<'morning' | 'evening'>('morning');
   const [isDayClosed, setIsDayClosed] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const rituals = {
     morning: [
@@ -27,6 +29,11 @@ const Discipline: React.FC = () => {
       { id: 2, text: "Lecture Bible Chapitre 5", icon: Brain, done: false },
       { id: 3, text: "Planification Lendemain", icon: Zap, done: false },
     ]
+  };
+
+  const handleValidate = () => {
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   return (
@@ -57,52 +64,58 @@ const Discipline: React.FC = () => {
           <div className="relative z-10">
             <h3 className="text-2xl font-black text-white mb-8 tracking-tight uppercase flex items-center gap-3">
                {phase === 'morning' ? <Zap className="text-amber-500" /> : <PenTool className="text-indigo-400" />}
-               {phase === 'morning' ? "3 Priorités Matin" : "Clôture de Journée"}
+               {phase === 'morning' ? "3 PRIORITÉS MATIN" : "CLÔTURE DE JOURNÉE"}
             </h3>
             
             <div className="space-y-4">
                {rituals[phase].map(item => (
-                 <div key={item.id} className="group flex items-center justify-between p-6 bg-slate-950/80 border border-white/5 rounded-3xl cursor-pointer hover:border-white/20 transition-all">
+                 <div key={item.id} className="group flex items-center justify-between p-6 bg-slate-950/80 border border-white/5 rounded-3xl cursor-pointer hover:border-white/20 transition-all relative">
                     <div className="flex items-center gap-6">
                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.done ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-500'}`}>
                           <item.icon size={22} />
                        </div>
                        <span className={`font-bold ${item.done ? 'text-slate-400 line-through' : 'text-slate-100'}`}>{item.text}</span>
                     </div>
+                    {item.done && <div className="absolute top-4 right-4"><ShieldAlert size={14} className="text-amber-500" /></div>}
                     <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${item.done ? 'bg-amber-500 border-amber-500' : 'border-slate-700'}`}>
-                       {item.done && <ShieldAlert size={14} className="text-slate-950" />}
+                       {item.done && <CheckCircle2 size={14} className="text-slate-950" />}
                     </div>
                  </div>
                ))}
             </div>
 
-            <button className="w-full mt-10 py-5 bg-white text-slate-950 font-black uppercase tracking-[0.2em] rounded-3xl hover:bg-slate-100 transition-all shadow-xl shadow-white/5">
-              Valider la Progression
+            <button 
+              onClick={handleValidate}
+              className="w-full mt-10 py-5 bg-white text-slate-950 font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-100 transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-3"
+            >
+              {showSuccess ? <CheckCircle2 className="animate-bounce" /> : null}
+              {showSuccess ? 'PROGRESSION VALIDÉE' : 'VALIDER LA PROGRESSION'}
             </button>
           </div>
         </div>
 
         {/* Gamification / Scores */}
         <div className="space-y-8">
-           <div className="glass rounded-[2rem] p-8 border-white/5 text-center">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Niveau Actuel</h4>
+           <div className="glass rounded-[2rem] p-8 border-white/5 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500/20" />
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">NIVEAU ACTUEL</h4>
               <div className="w-24 h-24 mx-auto bg-amber-500 rounded-[2.5rem] rotate-45 flex items-center justify-center border-4 border-slate-950 shadow-2xl shadow-amber-500/20 mb-10">
                  <span className="text-3xl font-black text-slate-950 -rotate-45">14</span>
               </div>
-              <p className="text-lg font-black text-white mb-2 uppercase tracking-tight">Vétéran de Discipline</p>
+              <p className="text-xl font-black text-white mb-2 uppercase tracking-tight">VÉTÉRAN DE DISCIPLINE</p>
               <div className="flex justify-center gap-1 mb-8">
                  {[1,2,3,4,5].map(i => <div key={i} className="w-8 h-1 bg-amber-500 rounded-full" />)}
                  <div className="w-8 h-1 bg-slate-800 rounded-full" />
               </div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">1,240 XP avant le prochain Badge</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">1,240 XP AVANT LE PROCHAIN BADGE</p>
            </div>
 
            <div className="glass rounded-[2rem] p-8 border-white/5">
               <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 flex items-center justify-between">
-                 Badges Débloqués
+                 BADGES DÉBLOQUÉS
                  <span className="text-amber-500">4 / 12</span>
               </h4>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 justify-center">
                  {[
                    { name: "Levé tôt", icon: Zap, color: "text-amber-500" },
                    { name: "Focus 4h", icon: Brain, color: "text-blue-400" },
@@ -110,7 +123,7 @@ const Discipline: React.FC = () => {
                    { name: "Bible 7j", icon: Heart, color: "text-emerald-400" },
                  ].map(b => (
                     <div key={b.name} className="flex flex-col items-center gap-2">
-                       <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:bg-white/10 transition-colors">
+                       <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:bg-white/10 transition-colors shadow-lg shadow-black/50">
                           <b.icon className={b.color} size={24} />
                        </div>
                        <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">{b.name}</span>
@@ -121,26 +134,10 @@ const Discipline: React.FC = () => {
         </div>
       </div>
 
-      {/* Extreme Warning Area */}
-      {phase === 'evening' && (
-        <div className="mt-12 glass border-rose-500/30 bg-rose-500/5 p-10 rounded-[3rem] flex flex-col items-center text-center">
-           <ShieldAlert className="text-rose-500 mb-6 animate-bounce" size={48} />
-           <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Prêt à fermer ta journée ?</h3>
-           <p className="text-slate-400 max-w-md mb-10 text-sm font-medium">Attention. Une fois la journée fermée, tout objectif non validé entraînera une baisse irrémédiable de ton score de discipline globale.</p>
-           <button 
-             onClick={() => setIsDayClosed(true)}
-             className="px-12 py-5 bg-rose-500 hover:bg-rose-600 text-white font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-2xl shadow-rose-500/20 active:scale-95"
-           >
-             Fermer la Journée
-           </button>
-        </div>
-      )}
-
       {isDayClosed && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-3xl animate-in zoom-in-95 duration-500 pointer-events-auto">
            <div className="text-center">
               <h2 className="text-6xl font-black text-white mb-4 uppercase italic">JOURNÉE TERMINÉE.</h2>
-              <p className="text-slate-500 text-xl font-medium mb-12 uppercase tracking-widest italic opacity-60">"Ton futur est créé par ce que tu fais aujourd'hui, pas demain."</p>
               <button 
                 onClick={() => setIsDayClosed(false)}
                 className="px-12 py-5 bg-white text-slate-950 font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform"
