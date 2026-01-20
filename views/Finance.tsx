@@ -59,7 +59,7 @@ const Finance: React.FC = () => {
       {/* Header Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass rounded-[2rem] p-8 bg-amber-500/5 border-amber-500/20">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Budget Total Quinzaine</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Budget Total Bimestriel</p>
           <div className="flex items-end gap-2 mb-6">
             <h2 className="text-4xl font-black text-white">3,500</h2>
             <span className="text-sm font-bold text-amber-500 mb-1">DH</span>
@@ -78,7 +78,7 @@ const Finance: React.FC = () => {
             <h2 className="text-4xl font-black text-white">250</h2>
             <span className="text-sm font-bold text-emerald-500 mb-1">DH / Jour</span>
           </div>
-          <p className="text-[10px] text-slate-500 font-medium">Pour tenir jusqu'au 15 du mois prochain.</p>
+          <p className="text-[10px] text-slate-500 font-medium">Pour tenir jusqu'au versement du prochain bimestre.</p>
         </div>
 
         <div className="flex flex-col gap-4">
