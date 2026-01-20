@@ -1,11 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { Loader2 } from 'lucide-react';
 
-interface AuthProps {
-  onLogin: () => void;
-}
+const Auth: React.FC = () => {
+  const [loading, setLoading] = useState(false);
 
-const Auth: React.FC<AuthProps> = ({ onLogin }) => {
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      // Fixed: Cast to any to access Supabase auth methods which are missing in types but present in runtime
+      const { error } = await (supabase.auth as any).signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      alert("Erreur d'authentification : " + error.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden font-outfit">
       {/* Background decoration */}
@@ -25,11 +42,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         </p>
 
         <button 
-          onClick={onLogin}
-          className="w-full flex items-center justify-center gap-4 bg-white text-slate-950 py-4 px-6 rounded-2xl font-bold hover:bg-slate-100 transition-all hover:scale-[1.02] active:scale-95 shadow-lg group"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-4 bg-white text-slate-950 py-4 px-6 rounded-2xl font-bold hover:bg-slate-100 transition-all hover:scale-[1.02] active:scale-95 shadow-lg group disabled:opacity-50"
         >
-          <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 group-hover:scale-125 transition-transform" />
-          <span className="uppercase tracking-wider">Continuer avec Google</span>
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 group-hover:scale-125 transition-transform" />
+          )}
+          <span className="uppercase tracking-wider">{loading ? 'Initialisation...' : 'Continuer avec Google'}</span>
         </button>
 
         <p className="mt-12 text-slate-500 text-[10px] uppercase tracking-widest leading-relaxed">
