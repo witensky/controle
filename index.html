@@ -3,42 +3,52 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J&B - Discipline & Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>J&B - LIFEFLOW</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+          --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #020617; /* slate-950 */
             color: #f8fafc; /* slate-50 */
             margin: 0;
             overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
         h1, h2, h3, .font-outfit {
             font-family: 'Outfit', sans-serif;
         }
         .glass {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
+        .pb-safe {
+            padding-bottom: calc(1.5rem + var(--safe-area-inset-bottom));
+        }
+
         /* Hide scrollbar */
         ::-webkit-scrollbar { display: none; }
         
         /* Animations */
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); }
-            50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
-            100% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); }
+        @keyframes pulse-glow-yellow {
+            0% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.3); }
         }
-        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+        .animate-pulse-glow { animation: pulse-glow-yellow 2s infinite; }
 
-        /* Custom Input Styling */
-        textarea::placeholder {
-            color: #1e293b;
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
+        .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 <script type="importmap">
 {
@@ -48,7 +58,6 @@
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
     "lucide-react": "https://esm.sh/lucide-react@0.424.0?external=react,react-dom",
-    "react-quill": "https://esm.sh/react-quill@2.0.0?external=react,react-dom",
     "@google/genai": "https://esm.sh/@google/genai@1.37.0",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
