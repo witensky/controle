@@ -1,5 +1,9 @@
 {
-  "name": "J&B - Discipline & Control",
-  "description": "A premium interactive dashboard for law students to master their finances, studies, and personal discipline through rigorous tracking and data-driven insights.",
-  "requestFramePermissions": []
+  "name": "J&B - Command Center v3.2",
+  "description": "Système de contrôle disciplinaire ultra-performant avec persistance Supabase et intelligence décisionnelle.",
+  "version": "3.2.0",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
 }

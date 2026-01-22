@@ -23,47 +23,36 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .gold-gradient {
-            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-        }
+        
         /* Hide scrollbar */
-        ::-webkit-scrollbar {
-            display: none;
+        ::-webkit-scrollbar { display: none; }
+        
+        /* Animations */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(251, 191, 36, 0.2); }
         }
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
 
-        /* Print Media Queries */
-        @media print {
-            body {
-                background-color: white !important;
-                color: black !important;
-            }
-            #root {
-                padding: 0 !important;
-            }
-            .glass {
-                background: white !important;
-                border: 1px solid #e2e8f0 !important;
-                box-shadow: none !important;
-                backdrop-filter: none !important;
-            }
-            .recharts-cartesian-grid-horizontal line,
-            .recharts-cartesian-grid-vertical line {
-                stroke: #e2e8f0 !important;
-            }
+        /* Custom Input Styling */
+        textarea::placeholder {
+            color: #1e293b;
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.424.0?external=react,react-dom",
+    "react-quill": "https://esm.sh/react-quill@2.0.0?external=react,react-dom",
+    "@google/genai": "https://esm.sh/@google/genai@1.37.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.45.4"
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>

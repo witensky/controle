@@ -1,237 +1,354 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  X, Save, CheckCircle2, Palette, Eye, Cpu, Download, Landmark, Banknote, CalendarDays, Coins, Layers, ToggleLeft, Globe, HardDrive, Clock, BellRing, AlertCircle, ShieldAlert, Bell, Timer
+  Save, CheckCircle2, Cpu, Download, Landmark, Banknote, CalendarDays, Coins, Loader2, AlertCircle, Sparkles, ShieldCheck, Zap, Activity, BrainCircuit, Bell, Database, FileJson, HardDrive, History, Lock, MessageSquare, Radio, RefreshCw, Server, Settings2, Share2, Timer, Trash2, UserCheck, Volume2, BarChart3
 } from 'lucide-react';
+import { supabase, handleSupabaseError } from '../lib/supabase';
 
 const Settings: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   
-  const [accentColor, setAccentColor] = useState('amber');
-  const [uiDensity, setUiDensity] = useState('Balanced');
-  const [glowIntensity, setGlowIntensity] = useState(60);
-  const [ghostMode, setGhostMode] = useState(false);
-
-  const [activeModules, setActiveModules] = useState({
-    finance: true, studies: true, discipline: true, sport: true, languages: true, bible: true
-  });
-
+  // Existing States
   const [amciMonthly, setAmciMonthly] = useState(3500);
   const [nextAmciDate, setNextAmciDate] = useState('2024-11-10');
-  const [lastAmountReceived, setLastAmountReceived] = useState(3500);
+  const [userName, setUserName] = useState('');
+  const [aiAutonomousMode, setAiAutonomousMode] = useState(true);
 
-  // Nouvel état pour les notifications et alertes
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-  const [expenseThreshold, setExpenseThreshold] = useState(50);
-  const [deadlineAlertTime, setDeadlineAlertTime] = useState('24h');
-  const [criticalAlerts, setCriticalAlerts] = useState(true);
+  // New Tactical Options (30 options)
+  const [options, setOptions] = useState({
+    // Protocole de Mission
+    defaultMissionDuration: 25,
+    autoStartNextMission: false,
+    strictFocusMode: true,
+    breakDuration: 5,
+    longBreakFrequency: 4,
+    archiveCompletedDelay: 24, // hours
+    enablePriorityBoost: true,
+    taskLimitDaily: 12,
+    autoCategorization: true,
+    energyThresholdWarning: 3,
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    // Configuration Analytique
+    reportGenerationDay: 'Dimanche',
+    precisionLevel: 'High',
+    enableAuditLogs: true,
+    dataRetentionMonths: 12,
+    autoExportCSV: false,
+    syncFrequency: 15, // minutes
+    calculateImpactScore: true,
+    trackIdleTime: false,
+    performanceGoal: 85,
+    benchmarkComparison: true,
+
+    // Communication & Alertes
+    systemVolume: 50,
+    notificationLevel: 'Critical Only',
+    hapticFeedback: true,
+    statusReportFrequency: 'Weekly',
+    enableVoiceFeedback: false,
+    alertOnBudgetOverrun: true,
+    ritualReminders: true,
+    morningRitualTime: '06:00',
+    eveningRitualTime: '22:00',
+    terminalLogging: true
+  });
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) {
+        setUserName(data.username || '');
+        setAmciMonthly(Number(data.amci_monthly_amount) || 3500);
+        setNextAmciDate(data.next_amci_date || '2024-11-10');
+        if (data.settings_config) {
+          setOptions(prev => ({ ...prev, ...data.settings_config }));
+        }
+      }
+    } catch (err) {
+      handleSupabaseError(err, 'fetchProfile');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleModule = (module: keyof typeof activeModules) => {
-    setActiveModules(prev => ({ ...prev, [module]: !prev[module] }));
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          username: userName,
+          amci_monthly_amount: amciMonthly,
+          next_amci_date: nextAmciDate,
+          settings_config: options,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      alert("Erreur de déploiement configuration.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleExport = () => {
-    const data = { accentColor, activeModules, amciMonthly, nextAmciDate, alerts: { expenseThreshold, deadlineAlertTime } };
-    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'jb-control-backup.json';
-    a.click();
+  const updateOption = (key: string, value: any) => {
+    setOptions(prev => ({ ...prev, [key]: value }));
   };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-amber-500" size={40} />
+      </div>
+    );
+  }
+
+  const Toggle = ({ active, onClick }: { active: boolean, onClick: () => void }) => (
+    <button 
+       onClick={onClick}
+       className={`w-12 h-6 rounded-full p-1 transition-all ${active ? 'bg-blue-500' : 'bg-slate-800'}`}
+    >
+       <div className={`w-4 h-4 bg-white rounded-full transition-all ${active ? 'translate-x-6' : 'translate-x-0'}`} />
+    </button>
+  );
 
   return (
     <div className="space-y-12 pb-32 animate-in fade-in duration-700">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-10">
         <div>
            <div className="flex items-center gap-3 mb-3">
              <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500"><Cpu size={16} /></div>
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Kernel Engine v3.2</span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Configuration du Noyau</span>
            </div>
-           <h2 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">COMMAND <span className="text-amber-500 font-outfit">CORE</span></h2>
+           <h2 className="text-5xl font-black text-white tracking-tighter uppercase italic">COMMAND <span className="text-amber-500 font-outfit">CORE</span></h2>
         </div>
-        <div className="flex gap-4">
-           <button onClick={handleExport} className="p-5 bg-white/5 border border-white/5 text-slate-400 rounded-2xl hover:text-white transition-all"><Download size={20} /></button>
-           <button 
-            onClick={handleSave}
-            className={`flex items-center gap-4 px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all shadow-3xl ${
-              saved ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/30' : 'bg-white text-slate-950 hover:scale-105 active:scale-95'
-            }`}
-           >
-             {saved ? <CheckCircle2 size={18} strokeWidth={3} /> : <Save size={18} strokeWidth={3} />}
-             {saved ? 'SYSTÈME SYNCHRONISÉ' : 'DÉPLOYER CONFIGURATION'}
-           </button>
-        </div>
+        <button 
+          onClick={handleSave}
+          disabled={saving}
+          className={`flex items-center gap-4 px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all shadow-3xl ${
+            saved ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/30' : 'bg-white text-slate-950 hover:scale-105 active:scale-95'
+          }`}
+        >
+          {saving ? <Loader2 className="animate-spin" size={18} /> : saved ? <CheckCircle2 size={18} /> : <Save size={18} />}
+          {saved ? 'CONFIG SAUVEGARDÉE' : 'DÉPLOYER CONFIGURATION'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Section Bourse */}
-        <div className="lg:col-span-3 glass rounded-[3rem] p-10 border-white/5 space-y-10 bg-emerald-500/[0.02]">
-           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-white uppercase italic flex items-center gap-4">
-               <Landmark size={22} className="text-emerald-500" /> Gestion Bourse AMCI
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">ALLOCATION MENSUELLE (DH)</label>
-                <div className="relative">
-                   <Banknote className="absolute left-5 top-1/2 -translate-y-1/2 text-emerald-500/50" size={20} />
-                   <input type="number" value={amciMonthly} onChange={(e) => setAmciMonthly(Number(e.target.value))} className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-xl font-black text-white outline-none focus:border-emerald-500/50" />
-                </div>
-             </div>
-             <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">DATE PROCHAINE RÉCEPTION</label>
-                <div className="relative">
-                   <CalendarDays className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500/50" size={20} />
-                   <input type="date" value={nextAmciDate} onChange={(e) => setNextAmciDate(e.target.value)} className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white outline-none focus:border-amber-500/50 uppercase" />
-                </div>
-             </div>
-             <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">DERNIÈRE QUANTITÉ REÇUE</label>
-                <div className="relative">
-                   <Coins className="absolute left-5 top-1/2 -translate-y-1/2 text-blue-500/50" size={20} />
-                   <input type="number" value={lastAmountReceived} onChange={(e) => setLastAmountReceived(Number(e.target.value))} className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-xl font-black text-white outline-none focus:border-blue-500/50" />
-                </div>
-             </div>
-          </div>
-        </div>
-
-        {/* NOUVELLE SECTION : Alertes et Notifications */}
-        <div className="lg:col-span-3 glass rounded-[3rem] p-10 border-rose-500/20 space-y-10 bg-rose-500/[0.02]">
-           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="text-xl font-black text-white uppercase italic flex items-center gap-4">
-               <BellRing size={22} className="text-rose-500 animate-pulse" /> Notifications & Alertes Tactiques
-            </h3>
-            <div className="flex items-center gap-4 bg-slate-950 p-2 rounded-2xl border border-white/5">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Alertes Système</span>
-              <button onClick={() => setAlertsEnabled(!alertsEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${alertsEnabled ? 'bg-rose-500' : 'bg-slate-800'}`}>
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${alertsEnabled ? 'left-7' : 'left-1'}`} />
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertCircle size={14} className="text-rose-500" />
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">SEUIL DÉPASSEMENT FINANCIER</label>
-                </div>
-                <div className="relative group">
-                   <div className="absolute left-5 top-1/2 -translate-y-1/2 text-rose-500/50 font-black text-xs">DH</div>
-                   <input 
-                    type="number" 
-                    value={expenseThreshold} 
-                    onChange={(e) => setExpenseThreshold(Number(e.target.value))} 
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-xl font-black text-white outline-none focus:border-rose-500/50 transition-all" 
-                    placeholder="Ex: 50"
-                   />
-                   <p className="text-[8px] text-slate-600 mt-2 uppercase font-bold px-1 italic">Alerter si une dépense dépasse le budget journalier de {expenseThreshold} DH</p>
-                </div>
-             </div>
-
-             <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Timer size={14} className="text-amber-500" />
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">RAPPEL ÉCHÉANCE MISSIONS</label>
-                </div>
-                <div className="relative">
-                   <select 
-                    value={deadlineAlertTime} 
-                    onChange={(e) => setDeadlineAlertTime(e.target.value)} 
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 px-6 text-sm font-black text-white outline-none appearance-none focus:border-amber-500/50"
-                   >
-                     <option value="6h">6 HEURES AVANT</option>
-                     <option value="12h">12 HEURES AVANT</option>
-                     <option value="24h">24 HEURES AVANT (CONSEILLÉ)</option>
-                     <option value="48h">48 HEURES AVANT</option>
-                   </select>
-                   <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                     <Bell size={16} />
-                   </div>
-                </div>
-             </div>
-
-             <div className="flex items-center justify-between p-6 bg-slate-950 rounded-3xl border border-white/5 group hover:border-rose-500/20 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${criticalAlerts ? 'bg-rose-500 text-slate-950 shadow-lg shadow-rose-500/20' : 'bg-slate-900 text-slate-500'}`}><ShieldAlert size={18} /></div>
-                  <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">ALERTES CRITIQUES</p>
-                    <p className="text-[8px] font-bold text-slate-600 uppercase mt-1">Interruption IA en cas de risque</p>
-                  </div>
-                </div>
-                <button onClick={() => setCriticalAlerts(!criticalAlerts)} className={`w-12 h-7 rounded-full transition-all relative ${criticalAlerts ? 'bg-rose-500' : 'bg-slate-800'}`}>
-                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${criticalAlerts ? 'left-6' : 'left-1'}`} />
-                </button>
-             </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-2 glass rounded-[3rem] p-10 border-white/5 space-y-10">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-white uppercase italic flex items-center gap-4">
-               <Palette size={22} className="text-purple-500" /> Engine Graphique
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-             <div className="space-y-6">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block italic">DENSITÉ DE L'INTERFACE</label>
-                <div className="grid grid-cols-3 gap-3 p-1.5 bg-slate-950 rounded-2xl border border-white/5">
-                   {['Compact', 'Balanced', 'Immersive'].map(d => (
-                     <button key={d} onClick={() => setUiDensity(d)} className={`py-3 rounded-xl text-[9px] font-black uppercase transition-all ${uiDensity === d ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>{d}</button>
-                   ))}
-                </div>
-             </div>
-             <div className="flex items-center justify-between p-6 bg-slate-950 rounded-3xl border border-white/5 group hover:border-amber-500/20 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${ghostMode ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-500'}`}><Eye size={18} /></div>
-                  <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">MODE GHOST</p>
-                    <p className="text-[8px] font-bold text-slate-600 uppercase mt-1">Masquage des flux financiers</p>
-                  </div>
-                </div>
-                <button onClick={() => setGhostMode(!ghostMode)} className={`w-12 h-7 rounded-full transition-all relative ${ghostMode ? 'bg-amber-500' : 'bg-slate-800'}`}>
-                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${ghostMode ? 'left-6' : 'left-1'}`} />
-                </button>
-             </div>
-          </div>
-        </div>
-
-        <div className="glass rounded-[3rem] p-10 border-white/5 space-y-8">
-          <h3 className="text-xl font-black text-white uppercase italic flex items-center gap-4">
-             <Layers size={22} className="text-blue-500" /> Architecture Modules
-          </h3>
-          <div className="space-y-3">
-             {Object.entries(activeModules).map(([key, value]) => (
-                <button key={key} onClick={() => toggleModule(key as any)} className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all ${value ? 'bg-blue-500/5 border-blue-500/20' : 'bg-slate-950 border-white/5 opacity-40'}`}>
-                  <span className="text-xs font-black text-white uppercase tracking-widest">{key}</span>
-                  {value ? <ToggleLeft className="text-blue-500 rotate-180" size={24} /> : <ToggleLeft className="text-slate-700" size={24} />}
-                </button>
-             ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-         {[
-           { label: 'Version Kernel', val: '3.2.0-STABLE', icon: Cpu },
-           { label: 'Status Stockage', val: '1.2 MB / 5.0 MB', icon: HardDrive },
-           { label: 'Dernière Sync', val: 'Maintenant', icon: Clock },
-           { label: 'Region Kernel', val: `FR / DH`, icon: Globe },
-         ].map((info, i) => (
-           <div key={i} className="p-6 bg-[#020617] rounded-3xl border border-white/5 flex items-center gap-4">
-              <info.icon size={16} className="text-slate-700" />
-              <div>
-                <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">{info.label}</p>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{info.val}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* IA GOVERNANCE (Existing) */}
+        <div className="glass rounded-[3rem] p-10 border-blue-500/20 bg-blue-500/[0.03] relative overflow-hidden group">
+           <div className="absolute top-0 right-0 p-8 opacity-[0.05] text-blue-500 group-hover:scale-125 transition-transform duration-1000">
+              <BrainCircuit size={180} />
+           </div>
+           <div className="relative z-10">
+              <div className="flex justify-between items-center mb-10">
+                 <h3 className="text-xl font-black text-white uppercase italic flex items-center gap-4">
+                    <Sparkles size={22} className="text-blue-400" /> Gouvernance IA
+                 </h3>
+                 <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Niveau 5 - Accès Total</span>
+                 </div>
+              </div>
+              <div className="space-y-8">
+                 <div className="flex items-center justify-between p-6 bg-slate-950/80 border border-white/5 rounded-[1.8rem]">
+                    <div className="flex items-center gap-4">
+                       <Zap size={18} className="text-amber-500" />
+                       <div>
+                          <p className="text-[10px] font-black text-white uppercase italic">Mode Autonome</p>
+                          <p className="text-[8px] text-slate-500 uppercase font-black">Autoriser l'IA à suggérer & éditer</p>
+                       </div>
+                    </div>
+                    <Toggle active={aiAutonomousMode} onClick={() => setAiAutonomousMode(!aiAutonomousMode)} />
+                 </div>
+                 <div className="p-6 border border-dashed border-white/10 rounded-[1.8rem] space-y-4">
+                    <p className="text-[9px] text-slate-500 font-bold leading-relaxed uppercase tracking-widest">
+                       L'intelligence artificielle Gemini Pro a reçu l'autorisation de sceller des missions, gérer les flux financiers AMCI et réviser les configurations du noyau en temps réel.
+                    </p>
+                    <button className="w-full py-4 bg-white/5 text-blue-400 border border-blue-500/20 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2">
+                       <Activity size={14} /> Lancer Audit d'Optimisation IA
+                    </button>
+                 </div>
               </div>
            </div>
-         ))}
+        </div>
+
+        {/* Bourse AMCI (Existing) */}
+        <div className="glass rounded-[3rem] p-10 border-white/5 bg-[#0f172a]/40">
+           <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+              <Landmark size={22} className="text-emerald-500" /> Bourse AMCI
+           </h3>
+           <div className="space-y-6">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic ml-1">ALLOCATION MENSUELLE (DH)</label>
+                 <input type="number" value={amciMonthly} onChange={(e) => setAmciMonthly(Number(e.target.value))} className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 px-6 text-xl font-black text-white outline-none focus:border-emerald-500/50" />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic ml-1">DATE PROCHAINE RÉCEPTION</label>
+                 <input type="date" value={nextAmciDate} onChange={(e) => setNextAmciDate(e.target.value)} className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 px-6 text-sm font-black text-white outline-none focus:border-amber-500/50 uppercase" />
+              </div>
+           </div>
+        </div>
+
+        {/* --- NEW CATEGORY: PROTOCOLE DE MISSION --- */}
+        <div className="glass rounded-[3rem] p-10 border-white/5 bg-[#0f172a]/40">
+           <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+              <Timer size={22} className="text-amber-500" /> Protocole de Mission
+           </h3>
+           <div className="space-y-4">
+              {[
+                { label: 'Démarrage Auto Mission Suivante', key: 'autoStartNextMission', type: 'toggle' },
+                { label: 'Mode Focus Strict (Blocage Nav)', key: 'strictFocusMode', type: 'toggle' },
+                { label: 'Auto-Catégorisation IA', key: 'autoCategorization', type: 'toggle' },
+                { label: 'Boost Priorité Automatique', key: 'enablePriorityBoost', type: 'toggle' },
+              ].map(opt => (
+                <div key={opt.key} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                   <span className="text-[10px] font-black text-slate-300 uppercase">{opt.label}</span>
+                   <Toggle active={(options as any)[opt.key]} onClick={() => updateOption(opt.key, !(options as any)[opt.key])} />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Durée Mission (Min)</label>
+                    <input type="number" value={options.defaultMissionDuration} onChange={e => updateOption('defaultMissionDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Pause (Min)</label>
+                    <input type="number" value={options.breakDuration} onChange={e => updateOption('breakDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Limite Missions/Jour</label>
+                    <input type="number" value={options.taskLimitDaily} onChange={e => updateOption('taskLimitDaily', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Seuil Alerte Énergie</label>
+                    <input type="number" value={options.energyThresholdWarning} onChange={e => updateOption('energyThresholdWarning', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* --- NEW CATEGORY: CONFIGURATION ANALYTIQUE --- */}
+        <div className="glass rounded-[3rem] p-10 border-white/5 bg-[#0f172a]/40">
+           <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+              <BarChart3 size={22} className="text-indigo-500" /> Configuration Analytique
+           </h3>
+           <div className="space-y-4">
+              {[
+                { label: 'Journalisation Audit Logs', key: 'enableAuditLogs', type: 'toggle' },
+                { label: 'Auto-Export CSV Mensuel', key: 'autoExportCSV', type: 'toggle' },
+                { label: 'Calcul Score d\'Impact Proactif', key: 'calculateImpactScore', type: 'toggle' },
+                { label: 'Comparaison Benchmark Récidive', key: 'benchmarkComparison', type: 'toggle' },
+              ].map(opt => (
+                <div key={opt.key} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                   <span className="text-[10px] font-black text-slate-300 uppercase">{opt.label}</span>
+                   <Toggle active={(options as any)[opt.key]} onClick={() => updateOption(opt.key, !(options as any)[opt.key])} />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Fréquence Sync (Min)</label>
+                    <input type="number" value={options.syncFrequency} onChange={e => updateOption('syncFrequency', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Rétention (Mois)</label>
+                    <input type="number" value={options.dataRetentionMonths} onChange={e => updateOption('dataRetentionMonths', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Objectif Perf (%)</label>
+                    <input type="number" value={options.performanceGoal} onChange={e => updateOption('performanceGoal', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black text-slate-600 uppercase italic">Jour Rapport</label>
+                    <select value={options.reportGenerationDay} onChange={e => updateOption('reportGenerationDay', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-[10px] text-white uppercase">
+                       {['Lundi', 'Mercredi', 'Vendredi', 'Dimanche'].map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* --- NEW CATEGORY: COMMUNICATION & ALERTES --- */}
+        <div className="glass rounded-[3rem] p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-2">
+           <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+              <Radio size={22} className="text-rose-500" /> Communication & Alertes Système
+           </h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                 {[
+                   { label: 'Retour Haptique Tactique', key: 'hapticFeedback', type: 'toggle' },
+                   { label: 'Rappels de Rituels (Sun/Moon)', key: 'ritualReminders', type: 'toggle' },
+                   { label: 'Alerte Dépassement Budget', key: 'alertOnBudgetOverrun', type: 'toggle' },
+                   { label: 'Logging Terminal AI', key: 'terminalLogging', type: 'toggle' },
+                 ].map(opt => (
+                   <div key={opt.key} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                      <span className="text-[10px] font-black text-slate-300 uppercase">{opt.label}</span>
+                      <Toggle active={(options as any)[opt.key]} onClick={() => updateOption(opt.key, !(options as any)[opt.key])} />
+                   </div>
+                 ))}
+              </div>
+              <div className="space-y-4">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Volume Système ({options.systemVolume}%)</label>
+                    <input type="range" min="0" max="100" value={options.systemVolume} onChange={e => updateOption('systemVolume', e.target.value)} className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                       <label className="text-[8px] font-black text-slate-600 uppercase italic">Rituel Matin</label>
+                       <input type="time" value={options.morningRitualTime} onChange={e => updateOption('morningRitualTime', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                    </div>
+                    <div className="space-y-1">
+                       <label className="text-[8px] font-black text-slate-600 uppercase italic">Rituel Soir</label>
+                       <input type="time" value={options.eveningRitualTime} onChange={e => updateOption('eveningRitualTime', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Niveau de Notification</label>
+                    <select value={options.notificationLevel} onChange={e => updateOption('notificationLevel', e.target.value)} className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-[10px] font-black text-white uppercase outline-none">
+                       {['Silent', 'Critical Only', 'Balanced', 'Full Tactical'].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Profil Utilisateur (Existing) */}
+        <div className="glass rounded-[3rem] p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-2">
+           <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+              <ShieldCheck size={22} className="text-amber-500" /> Profil Utilisateur
+           </h3>
+           <div className="space-y-6">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic ml-1">NOM D'OPÉRATEUR</label>
+                 <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Witensky..." className="w-full bg-slate-950 border border-white/10 rounded-2xl py-5 px-6 text-xl font-black text-white outline-none focus:border-blue-500/50" />
+              </div>
+           </div>
+        </div>
       </div>
     </div>
   );
