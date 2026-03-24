@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Myflow</string>
+    <string name="title_activity_main">Myflow</string>
+    <string name="package_name">com.jb.app</string>
+    <string name="custom_url_scheme">com.jb.app</string>
+</resources>

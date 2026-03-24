@@ -1,0 +1,923 @@
+﻿
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+   Save, CheckCircle2, Cpu, Download, Landmark, Banknote, CalendarDays, Coins, Loader2, AlertCircle, Sparkles, ShieldCheck, Zap, Activity, BrainCircuit, Bell, Database, FileJson, HardDrive, History, Lock, MessageSquare, Radio, RefreshCw, Server, Settings2, Share2, Timer, Trash2, UserCheck, Volume2, BarChart3, Eye, Monitor, Palette, Smartphone, AlertTriangle, Brain, BookOpen, X
+} from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAppDialog } from '../components/common/AppDialogProvider';
+import { offlineRepository } from '../data/offlineRepository';
+import { localStore, LOCAL_KEYS } from '../lib/localStorage';
+import { requestBrowserNotificationPermission } from '../lib/browserNotifications';
+import { AppView } from '../types';
+import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBudget';
+import {
+   computeUpcomingMonthlyResetDate,
+   normalizeCustomResetDate,
+   normalizeResetDay,
+   resolveFinanceResetDate,
+} from '../utils/financeReset';
+import { exportHtmlToPdf } from '../utils/pdfExport';
+
+type DataCollectionKey =
+   | 'missions'
+   | 'transactions'
+   | 'savings'
+   | 'subjects'
+   | 'words'
+   | 'workouts'
+   | 'metrics'
+   | 'focus_sessions'
+   | 'weekly_goals'
+   | 'protocol_logs';
+
+type PeriodFilter = 'all' | '7d' | '30d' | '90d' | 'year';
+
+type ManagedDataRecord = {
+   id: string;
+   collection: DataCollectionKey;
+   title: string;
+   category: string;
+   date: string;
+   summary: string;
+   raw: Record<string, unknown>;
+};
+
+const DATA_COLLECTION_OPTIONS: Array<{ key: 'all' | DataCollectionKey; label: string }> = [
+   { key: 'all', label: 'Toutes' },
+   { key: 'missions', label: 'Missions' },
+   { key: 'transactions', label: 'Transactions' },
+   { key: 'savings', label: 'Epargne' },
+   { key: 'subjects', label: 'Cours' },
+   { key: 'words', label: 'Mots' },
+   { key: 'workouts', label: 'Workouts' },
+   { key: 'metrics', label: 'Mesures' },
+   { key: 'focus_sessions', label: 'Focus' },
+   { key: 'weekly_goals', label: 'Obj. Hebdo' },
+   { key: 'protocol_logs', label: 'Protocoles' },
+];
+
+const formatRecordDate = (value: string) => {
+   const parsed = new Date(value);
+   if (Number.isNaN(parsed.getTime())) {
+      return value || 'Sans date';
+   }
+   return parsed.toLocaleDateString('fr-FR');
+};
+
+const matchesPeriod = (value: string, period: PeriodFilter) => {
+   if (period === 'all') return true;
+   const parsed = new Date(value);
+   if (Number.isNaN(parsed.getTime())) return false;
+
+   const now = new Date();
+   const thresholds: Record<Exclude<PeriodFilter, 'all'>, number> = {
+      '7d': 7,
+      '30d': 30,
+      '90d': 90,
+      year: 365,
+   };
+
+   const threshold = thresholds[period];
+   const diff = now.getTime() - parsed.getTime();
+   return diff <= threshold * 24 * 60 * 60 * 1000;
+};
+
+const downloadBlob = (filename: string, content: BlobPart, type: string) => {
+   const blob = new Blob([content], { type });
+   const url = URL.createObjectURL(blob);
+   const link = document.createElement('a');
+   link.href = url;
+   link.download = filename;
+   link.click();
+   URL.revokeObjectURL(url);
+};
+
+interface SettingsProps {
+   onNavigate: (view: AppView) => void;
+}
+
+const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
+   const queryClient = useQueryClient();
+   const [loading, setLoading] = useState(true);
+   const [saving, setSaving] = useState(false);
+   const [saved, setSaved] = useState(false);
+   const [reminderNotice, setReminderNotice] = useState<{ tone: 'info' | 'success' | 'error'; message: string } | null>(null);
+   const { showAlert, showConfirm } = useAppDialog();
+   const saveTimeoutRef = useRef<number | null>(null);
+   const savedIndicatorTimeoutRef = useRef<number | null>(null);
+   const reminderNoticeTimeoutRef = useRef<number | null>(null);
+   const lastPersistedSnapshotRef = useRef('');
+   const dataCenterSectionRef = useRef<HTMLDivElement | null>(null);
+
+   // Existing States
+   const [amciMonthly, setAmciMonthly] = useState(DEFAULT_MONTHLY_BUDGET);
+   const [nextAmciDate, setNextAmciDate] = useState(() => resolveFinanceResetDate({ recurrence: 'monthly', dayOfMonth: 10 }));
+   const [userName, setUserName] = useState('');
+
+
+   // Data Stats
+   const [dataStats, setDataStats] = useState({
+      missions: 0,
+      transactions: 0,
+      words: 0,
+      subjects: 0
+   });
+   const [dataCenterOpen, setDataCenterOpen] = useState(false);
+   const [dataCenterLoading, setDataCenterLoading] = useState(false);
+   const [dataCenterRecords, setDataCenterRecords] = useState<ManagedDataRecord[]>([]);
+   const [collectionFilter, setCollectionFilter] = useState<'all' | DataCollectionKey>('all');
+   const [categoryFilter, setCategoryFilter] = useState('all');
+   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+   const [searchQuery, setSearchQuery] = useState('');
+   const [selectedRecordIds, setSelectedRecordIds] = useState<string[]>([]);
+
+   // Préférences (Étendues)
+   const [options, setOptions] = useState({
+      // Gestion des Objectifs
+      defaultMissionDuration: 25,
+      autoStartNextMission: false,
+      strictFocusMode: true,
+      breakDuration: 5,
+      longBreakFrequency: 4,
+      archiveCompletedDelay: 24,
+      enablePriorityBoost: true,
+      taskLimitDaily: 12,
+      autoCategorization: true,
+      energyThresholdWarning: 3,
+
+      // Configuration Analytique
+      reportGenerationDay: 'Dimanche',
+      precisionLevel: 'High',
+      enableAuditLogs: true,
+      dataRetentionMonths: 12,
+      autoExportCSV: false,
+      syncFrequency: 15, // minutes
+      calculateImpactScore: true,
+      trackIdleTime: false,
+      performanceGoal: 85,
+      benchmarkComparison: true,
+
+      // Communication & Alertes
+      systemVolume: 50,
+      notificationLevel: 'Critical Only',
+      hapticFeedback: true,
+      statusReportFrequency: 'Weekly',
+      enableVoiceFeedback: false,
+      alertOnBudgetOverrun: true,
+      ritualReminders: true,
+      morningRitualTime: '06:00',
+      eveningRitualTime: '22:00',
+      terminalLogging: true,
+
+      // Interface & Visuel
+      themeMode: 'Sombre', // Sombre, Néon, Minimaliste
+      density: 'Balanced', // Compact, Balanced, Spacious
+      reduceMotion: false,
+      showParticles: true,
+      accentColor: 'Amber', // Amber, Blue, Emerald, Rose
+
+      // Sécurité & Système (NOUVEAU)
+      ghostMode: false, // Hide values
+      autoLockDelay: 5, // minutes
+      devMode: false,
+      offlineCache: true,
+
+      // Finance (NEW)
+      amci_recurrence: 'monthly' as 'monthly' | 'custom',
+      amci_day_of_month: 10
+   });
+
+   const buildDraftSnapshot = (
+      draftUserName = userName,
+      draftAmciMonthly = amciMonthly,
+      draftNextAmciDate = nextAmciDate,
+      draftOptions = options
+   ) => JSON.stringify({
+      userName: draftUserName,
+      amciMonthly: draftAmciMonthly,
+      nextAmciDate: draftNextAmciDate,
+      options: draftOptions
+   });
+
+   const syncProfileCaches = (profile: any) => {
+      queryClient.setQueryData(['profile'], profile);
+      queryClient.setQueryData(['finance', 'profile'], {
+         amci_monthly_amount: profile.amci_monthly_amount,
+         next_amci_date: profile.next_amci_date,
+         settings_config: profile.settings_config
+      });
+      localStore.set(LOCAL_KEYS.PROFILE, profile);
+   };
+
+   const showSavedIndicator = () => {
+      setSaved(true);
+      if (savedIndicatorTimeoutRef.current) {
+         window.clearTimeout(savedIndicatorTimeoutRef.current);
+      }
+      savedIndicatorTimeoutRef.current = window.setTimeout(() => setSaved(false), 1800);
+   };
+
+   useEffect(() => {
+      fetchProfile();
+      fetchDataStats();
+   }, []);
+
+    useEffect(() => {
+      return () => {
+         if (saveTimeoutRef.current) {
+            window.clearTimeout(saveTimeoutRef.current);
+         }
+         if (savedIndicatorTimeoutRef.current) {
+            window.clearTimeout(savedIndicatorTimeoutRef.current);
+         }
+         if (reminderNoticeTimeoutRef.current) {
+            window.clearTimeout(reminderNoticeTimeoutRef.current);
+         }
+      };
+   }, []);
+
+   const showReminderNotice = (message: string, tone: 'info' | 'success' | 'error' = 'info') => {
+      setReminderNotice({ tone, message });
+      if (reminderNoticeTimeoutRef.current) {
+         window.clearTimeout(reminderNoticeTimeoutRef.current);
+      }
+      reminderNoticeTimeoutRef.current = window.setTimeout(() => setReminderNotice(null), 3200);
+   };
+
+   const fetchDataStats = async () => {
+      const stats = await offlineRepository.analytics.getCounts();
+      setDataStats(stats);
+   };
+
+   const fetchProfile = async () => {
+      setLoading(true);
+      try {
+         const data = await offlineRepository.profile.getProfile();
+         if (data) {
+            const nextUserName = data.username || '';
+            const nextAmciMonthly = resolveMonthlyBudget(data.amci_monthly_amount);
+            const nextAmciDate = resolveFinanceResetDate({
+               recurrence: data.settings_config?.amci_recurrence || 'monthly',
+               dayOfMonth: data.settings_config?.amci_day_of_month || 10,
+               customDate: data.next_amci_date,
+            });
+            const nextOptions = data.settings_config ? { ...options, ...data.settings_config } : options;
+
+            setUserName(nextUserName);
+            setAmciMonthly(nextAmciMonthly);
+            setNextAmciDate(nextAmciDate);
+            if (data.settings_config) {
+               setOptions(nextOptions);
+            }
+            lastPersistedSnapshotRef.current = buildDraftSnapshot(nextUserName, nextAmciMonthly, nextAmciDate, nextOptions);
+            syncProfileCaches(data);
+         }
+      } catch (err) {
+         console.error(err);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   const persistProfileDraft = async () => {
+      const normalizedBudget = Math.max(0, Number(amciMonthly) || 0);
+      const normalizedResetDay = normalizeResetDay(Number(options.amci_day_of_month) || 1);
+      const nextOptions = {
+         ...options,
+         amci_day_of_month: normalizedResetDay
+      };
+      const normalizedNextResetDate = resolveFinanceResetDate({
+         recurrence: nextOptions.amci_recurrence,
+         dayOfMonth: normalizedResetDay,
+         customDate: nextAmciDate,
+      });
+
+      const profile = await offlineRepository.profile.updateProfile({
+         username: userName,
+         amci_monthly_amount: normalizedBudget,
+         next_amci_date: normalizedNextResetDate,
+         settings_config: nextOptions
+      });
+
+      setAmciMonthly(normalizedBudget);
+      setNextAmciDate(profile.next_amci_date || normalizedNextResetDate);
+      setOptions((previous) => ({ ...previous, ...nextOptions }));
+      syncProfileCaches(profile);
+      lastPersistedSnapshotRef.current = buildDraftSnapshot(
+         profile.username || '',
+         Number(profile.amci_monthly_amount) || 0,
+         profile.next_amci_date || normalizedNextResetDate,
+         profile.settings_config || nextOptions
+      );
+      showSavedIndicator();
+      return profile;
+   };
+
+   const handleSave = async () => {
+      if (saveTimeoutRef.current) {
+         window.clearTimeout(saveTimeoutRef.current);
+         saveTimeoutRef.current = null;
+      }
+      setSaving(true);
+      try {
+         await persistProfileDraft();
+      } catch (err) {
+         await showAlert({
+            title: 'Sauvegarde impossible',
+            message: "Les reglages n'ont pas pu etre sauvegardes. Reessaie dans un instant.",
+            tone: 'danger',
+         });
+      } finally {
+         setSaving(false);
+      }
+   };
+
+   useEffect(() => {
+      if (loading) return;
+
+      const snapshot = buildDraftSnapshot();
+      if (!lastPersistedSnapshotRef.current) {
+         lastPersistedSnapshotRef.current = snapshot;
+         return;
+      }
+
+      if (snapshot === lastPersistedSnapshotRef.current) {
+         return;
+      }
+
+      setSaved(false);
+      setSaving(true);
+
+      if (saveTimeoutRef.current) {
+         window.clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveTimeoutRef.current = window.setTimeout(async () => {
+         try {
+            await persistProfileDraft();
+         } catch (err) {
+            console.error(err);
+         } finally {
+            setSaving(false);
+         }
+      }, 450);
+   }, [userName, amciMonthly, nextAmciDate, options, loading]);
+
+   const updateOption = (key: string, value: any) => {
+      setOptions(prev => ({ ...prev, [key]: value }));
+   };
+
+   const handleRitualReminderToggle = async () => {
+      const nextActive = !options.ritualReminders;
+
+      if (!nextActive) {
+         updateOption('ritualReminders', false);
+         showReminderNotice('Rappels quotidiens desactives.', 'info');
+         return;
+      }
+
+      updateOption('ritualReminders', true);
+      const permission = await requestBrowserNotificationPermission();
+      if (permission === 'granted') {
+         showReminderNotice(`Rappels quotidiens actifs a ${options.morningRitualTime}.`, 'success');
+         return;
+      }
+
+      if (permission === 'denied') {
+         showReminderNotice("Permission de notification refusée. Les rappels resteront visibles dans l’application.", 'info');
+         return;
+      }
+
+      if (permission === 'unsupported') {
+         showReminderNotice("Notifications système indisponibles ici. Les rappels restent dans l’application.", 'info');
+         return;
+      }
+
+      showReminderNotice("Autorise les notifications pour recevoir les rappels en dehors de l’écran.", 'info');
+   };
+
+   const handleBudgetChange = (value: string) => {
+      setAmciMonthly(Math.max(0, Number(value) || 0));
+   };
+
+   const handleResetModeChange = (mode: 'monthly' | 'custom') => {
+      setOptions((prev) => ({ ...prev, amci_recurrence: mode }));
+
+      if (mode === 'monthly') {
+         setNextAmciDate(computeUpcomingMonthlyResetDate(options.amci_day_of_month || 10));
+         return;
+      }
+
+      setNextAmciDate((previous) => normalizeCustomResetDate(previous));
+   };
+
+   const handleResetDayChange = (value: string) => {
+      const nextDay = normalizeResetDay(Number(value) || 1);
+      setOptions((prev) => ({ ...prev, amci_day_of_month: nextDay }));
+
+      if (options.amci_recurrence === 'monthly') {
+         setNextAmciDate(computeUpcomingMonthlyResetDate(nextDay));
+      }
+   };
+
+   const handleCustomResetDateChange = (value: string) => {
+      setNextAmciDate(normalizeCustomResetDate(value));
+   };
+
+   const handleFlushData = async (table: string) => {
+      const confirmed = await showConfirm({
+         title: 'Purger la collection',
+         message: `La table ${table} sera videe definitivement. Cette action est irreversible.`,
+         confirmLabel: 'Purger',
+         tone: 'danger',
+      });
+      if (!confirmed) return;
+      await offlineRepository.settings.clearCollection(table);
+      fetchDataStats();
+   };
+
+   const loadDataCenterRecords = async () => {
+      setDataCenterLoading(true);
+      try {
+         const snapshot = await offlineRepository.settings.getDataCenterSnapshot();
+         const nextRecords: ManagedDataRecord[] = [
+            ...snapshot.missions.map((mission) => ({
+               id: mission.id,
+               collection: 'missions' as const,
+               title: mission.title,
+               category: mission.category || 'Sans categorie',
+               date: mission.planned_date || mission.created_at || '',
+               summary: `${mission.status} • Priorite ${mission.priority}`,
+               raw: mission as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.transactions.map((transaction) => ({
+               id: transaction.id,
+               collection: 'transactions' as const,
+               title: transaction.title,
+               category: transaction.category || transaction.type,
+               date: transaction.date || '',
+               summary: `${transaction.type} • ${transaction.amount} DH`,
+               raw: transaction as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.savings.map((saving) => ({
+               id: saving.id,
+               collection: 'savings' as const,
+               title: saving.reason,
+               category: saving.executed ? 'Executee' : 'Disponible',
+               date: saving.date || saving.execution_date || '',
+               summary: `${saving.amount} DH`,
+               raw: saving as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.subjects.map((subject) => ({
+               id: subject.id,
+               collection: 'subjects' as const,
+               title: subject.name,
+               category: subject.status || subject.semester || 'Cours',
+               date: subject.created_at || '',
+               summary: `${subject.chaptersDone}/${subject.chaptersTotal} chapitres • ${subject.progress}%`,
+               raw: subject as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.words.map((word) => ({
+               id: word.id,
+               collection: 'words' as const,
+               title: word.word,
+               category: word.language || 'Langue',
+               date: word.learned_at || '',
+               summary: word.translation || word.definition || 'Mot enregistre',
+               raw: word as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.workouts.map((workout) => ({
+               id: workout.id,
+               collection: 'workouts' as const,
+               title: workout.routine_name || 'Workout',
+               category: 'Sport',
+               date: workout.date || '',
+               summary: `${workout.duration || 0} min • ${workout.total_volume || 0} volume`,
+               raw: workout as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.metrics.map((metric) => ({
+               id: metric.id,
+               collection: 'metrics' as const,
+               title: `Mesure ${formatRecordDate(metric.date || '')}`,
+               category: 'Corps',
+               date: metric.date || '',
+               summary: `${metric.weight || 0} kg`,
+               raw: metric as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.focusSessions.map((session) => ({
+               id: session.id,
+               collection: 'focus_sessions' as const,
+               title: session.type,
+               category: session.status,
+               date: session.started_at || '',
+               summary: `${Math.round((session.duration_seconds || 0) / 60)} min`,
+               raw: session as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.weeklyGoals.map((goal) => ({
+               id: goal.id,
+               collection: 'weekly_goals' as const,
+               title: goal.category,
+               category: `Semaine ${goal.week_number}`,
+               date: `${goal.year}-01-01`,
+               summary: `${goal.current_count}/${goal.target_count}`,
+               raw: goal as unknown as Record<string, unknown>,
+            })),
+            ...snapshot.protocolLogs.map((log) => ({
+               id: log.id,
+               collection: 'protocol_logs' as const,
+               title: `Protocole ${formatRecordDate(log.date || '')}`,
+               category: 'Rituel',
+               date: log.date || '',
+               summary: `${log.completion_score || 0}% completion`,
+               raw: log as unknown as Record<string, unknown>,
+            })),
+         ].sort((left, right) => right.date.localeCompare(left.date));
+
+         setDataCenterRecords(nextRecords);
+         return nextRecords;
+      } finally {
+         setDataCenterLoading(false);
+      }
+   };
+
+   const handleOpenDataCenter = async () => {
+      setDataCenterOpen(true);
+      await loadDataCenterRecords();
+      window.setTimeout(() => {
+         dataCenterSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+   };
+
+   const handleExportFullBackup = async () => {
+      const records = dataCenterRecords.length > 0 ? dataCenterRecords : (await loadDataCenterRecords()) || [];
+      handleExportJson(records, `backup-complet-${new Date().toISOString().split('T')[0]}.json`);
+   };
+
+   const handleReloadLocal = async () => {
+      await Promise.all([fetchProfile(), fetchDataStats(), loadDataCenterRecords()]);
+      await queryClient.invalidateQueries();
+   };
+
+   const filteredDataRecords = useMemo(() => {
+      return dataCenterRecords.filter((record) => {
+         const matchesCollection = collectionFilter === 'all' || record.collection === collectionFilter;
+         const matchesCategory = categoryFilter === 'all' || record.category === categoryFilter;
+         const matchesPeriodFilter = matchesPeriod(record.date, periodFilter);
+         const normalizedSearch = searchQuery.trim().toLowerCase();
+         const matchesSearch =
+            normalizedSearch.length === 0 ||
+            `${record.title} ${record.category} ${record.summary}`.toLowerCase().includes(normalizedSearch);
+
+         return matchesCollection && matchesCategory && matchesPeriodFilter && matchesSearch;
+      });
+   }, [categoryFilter, collectionFilter, dataCenterRecords, periodFilter, searchQuery]);
+
+   const categoryOptions = useMemo(() => {
+      const categories = new Set(
+         dataCenterRecords
+            .filter((record) => collectionFilter === 'all' || record.collection === collectionFilter)
+            .map((record) => record.category),
+      );
+      return ['all', ...Array.from(categories).sort((left, right) => left.localeCompare(right))];
+   }, [collectionFilter, dataCenterRecords]);
+
+   useEffect(() => {
+      setSelectedRecordIds((previous) => previous.filter((id) => filteredDataRecords.some((record) => record.id === id)));
+   }, [filteredDataRecords]);
+
+   const handleToggleRecordSelection = (id: string) => {
+      setSelectedRecordIds((previous) =>
+         previous.includes(id) ? previous.filter((value) => value !== id) : [...previous, id],
+      );
+   };
+
+   const handleSelectVisibleRecords = () => {
+      setSelectedRecordIds(filteredDataRecords.map((record) => record.id));
+   };
+
+   const handleClearSelection = () => {
+      setSelectedRecordIds([]);
+   };
+
+   const handleExportJson = (records: ManagedDataRecord[], filename: string) => {
+      downloadBlob(filename, JSON.stringify(records.map((record) => record.raw), null, 2), 'application/json');
+   };
+
+   const handleExportPdf = async (records: ManagedDataRecord[]) => {
+      try {
+         await exportHtmlToPdf({
+            fileName: `centre-de-donnees-${new Date().toISOString().split('T')[0]}.pdf`,
+            title: 'Centre de données',
+            html: `
+              <div style="font-family: Arial, sans-serif; color: #0f172a;">
+                <h1 style="font-size: 20px; margin-bottom: 4px;">Centre de données</h1>
+                <p style="margin-top: 0; color: #475569;">${records.length} élément(s) exporté(s)</p>
+                <table style="width:100%; border-collapse:collapse; margin-top:24px;">
+                  <thead>
+                    <tr>
+                      <th style="border-bottom:1px solid #e2e8f0; padding:10px 8px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">Collection</th>
+                      <th style="border-bottom:1px solid #e2e8f0; padding:10px 8px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">Titre</th>
+                      <th style="border-bottom:1px solid #e2e8f0; padding:10px 8px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">Catégorie</th>
+                      <th style="border-bottom:1px solid #e2e8f0; padding:10px 8px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">Date</th>
+                      <th style="border-bottom:1px solid #e2e8f0; padding:10px 8px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:#64748b;">Résumé</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${records.map((record) => `
+                      <tr>
+                        <td style="border-bottom:1px solid #e2e8f0; padding:10px 8px; font-size:12px;">${record.collection}</td>
+                        <td style="border-bottom:1px solid #e2e8f0; padding:10px 8px; font-size:12px;">${record.title}</td>
+                        <td style="border-bottom:1px solid #e2e8f0; padding:10px 8px; font-size:12px;">${record.category}</td>
+                        <td style="border-bottom:1px solid #e2e8f0; padding:10px 8px; font-size:12px;">${formatRecordDate(record.date)}</td>
+                        <td style="border-bottom:1px solid #e2e8f0; padding:10px 8px; font-size:12px;">${record.summary}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `,
+         });
+      } catch (error) {
+         void showAlert({
+            title: 'Export PDF indisponible',
+            message: "Impossible de générer le PDF pour le moment.",
+            tone: 'danger',
+         });
+      }
+   };
+
+   const handleDeleteRecords = async (records: ManagedDataRecord[]) => {
+      if (records.length === 0) return;
+      const confirmed = await showConfirm({
+         title: 'Supprimer la sélection',
+         message: `Supprimer ${records.length} élément(s) sélectionné(s) ?`,
+         confirmLabel: 'Supprimer',
+         tone: 'danger',
+      });
+      if (!confirmed) return;
+
+      const grouped = records
+         .reduce<Record<string, string[]>>((acc, record) => {
+            acc[record.collection] = [...(acc[record.collection] || []), record.id];
+            return acc;
+         }, {});
+
+      await Promise.all(
+         Object.entries(grouped).map(([collection, ids]) => offlineRepository.settings.deleteRecords(collection, ids)),
+      );
+
+      setSelectedRecordIds((previous) => previous.filter((id) => !records.some((record) => record.id === id)));
+      await Promise.all([fetchDataStats(), loadDataCenterRecords()]);
+      await queryClient.invalidateQueries();
+   };
+
+   const handleDeleteSelectedRecords = async () => {
+      await handleDeleteRecords(filteredDataRecords.filter((record) => selectedRecordIds.includes(record.id)));
+   };
+
+   if (loading) {
+      return (
+         <div className="h-screen flex items-center justify-center">
+            <Loader2 className="animate-spin text-amber-500" size={40} />
+         </div>
+      );
+   }
+
+   const Toggle = ({ active, onClick }: { active: boolean, onClick: () => void }) => (
+      <button
+         onClick={onClick}
+         className={`w-12 h-6 rounded-full p-1 transition-all ${active ? 'bg-blue-500' : 'bg-slate-800'}`}
+      >
+         <div className={`w-4 h-4 bg-white rounded-full transition-all ${active ? 'translate-x-6' : 'translate-x-0'}`} />
+      </button>
+   );
+
+   return (
+      <div className="space-y-12 pb-32 animate-in fade-in duration-700">
+         {/* Header */}
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-10">
+            <div>
+               <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500"><Settings2 size={16} /></div>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] font-outfit">PRÉFÉRENCES & SYSTÈME</span>
+               </div>
+               <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">MES <span className="text-amber-500 font-outfit">RÉGLAGES</span></h2>
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            {/* CENTRE DE DONNÉES */}
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40">
+               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+                  <Database size={22} className="text-rose-500" /> Gestion des Données
+               </h3>
+               <div className="grid grid-cols-2 gap-4 mb-8">
+                  {[
+                     { label: 'Missions', count: dataStats.missions, icon: CheckCircle2, color: 'text-emerald-500' },
+                     { label: 'Transactions', count: dataStats.transactions, icon: Banknote, color: 'text-amber-500' },
+                     { label: 'Concepts', count: dataStats.words, icon: Brain, color: 'text-blue-500' },
+                     { label: 'Cours', count: dataStats.subjects, icon: BookOpen, color: 'text-rose-500' },
+                  ].map(stat => (
+                     <div key={stat.label} className="p-4 bg-slate-950 rounded-2xl border border-white/5 flex flex-col justify-center items-center">
+                        <stat.icon size={16} className={`mb-2 ${stat.color}`} />
+                        <span className="text-2xl font-black text-white">{stat.count}</span>
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
+                     </div>
+                  ))}
+               </div>
+               <div className="space-y-4">
+                  <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/50 p-4">
+                     <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">Page dediee</p>
+                     <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                        Ouvre le Data Center pour filtrer, exporter ou supprimer tes donnees.
+                     </p>
+                     <button
+                        onClick={() => onNavigate('DATA_CENTER')}
+                        className="mt-4 w-full rounded-2xl bg-white px-4 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-slate-950 transition-all hover:scale-[1.01]"
+                     >
+                        Ouvrir la page data center
+                     </button>
+                  </div>
+                  <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/50 p-4">
+                     <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
+                           <BarChart3 size={16} />
+                        </div>
+                        <div>
+                           <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">Analyses</p>
+                           <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                              Ouvre les bilans et graphiques avances depuis les reglages.
+                           </p>
+                        </div>
+                     </div>
+                     <button
+                        onClick={() => onNavigate('REPORTS')}
+                        className="mt-4 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-amber-300 transition-all hover:bg-amber-500 hover:text-slate-950"
+                     >
+                        Ouvrir analyses
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            {/* NOTIFICATIONS */}
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-1">
+               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+                  <Radio size={22} className="text-rose-500" /> Notifications & Rappels
+               </h3>
+                  <div className="space-y-4">
+                     <div className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                        <div className="pr-4">
+                           <span className="text-[10px] font-black text-slate-300 uppercase">Rappels Quotidiens</span>
+                           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                              Declenche une notification locale chaque jour a l&apos;heure du rituel matin.
+                           </p>
+                        </div>
+                        <Toggle active={options.ritualReminders} onClick={handleRitualReminderToggle} />
+                     </div>
+                     <div className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                        <div className="pr-4">
+                           <span className="text-[10px] font-black text-slate-300 uppercase">Journal de Bord</span>
+                           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                              Affiche le bloc journal sur le dashboard et active le rappel du soir.
+                           </p>
+                        </div>
+                        <Toggle active={options.terminalLogging} onClick={() => updateOption('terminalLogging', !options.terminalLogging)} />
+                     </div>
+                  <div className="space-y-2 mt-4">
+                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Heure Rituel Matin</label>
+                     <input type="time" value={options.morningRitualTime} onChange={e => updateOption('morningRitualTime', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-xl p-4 text-xs text-white" />
+                  </div>
+                  <div className="rounded-xl border border-white/5 bg-slate-950/40 px-4 py-3">
+                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Etat actuel</p>
+                     <div className="mt-2 space-y-1.5 text-[11px] text-slate-400">
+                        <p>Rappel matin : {options.ritualReminders ? `actif a ${options.morningRitualTime}` : 'desactive'}</p>
+                        <p>Journal de bord : {options.terminalLogging ? 'visible sur le dashboard' : 'masque sur le dashboard'}</p>
+                     </div>
+                  </div>
+                  {reminderNotice ? (
+                     <div className={`rounded-xl border px-4 py-3 text-[11px] leading-relaxed ${
+                        reminderNotice.tone === 'success'
+                           ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                           : reminderNotice.tone === 'error'
+                              ? 'border-rose-500/20 bg-rose-500/10 text-rose-300'
+                              : 'border-white/8 bg-white/[0.03] text-slate-300'
+                     }`}>
+                        {reminderNotice.message}
+                     </div>
+                  ) : null}
+               </div>
+            </div>
+
+            {/* PARAMÈTRES SYSTÈME */}
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-2">
+               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+                  <Server size={22} className="text-indigo-500" /> Paramètres Système
+               </h3>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Gestion des Objectifs</h4>
+                     {[
+                        { label: 'Mode Concentration (Bloquant)', key: 'strictFocusMode' },
+                        { label: 'Auto-Catégorisation', key: 'autoCategorization' },
+                     ].map(opt => (
+                        <div key={opt.key} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                           <span className="text-[10px] font-black text-slate-300 uppercase">{opt.label}</span>
+                           <Toggle active={(options as any)[opt.key]} onClick={() => updateOption(opt.key, !(options as any)[opt.key])} />
+                        </div>
+                     ))}
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-slate-600 uppercase italic">Cycle Objectif (Min)</label>
+                           <input type="number" value={options.defaultMissionDuration} onChange={e => updateOption('defaultMissionDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                        </div>
+                        <div className="space-y-1">
+                           <label className="text-[8px] font-black text-slate-600 uppercase italic">Pause (Min)</label>
+                           <input type="number" value={options.breakDuration} onChange={e => updateOption('breakDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Gestion du Budget</h4>
+
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Budget Mensuel (DH)</label>
+                        <input
+                           type="number"
+                           value={amciMonthly}
+                           onChange={(e) => handleBudgetChange(e.target.value)}
+                           className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-emerald-500 font-black outline-none focus:border-emerald-500"
+                        />
+                     </div>
+
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Mode de Reset</label>
+                        <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                           {[
+                              { id: 'monthly', label: 'Cycle Mensuel' },
+                              { id: 'custom', label: 'Date Fixe' }
+                           ].map(mode => (
+                              <button
+                                 key={mode.id}
+                                 onClick={() => handleResetModeChange(mode.id as 'monthly' | 'custom')}
+                                 className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${options.amci_recurrence === mode.id ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-slate-500 hover:text-white'
+                                    }`}
+                              >
+                                 {mode.label}
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+
+                     {options.amci_recurrence === 'monthly' ? (
+                        <div className="space-y-2 animate-in slide-in-from-top-2">
+                           <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Jour du Reset (1-31)</label>
+                           <div className="relative">
+                              <input
+                                 type="number"
+                                 min="1" max="31"
+                                 value={options.amci_day_of_month || 10}
+                                 onChange={(e) => handleResetDayChange(e.target.value)}
+                                 className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-emerald-500"
+                              />
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500 uppercase">Du Mois</div>
+                           </div>
+                        </div>
+                     ) : (
+                        <div className="space-y-2 animate-in slide-in-from-top-2">
+                           <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Prochain Versement</label>
+                           <input
+                              type="date"
+                              value={nextAmciDate}
+                              min={normalizeCustomResetDate(new Date().toISOString().split('T')[0])}
+                              onChange={(e) => handleCustomResetDateChange(e.target.value)}
+                              className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-emerald-500 [color-scheme:dark]"
+                           />
+                        </div>
+                     )}
+                  </div>
+               </div>
+            </div>
+
+         </div>
+
+         <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-20 pt-4">
+            <div className="mx-auto max-w-xl rounded-[2rem] border border-white/5 bg-[#020617]/88 p-3 shadow-[0_24px_60px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+               <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className={`flex w-full items-center justify-center gap-4 rounded-[1.5rem] px-10 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all ${saved ? 'bg-emerald-500 text-slate-950 shadow-[0_20px_50px_rgba(16,185,129,0.28)]' : 'bg-white text-slate-950 hover:scale-[1.01] active:scale-[0.99]'}`}
+               >
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : saved ? <CheckCircle2 size={18} /> : <Save size={18} />}
+                  {saved ? 'ENREGISTRÉ' : 'ENREGISTRER'}
+               </button>
+            </div>
+         </div>
+
+      </div>
+   );
+};
+
+export default Settings;

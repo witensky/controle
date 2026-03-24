@@ -1,0 +1,9 @@
+{
+  "name": "J&B - Command Center v3.2",
+  "description": "Système de contrôle disciplinaire ultra-performant avec persistance Supabase et intelligence décisionnelle.",
+  "version": "3.2.0",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
