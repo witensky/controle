@@ -257,27 +257,27 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
                     </div>
                 </div>
 
-                <div className="lg:col-span-5 glass rounded-[2rem] p-6 border-white/5 bg-[#0b1121]/60 flex flex-col h-[300px]">
+                <div className="lg:col-span-5 glass rounded-[2rem] p-6 border border-[color:var(--border)] bg-[color:var(--card)] flex flex-col h-[300px] shadow-card dark:border-white/5 dark:bg-[#0b1121]/60">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-2">
                             <LayoutGrid className="text-amber-500" size={16} />
-                            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] italic font-outfit">Objectifs prioritaires</h3>
+                            <h3 className="text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.2em] italic font-outfit dark:text-white">Objectifs prioritaires</h3>
                         </div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                        <span className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-widest">
                             {completionRate}% Accomplis
                         </span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                         {pendingMissions.slice(0, 4).map((mission, idx) => (
-                            <div key={mission.id || idx} className="flex items-center justify-between p-4 bg-slate-950/40 border border-white/5 rounded-2xl group hover:border-amber-500/20 transition-all">
-                                <p className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors truncate max-w-[150px]">
+                            <div key={mission.id || idx} className="flex items-center justify-between p-4 rounded-2xl group transition-all border border-[color:var(--border)] bg-[color:var(--surface-2)] hover:border-amber-500/20 dark:border-white/5 dark:bg-slate-950/40">
+                                <p className="text-xs font-bold text-[color:var(--text-primary)] transition-colors truncate max-w-[150px] dark:text-slate-300 dark:group-hover:text-white">
                                     {mission.title}
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => onNavigate('DISCIPLINE')}
-                                    className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/10 text-slate-600 transition-all hover:border-white/20 hover:text-white"
+                                    className="flex h-6 w-6 items-center justify-center rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:text-slate-600 dark:hover:border-white/20 dark:hover:text-white"
                                 >
                                     <Plus size={12} />
                                 </button>
@@ -286,20 +286,20 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
 
                         {pendingMissions.length === 0 ? (
                             <div className="flex h-full min-h-[190px] items-center">
-                                <div className="w-full rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/35 px-5 py-6 text-center">
-                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+                                <div className="w-full rounded-[1.5rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-5 py-6 text-center shadow-card dark:border-white/10 dark:bg-slate-950/35">
+                                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                         <Target size={18} />
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.26em] text-emerald-300">
-                                        Tout est a jour
+                                    <p className="text-[10px] font-black uppercase tracking-[0.26em] text-emerald-600 dark:text-emerald-300">
+                                        Tout est à jour
                                     </p>
-                                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                                    <p className="mt-3 text-sm leading-6 text-[color:var(--text-muted)] dark:text-slate-500">
                                         Aucun objectif prioritaire en attente pour le moment.
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => onNavigate('DISCIPLINE')}
-                                        className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200 transition-all hover:border-amber-500/25 hover:bg-amber-500/10 hover:text-amber-200"
+                                        className="mt-5 inline-flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--text-primary)] transition-all hover:border-amber-500/25 hover:bg-amber-500/10 hover:text-amber-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:text-amber-200"
                                     >
                                         Ajouter un objectif
                                         <Plus size={12} />

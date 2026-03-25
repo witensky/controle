@@ -243,7 +243,8 @@ const DailyPlanner: React.FC<DailyPlannerProps> = ({
     }
 
     return (
-        <div className="glass relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-blue-500/15 bg-blue-500/[0.03] p-5 sm:p-6">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card sm:p-6">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent dark:from-blue-500/12" />
             <div className="absolute right-0 top-0 p-5 opacity-[0.04] text-blue-500 sm:p-6">
                 <Sparkles size={84} />
             </div>
@@ -251,17 +252,17 @@ const DailyPlanner: React.FC<DailyPlannerProps> = ({
             <div className="relative z-10">
                 <div className="mb-5 flex items-start justify-between gap-3">
                     <div>
-                        <h3 className="mb-1 flex items-center gap-3 text-lg font-black uppercase italic text-white font-outfit">
+                        <h3 className="mb-1 flex items-center gap-3 text-lg font-black uppercase italic text-[color:var(--text-primary)] font-outfit">
                             <Sparkles size={18} className="text-blue-400" />
                             Suggestions du moment
                         </h3>
-                        <p className="text-[10px] font-bold uppercase text-slate-400">Base sur votre rythme habituel</p>
+                        <p className="text-[10px] font-bold uppercase text-[color:var(--text-muted)]">Basé sur votre rythme habituel</p>
                     </div>
                     <button
                         type="button"
                         onClick={handleDismiss}
                         aria-label="Fermer les suggestions"
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-slate-950/60 text-slate-500 transition-all hover:border-white/15 hover:text-white"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)]"
                     >
                         <X size={14} />
                     </button>
@@ -273,19 +274,19 @@ const DailyPlanner: React.FC<DailyPlannerProps> = ({
                             key={slot.id}
                             type="button"
                             onClick={() => handleSuggestionClick(slot)}
-                            className="group w-full rounded-[1.5rem] border border-white/5 bg-slate-950/78 p-4 text-left transition-all hover:border-blue-500/25 hover:bg-slate-950 active:scale-[0.99]"
+                            className="group w-full rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-left transition-all hover:border-blue-500/25 hover:bg-[color:var(--surface)] active:scale-[0.99]"
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex items-center gap-3">
-                                    <div className={`shrink-0 rounded-xl bg-slate-900 p-2.5 ${slot.color}`}>
+                                    <div className={`shrink-0 rounded-xl bg-[color:var(--muted)] p-2.5 ${slot.color}`}>
                                         <slot.icon size={16} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[8px] font-black uppercase tracking-[0.22em] text-slate-500">{slot.category}</p>
-                                        <h4 className="mt-1 text-[13px] font-black uppercase leading-tight text-white transition-colors group-hover:text-blue-300">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">{slot.category}</p>
+                                        <h4 className="mt-1 text-[13px] font-black uppercase leading-tight text-[color:var(--text-primary)] transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-300">
                                             {slot.title}
                                         </h4>
-                                        <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.18em] text-slate-500">{slot.type}</span>
+                                        <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{slot.type}</span>
                                     </div>
                                 </div>
                                 <div className="shrink-0 rounded-xl bg-blue-500/10 px-3 py-2">

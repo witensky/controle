@@ -57,7 +57,7 @@ export const SparklineChart: React.FC<{
       {showDots
         ? points.split(' ').map((point) => {
             const [cx, cy] = point.split(',');
-            return <circle key={point} cx={cx} cy={cy} r="4" fill={stroke} stroke="#0b1121" strokeWidth="2" />;
+            return <circle key={point} cx={cx} cy={cy} r="4" fill={stroke} stroke="rgba(15,23,42,0.22)" strokeWidth="2" />;
           })
         : null}
     </svg>
@@ -144,7 +144,7 @@ export const DualSparklineChart: React.FC<{
                 r={radius}
                 fill={line.color}
                 fillOpacity={isLast ? 1 : 0.65}
-                stroke="#020617"
+                stroke="rgba(15,23,42,0.24)"
                 strokeWidth={isLast ? 2.5 : 1.5}
               />
             );
@@ -167,13 +167,13 @@ export const VerticalBarsChart: React.FC<{
         const height = `${clamp((Number(item.value || 0) / maxValue) * 100, 6, 100)}%`;
         return (
           <div key={`${item.label}-${index}`} className="flex h-full flex-1 flex-col justify-end gap-2">
-            <div className="flex-1 rounded-t-2xl bg-slate-900/60 relative overflow-hidden">
+            <div className="flex-1 rounded-t-2xl bg-[color:var(--surface-2)] relative overflow-hidden border border-[color:var(--border)]">
               <div
                 className="absolute inset-x-0 bottom-0 rounded-t-2xl"
                 style={{ height, background: colors[index % colors.length] }}
               />
             </div>
-            <span className="truncate text-center text-[8px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
+            <span className="truncate text-center text-[8px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{item.label}</span>
           </div>
         );
       })}
@@ -192,10 +192,10 @@ export const HorizontalBarsChart: React.FC<{
       {data.map((item, index) => (
         <div key={`${item.label}-${index}`} className="space-y-1.5">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
-            <span className="text-[10px] font-black italic text-white">{Number(item.value || 0).toLocaleString()}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{item.label}</span>
+            <span className="text-[10px] font-black italic text-[color:var(--text-primary)]">{Number(item.value || 0).toLocaleString()}</span>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-slate-900/70">
+          <div className="h-3 overflow-hidden rounded-full bg-[color:var(--muted)]">
             <div
               className="h-full rounded-full"
               style={{
@@ -224,7 +224,7 @@ export const StackedBarsChart: React.FC<{
     <div className="relative flex h-full items-end justify-between gap-2 sm:gap-3">
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-7">
         {[0.25, 0.5, 0.75].map((stop) => (
-          <div key={stop} className="border-t border-dashed border-white/6" />
+          <div key={stop} className="border-t border-dashed border-[color:var(--border)]" />
         ))}
       </div>
       {data.map((row, rowIndex) => {
@@ -237,12 +237,12 @@ export const StackedBarsChart: React.FC<{
           <div key={`${row[labelKey]}-${rowIndex}`} className="relative flex h-full flex-1 flex-col justify-end gap-2">
             <div className="flex min-h-[20px] items-end justify-center">
               {total > 0 ? (
-                <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] ${isPeak ? 'bg-blue-500/18 text-blue-200' : 'text-slate-500'}`}>
+                <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.22em] ${isPeak ? 'bg-blue-500/18 text-blue-600 dark:text-blue-200' : 'text-[color:var(--text-muted)]'}`}>
                   {total.toLocaleString()}
                 </span>
               ) : null}
             </div>
-            <div className={`relative flex-1 overflow-hidden rounded-[1.35rem] border ${isPeak ? 'border-blue-400/30 bg-slate-900/80 shadow-[0_0_30px_rgba(59,130,246,0.12)]' : 'border-white/5 bg-slate-900/55'}`}>
+            <div className={`relative flex-1 overflow-hidden rounded-[1.35rem] border ${isPeak ? 'border-blue-400/30 bg-[color:var(--surface-2)] shadow-[0_0_30px_rgba(59,130,246,0.12)]' : 'border-[color:var(--border)] bg-[color:var(--surface-2)]'}`}>
               <div className="absolute inset-x-2 top-3 h-8 rounded-full bg-white/[0.03] blur-xl" />
               <div className="absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-[1.15rem]" style={{ height: `${columnHeight}%` }}>
                 {valueKeys.map((key, keyIndex) => {
@@ -268,7 +268,7 @@ export const StackedBarsChart: React.FC<{
                 <div className="pointer-events-none absolute inset-x-[22%] top-5 h-10 rounded-full bg-blue-300/20 blur-2xl" />
               ) : null}
             </div>
-            <span className={`truncate text-center text-[8px] font-black uppercase tracking-widest ${isLatest ? 'text-blue-300' : 'text-slate-500'}`}>
+            <span className={`truncate text-center text-[8px] font-black uppercase tracking-widest ${isLatest ? 'text-blue-600 dark:text-blue-300' : 'text-[color:var(--text-muted)]'}`}>
               {String(row[labelKey] || '')}
             </span>
           </div>

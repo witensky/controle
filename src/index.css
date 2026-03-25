@@ -1,5 +1,96 @@
 @import "tailwindcss";
 
+/* Theme tokens (light by default, dark via .dark class)
+   Keep these semantic so components don't hardcode colors. */
+:root {
+  /* Core surfaces */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --card: rgba(255, 255, 255, 0.92);
+  --muted: rgba(15, 23, 42, 0.06);
+  --overlay: rgba(15, 23, 42, 0.55);
+
+  /* Typography */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-on-accent: #ffffff;
+
+  /* Borders & shadows */
+  --border: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.14);
+  --shadow: rgba(15, 23, 42, 0.08);
+  --shadow-strong: rgba(15, 23, 42, 0.16);
+
+  /* Accents */
+  --accent: #f59e0b;
+  --success: #10b981;
+  --danger: #f43f5e;
+
+  /* Back-compat aliases (used across the app already) */
+  --app-bg: var(--bg);
+  --app-fg: var(--text-primary);
+  --scroll-track: #e2e8f0;
+  --scroll-thumb: #94a3b8;
+  --scroll-thumb-hover: #64748b;
+  --glass-bg: var(--card);
+  --glass-border: var(--border);
+  --panel-bg: rgba(255, 255, 255, 0.96);
+  --panel-border: var(--border);
+
+  /* Charts */
+  --chart-grid: rgba(15, 23, 42, 0.08);
+  --chart-cursor: rgba(15, 23, 42, 0.14);
+  --chart-tooltip-shadow: 0 24px 80px rgba(15, 23, 42, 0.14);
+}
+
+html.dark {
+  /* Core surfaces */
+  --bg: #020617;
+  --surface: #071226;
+  --surface-2: #0b1121;
+  --card: rgba(2, 6, 23, 0.66);
+  --muted: rgba(255, 255, 255, 0.06);
+  --overlay: rgba(2, 6, 23, 0.78);
+
+  /* Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-on-accent: #ffffff;
+
+  /* Borders & shadows */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --shadow: rgba(2, 6, 23, 0.55);
+  --shadow-strong: rgba(2, 6, 23, 0.7);
+
+  /* Back-compat aliases */
+  --app-bg: var(--bg);
+  --app-fg: var(--text-primary);
+  --scroll-track: #020617;
+  --scroll-thumb: #1e293b;
+  --scroll-thumb-hover: #334155;
+  --glass-bg: var(--card);
+  --glass-border: var(--border);
+  --panel-bg: rgba(2, 6, 23, 0.72);
+  --panel-border: var(--border);
+
+  /* Charts */
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-cursor: rgba(255, 255, 255, 0.12);
+  --chart-tooltip-shadow: 0 24px 80px rgba(2, 6, 23, 0.6);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 html, body {
   overflow-x: clip;
   width: 100%;
@@ -14,6 +105,113 @@ html, body {
 
 body {
   line-height: 1.6;
+  background: var(--app-bg);
+  color: var(--app-fg);
+}
+
+@layer utilities {
+  /* Semantic helpers (prefer these over hardcoded Tailwind colors) */
+  .bg-app { background-color: var(--bg); }
+  .bg-surface { background-color: var(--surface); }
+  .bg-surface-2 { background-color: var(--surface-2); }
+  .bg-card { background-color: var(--card); }
+  .bg-muted { background-color: var(--muted); }
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted { color: var(--text-muted); }
+  .border-app { border-color: var(--border); }
+  .border-app-strong { border-color: var(--border-strong); }
+
+  .shadow-card {
+    box-shadow: 0 18px 60px var(--shadow);
+  }
+
+  .ui-field {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+
+  .ui-field::placeholder {
+    color: var(--text-muted);
+    opacity: 0.78;
+  }
+}
+
+/* Light-mode shims for legacy dark-only utilities.
+   These reduce the "mixed theme" look while we migrate components to semantic tokens. */
+html:not(.dark) .border-white\/5 { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/6 { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/8 { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/10 { border-color: var(--border-strong) !important; }
+html:not(.dark) .border-white\/15 { border-color: var(--border-strong) !important; }
+
+/* Light-mode shims for common legacy "dark UI" text colors inside glass surfaces.
+   Limit scope to .glass/.glass-panel so accent buttons (e.g. bg-amber-500 text-white) remain unchanged. */
+html:not(.dark) .glass .text-white,
+html:not(.dark) .glass-panel .text-white {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .glass .text-white\/80,
+html:not(.dark) .glass-panel .text-white\/80,
+html:not(.dark) .glass .text-white\/60,
+html:not(.dark) .glass-panel .text-white\/60 {
+  color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .glass .text-slate-300,
+html:not(.dark) .glass-panel .text-slate-300,
+html:not(.dark) .glass .text-slate-200,
+html:not(.dark) .glass-panel .text-slate-200 {
+  color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .glass .text-slate-400,
+html:not(.dark) .glass-panel .text-slate-400,
+html:not(.dark) .glass .text-slate-500,
+html:not(.dark) .glass-panel .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Light-mode shims for common legacy dark surface backgrounds used inside glass cards/modals. */
+html:not(.dark) .glass .bg-slate-950,
+html:not(.dark) .glass-panel .bg-slate-950,
+html:not(.dark) .glass .bg-slate-900,
+html:not(.dark) .glass-panel .bg-slate-900 {
+  background-color: var(--surface-2) !important;
+}
+
+html:not(.dark) .glass .bg-slate-950\/30,
+html:not(.dark) .glass-panel .bg-slate-950\/30,
+html:not(.dark) .glass .bg-slate-950\/35,
+html:not(.dark) .glass-panel .bg-slate-950\/35,
+html:not(.dark) .glass .bg-slate-950\/40,
+html:not(.dark) .glass-panel .bg-slate-950\/40,
+html:not(.dark) .glass .bg-slate-950\/45,
+html:not(.dark) .glass-panel .bg-slate-950\/45,
+html:not(.dark) .glass .bg-slate-950\/50,
+html:not(.dark) .glass-panel .bg-slate-950\/50,
+html:not(.dark) .glass .bg-slate-950\/65,
+html:not(.dark) .glass-panel .bg-slate-950\/65,
+html:not(.dark) .glass .bg-slate-950\/70,
+html:not(.dark) .glass-panel .bg-slate-950\/70,
+html:not(.dark) .glass .bg-slate-900\/50,
+html:not(.dark) .glass-panel .bg-slate-900\/50,
+html:not(.dark) .glass .bg-slate-900\/80,
+html:not(.dark) .glass-panel .bg-slate-900\/80,
+html:not(.dark) .glass .bg-slate-900\/92,
+html:not(.dark) .glass-panel .bg-slate-900\/92 {
+  background-color: var(--surface-2) !important;
+}
+
+html:not(.dark) .glass .bg-white\/5,
+html:not(.dark) .glass-panel .bg-white\/5,
+html:not(.dark) .glass .bg-white\/10,
+html:not(.dark) .glass-panel .bg-white\/10,
+html:not(.dark) .glass .bg-white\/8,
+html:not(.dark) .glass-panel .bg-white\/8 {
+  background-color: var(--muted) !important;
 }
 
 /* Scrollbar Customization */
@@ -23,31 +221,39 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #020617;
+    background: var(--scroll-track);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: var(--scroll-thumb);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: var(--scroll-thumb-hover);
 }
 
 /* Glassmorphism Utilities */
 .glass {
-    background: rgba(15, 23, 42, 0.4);
+    background: var(--glass-bg) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
 }
 
 .glass-panel {
-    background: rgba(2, 6, 23, 0.7);
+    background: var(--panel-bg) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
+}
+
+html.theme-ready body,
+html.theme-ready .glass,
+html.theme-ready .glass-panel,
+html.theme-ready .app-navigation,
+html.theme-ready .app-bottom-nav {
+  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
 }
 
 /* Animations */
@@ -86,11 +292,11 @@ body {
 /* Chart Overrides */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-    stroke: rgba(255, 255, 255, 0.05);
+    stroke: var(--chart-grid);
 }
 
 .recharts-tooltip-cursor {
-    stroke: rgba(255, 255, 255, 0.1);
+    stroke: var(--chart-cursor);
 }
 
 .recharts-default-tooltip {
@@ -104,7 +310,7 @@ body {
 }
 
 .chart-tooltip {
-    box-shadow: 0 24px 80px rgba(2, 6, 23, 0.55);
+    box-shadow: var(--chart-tooltip-shadow);
 }
 
 /* Hide Scrollbar Utility */

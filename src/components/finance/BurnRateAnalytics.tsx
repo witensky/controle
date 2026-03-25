@@ -118,7 +118,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
       bodyClassName="space-y-6"
     >
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(300px,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-[1.9rem] bg-gradient-to-br from-slate-900 via-[#0b1121] to-[#0b1121] p-5 sm:p-6">
+        <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 shadow-card dark:border-white/5 dark:bg-gradient-to-br dark:from-slate-900 dark:via-[#0b1121] dark:to-[#0b1121] sm:p-6">
           <div className="mb-6 flex flex-col items-center text-center">
             <div className="mb-5 h-48 w-48 sm:h-56 sm:w-56">
               <RadialProgressChart
@@ -132,13 +132,13 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[1.25rem] border border-white/5 bg-slate-950/50 p-4 text-center">
-              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Rythme ideal</p>
-              <p className="text-xl font-black text-blue-500">{idealBurnRate.toFixed(1)}%</p>
+            <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-center dark:border-white/5 dark:bg-slate-950/50">
+              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Rythme idéal</p>
+              <p className="text-xl font-black text-blue-600 dark:text-blue-500">{idealBurnRate.toFixed(1)}%</p>
             </div>
-            <div className="rounded-[1.25rem] border border-white/5 bg-slate-950/50 p-4 text-center">
-              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Deviation</p>
-              <p className={`text-xl font-black ${deviation > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+            <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-center dark:border-white/5 dark:bg-slate-950/50">
+              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Déviation</p>
+              <p className={`text-xl font-black ${deviation > 0 ? 'text-rose-600 dark:text-rose-500' : 'text-emerald-600 dark:text-emerald-500'}`}>
                 {deviation > 0 ? '+' : ''}
                 {deviation.toFixed(1)}%
               </p>
@@ -147,8 +147,8 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-[1.9rem] border border-white/5 bg-slate-950/25 p-5 sm:p-6">
-            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Consommation par categorie</h3>
+          <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 shadow-card dark:border-white/5 dark:bg-slate-950/25 sm:p-6">
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">Consommation par catégorie</h3>
             <PieChartComponent
               data={expensesByCategory}
               dataKey="value"
@@ -163,7 +163,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
           </div>
 
           {expensesByCategory.length > 0 ? (
-            <div className="rounded-[1.75rem] border border-white/5 bg-slate-900/35 p-5">
+            <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 dark:border-white/5 dark:bg-slate-900/35">
               <div className="space-y-3">
                 {expensesByCategory.map((entry, index) => (
                   <div key={entry.name} className="flex items-center justify-between gap-3">

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppDialog } from '../components/common/AppDialogProvider';
+import ThemeToggle from '../components/common/ThemeToggle';
 import { offlineRepository } from '../data/offlineRepository';
 import { localStore, LOCAL_KEYS } from '../lib/localStorage';
 import { requestBrowserNotificationPermission } from '../lib/browserNotifications';
@@ -686,30 +687,39 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
    const Toggle = ({ active, onClick }: { active: boolean, onClick: () => void }) => (
       <button
          onClick={onClick}
-         className={`w-12 h-6 rounded-full p-1 transition-all ${active ? 'bg-blue-500' : 'bg-slate-800'}`}
+         className={`w-12 h-6 rounded-full border p-1 transition-all ${
+            active ? 'bg-blue-500 border-blue-500/40' : 'bg-[color:var(--muted)] border-[color:var(--border)]'
+         }`}
       >
-         <div className={`w-4 h-4 bg-white rounded-full transition-all ${active ? 'translate-x-6' : 'translate-x-0'}`} />
+         <div
+            className={`h-4 w-4 rounded-full bg-[color:var(--surface)] shadow-sm transition-all ${
+               active ? 'translate-x-6' : 'translate-x-0'
+            }`}
+         />
       </button>
    );
 
    return (
       <div className="space-y-12 pb-32 animate-in fade-in duration-700">
          {/* Header */}
-         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-10">
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[color:var(--border)] pb-10">
             <div>
                <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500"><Settings2 size={16} /></div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] font-outfit">PRÉFÉRENCES & SYSTÈME</span>
+                  <span className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em] font-outfit">PRÉFÉRENCES & SYSTÈME</span>
                </div>
-               <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">MES <span className="text-amber-500 font-outfit">RÉGLAGES</span></h2>
+               <h2 className="text-4xl md:text-5xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase italic">MES <span className="text-amber-500 font-outfit">RÉGLAGES</span></h2>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+               <ThemeToggle />
             </div>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             {/* CENTRE DE DONNÉES */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40">
-               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card">
+               <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
                   <Database size={22} className="text-rose-500" /> Gestion des Données
                </h3>
                <div className="grid grid-cols-2 gap-4 mb-8">
@@ -719,18 +729,18 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                      { label: 'Concepts', count: dataStats.words, icon: Brain, color: 'text-blue-500' },
                      { label: 'Cours', count: dataStats.subjects, icon: BookOpen, color: 'text-rose-500' },
                   ].map(stat => (
-                     <div key={stat.label} className="p-4 bg-slate-950 rounded-2xl border border-white/5 flex flex-col justify-center items-center">
+                     <div key={stat.label} className="p-4 bg-[color:var(--surface)] rounded-2xl border border-[color:var(--border)] flex flex-col justify-center items-center">
                         <stat.icon size={16} className={`mb-2 ${stat.color}`} />
-                        <span className="text-2xl font-black text-white">{stat.count}</span>
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
+                        <span className="text-2xl font-black text-[color:var(--text-primary)]">{stat.count}</span>
+                        <span className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest">{stat.label}</span>
                      </div>
                   ))}
                </div>
                <div className="space-y-4">
-                  <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/50 p-4">
-                     <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">Page dediee</p>
-                     <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                        Ouvre le Data Center pour filtrer, exporter ou supprimer tes donnees.
+                  <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+                     <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-secondary)]">Page dédiée</p>
+                     <p className="mt-3 text-sm leading-relaxed text-[color:var(--text-muted)]">
+                        Ouvre le Data Center pour filtrer, exporter ou supprimer tes données.
                      </p>
                      <button
                         onClick={() => onNavigate('DATA_CENTER')}
@@ -739,15 +749,15 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                         Ouvrir la page data center
                      </button>
                   </div>
-                  <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/50 p-4">
+                  <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
                      <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
                            <BarChart3 size={16} />
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">Analyses</p>
-                           <p className="mt-1 text-sm leading-relaxed text-slate-500">
-                              Ouvre les bilans et graphiques avances depuis les reglages.
+                           <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-secondary)]">Analyses</p>
+                           <p className="mt-1 text-sm leading-relaxed text-[color:var(--text-muted)]">
+                              Ouvre les bilans et graphiques avancés depuis les réglages.
                            </p>
                         </div>
                      </div>
@@ -762,37 +772,37 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
             </div>
 
             {/* NOTIFICATIONS */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-1">
-               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card lg:col-span-1">
+               <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
                   <Radio size={22} className="text-rose-500" /> Notifications & Rappels
                </h3>
                   <div className="space-y-4">
-                     <div className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                     <div className="flex justify-between items-center p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
                         <div className="pr-4">
-                           <span className="text-[10px] font-black text-slate-300 uppercase">Rappels Quotidiens</span>
-                           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                           <span className="text-[10px] font-black text-[color:var(--text-primary)] uppercase">Rappels quotidiens</span>
+                           <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--text-muted)]">
                               Declenche une notification locale chaque jour a l&apos;heure du rituel matin.
                            </p>
                         </div>
                         <Toggle active={options.ritualReminders} onClick={handleRitualReminderToggle} />
                      </div>
-                     <div className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
+                     <div className="flex justify-between items-center p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
                         <div className="pr-4">
-                           <span className="text-[10px] font-black text-slate-300 uppercase">Journal de Bord</span>
-                           <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                           <span className="text-[10px] font-black text-[color:var(--text-primary)] uppercase">Journal de bord</span>
+                           <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--text-muted)]">
                               Affiche le bloc journal sur le dashboard et active le rappel du soir.
                            </p>
                         </div>
                         <Toggle active={options.terminalLogging} onClick={() => updateOption('terminalLogging', !options.terminalLogging)} />
                      </div>
                   <div className="space-y-2 mt-4">
-                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Heure Rituel Matin</label>
-                     <input type="time" value={options.morningRitualTime} onChange={e => updateOption('morningRitualTime', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-xl p-4 text-xs text-white" />
+                     <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Heure rituel matin</label>
+                     <input type="time" value={options.morningRitualTime} onChange={e => updateOption('morningRitualTime', e.target.value)} className="ui-field w-full border rounded-xl p-4 text-xs" />
                   </div>
-                  <div className="rounded-xl border border-white/5 bg-slate-950/40 px-4 py-3">
-                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Etat actuel</p>
-                     <div className="mt-2 space-y-1.5 text-[11px] text-slate-400">
-                        <p>Rappel matin : {options.ritualReminders ? `actif a ${options.morningRitualTime}` : 'desactive'}</p>
+                  <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] px-4 py-3">
+                     <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">État actuel</p>
+                     <div className="mt-2 space-y-1.5 text-[11px] text-[color:var(--text-secondary)]">
+                        <p>Rappel matin : {options.ritualReminders ? `actif à ${options.morningRitualTime}` : 'désactivé'}</p>
                         <p>Journal de bord : {options.terminalLogging ? 'visible sur le dashboard' : 'masque sur le dashboard'}</p>
                      </div>
                   </div>
@@ -802,7 +812,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                            ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
                            : reminderNotice.tone === 'error'
                               ? 'border-rose-500/20 bg-rose-500/10 text-rose-300'
-                              : 'border-white/8 bg-white/[0.03] text-slate-300'
+                              : 'border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-secondary)]'
                      }`}>
                         {reminderNotice.message}
                      </div>
@@ -811,50 +821,50 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
             </div>
 
             {/* PARAMÈTRES SYSTÈME */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#0f172a]/40 lg:col-span-2">
-               <h3 className="text-xl font-black text-white uppercase italic mb-8 flex items-center gap-4">
+            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card lg:col-span-2">
+               <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
                   <Server size={22} className="text-indigo-500" /> Paramètres Système
                </h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Gestion des Objectifs</h4>
+                     <h4 className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest mb-2 border-b border-[color:var(--border)] pb-2">Gestion des objectifs</h4>
                      {[
                         { label: 'Mode Concentration (Bloquant)', key: 'strictFocusMode' },
                         { label: 'Auto-Catégorisation', key: 'autoCategorization' },
                      ].map(opt => (
-                        <div key={opt.key} className="flex justify-between items-center p-4 bg-slate-950/50 rounded-xl border border-white/5">
-                           <span className="text-[10px] font-black text-slate-300 uppercase">{opt.label}</span>
+                        <div key={opt.key} className="flex justify-between items-center p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
+                           <span className="text-[10px] font-black text-[color:var(--text-primary)] uppercase">{opt.label}</span>
                            <Toggle active={(options as any)[opt.key]} onClick={() => updateOption(opt.key, !(options as any)[opt.key])} />
                         </div>
                      ))}
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                           <label className="text-[8px] font-black text-slate-600 uppercase italic">Cycle Objectif (Min)</label>
-                           <input type="number" value={options.defaultMissionDuration} onChange={e => updateOption('defaultMissionDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                           <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase italic">Cycle objectif (min)</label>
+                           <input type="number" value={options.defaultMissionDuration} onChange={e => updateOption('defaultMissionDuration', e.target.value)} className="ui-field w-full border rounded-lg p-3 text-xs" />
                         </div>
                         <div className="space-y-1">
-                           <label className="text-[8px] font-black text-slate-600 uppercase italic">Pause (Min)</label>
-                           <input type="number" value={options.breakDuration} onChange={e => updateOption('breakDuration', e.target.value)} className="w-full bg-slate-950 border border-white/5 rounded-lg p-3 text-xs text-white" />
+                           <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase italic">Pause (min)</label>
+                           <input type="number" value={options.breakDuration} onChange={e => updateOption('breakDuration', e.target.value)} className="ui-field w-full border rounded-lg p-3 text-xs" />
                         </div>
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                     <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Gestion du Budget</h4>
+                     <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2 border-b border-[color:var(--border)] pb-2">Gestion du budget</h4>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Budget Mensuel (DH)</label>
+                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Budget mensuel (DH)</label>
                         <input
                            type="number"
                            value={amciMonthly}
                            onChange={(e) => handleBudgetChange(e.target.value)}
-                           className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-emerald-500 font-black outline-none focus:border-emerald-500"
+                           className="ui-field w-full border rounded-xl p-4 text-emerald-600 dark:text-emerald-400 font-black outline-none focus:border-emerald-500"
                         />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Mode de Reset</label>
-                        <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5">
+                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Mode de reset</label>
+                        <div className="flex bg-[color:var(--surface)] p-1 rounded-xl border border-[color:var(--border)]">
                            {[
                               { id: 'monthly', label: 'Cycle Mensuel' },
                               { id: 'custom', label: 'Date Fixe' }
@@ -862,7 +872,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                               <button
                                  key={mode.id}
                                  onClick={() => handleResetModeChange(mode.id as 'monthly' | 'custom')}
-                                 className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${options.amci_recurrence === mode.id ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-slate-500 hover:text-white'
+                                 className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${options.amci_recurrence === mode.id ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
                                     }`}
                               >
                                  {mode.label}
@@ -873,27 +883,27 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
 
                      {options.amci_recurrence === 'monthly' ? (
                         <div className="space-y-2 animate-in slide-in-from-top-2">
-                           <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Jour du Reset (1-31)</label>
+                           <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Jour du reset (1-31)</label>
                            <div className="relative">
                               <input
                                  type="number"
                                  min="1" max="31"
                                  value={options.amci_day_of_month || 10}
                                  onChange={(e) => handleResetDayChange(e.target.value)}
-                                 className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-emerald-500"
+                                 className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-emerald-500"
                               />
                               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500 uppercase">Du Mois</div>
                            </div>
                         </div>
                      ) : (
                         <div className="space-y-2 animate-in slide-in-from-top-2">
-                           <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic ml-1">Prochain Versement</label>
+                           <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Prochain versement</label>
                            <input
                               type="date"
                               value={nextAmciDate}
                               min={normalizeCustomResetDate(new Date().toISOString().split('T')[0])}
                               onChange={(e) => handleCustomResetDateChange(e.target.value)}
-                              className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-emerald-500 [color-scheme:dark]"
+                              className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-emerald-500"
                            />
                         </div>
                      )}
@@ -904,7 +914,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
          </div>
 
          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-20 pt-4">
-            <div className="mx-auto max-w-xl rounded-[2rem] border border-white/5 bg-[#020617]/88 p-3 shadow-[0_24px_60px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+            <div className="glass-panel mx-auto max-w-xl rounded-[2rem] p-3 shadow-[0_24px_60px_var(--shadow-strong)] backdrop-blur-xl">
                <button
                   onClick={handleSave}
                   disabled={saving}

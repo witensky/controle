@@ -178,20 +178,20 @@ const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData,
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
       <div
         onClick={() => setActiveMenu('flux')}
-        className="glass min-h-[320px] cursor-pointer overflow-hidden rounded-[2rem] border-white/5 bg-[#0b1121]/60 p-5 transition-all hover:border-amber-500/20 group sm:p-6"
+        className="glass min-h-[320px] cursor-pointer overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 transition-all hover:border-amber-500/20 group shadow-card dark:border-white/5 dark:bg-[#0b1121]/60 sm:p-6"
       >
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TrendingUp size={18} className="text-amber-500" />
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-white">Analyse des Flux</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-[color:var(--text-primary)] dark:text-white">Analyse des Flux</h3>
           </div>
           <ArrowUpRight className="text-slate-700 transition-colors group-hover:text-amber-500" size={16} />
         </div>
 
         <div className="flex-1 w-full">
           {safeFluxData.length === 0 ? (
-            <div className="flex min-h-[220px] h-full items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/20 text-center">
-              <p className="max-w-[180px] text-[11px] font-black uppercase tracking-widest text-slate-500">Aucun flux recent a afficher.</p>
+            <div className="flex min-h-[220px] h-full items-center justify-center rounded-[1.5rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] text-center dark:border-white/10 dark:bg-slate-950/20">
+              <p className="max-w-[180px] text-[11px] font-black uppercase tracking-widest text-[color:var(--text-muted)] dark:text-slate-500">Aucun flux récent à afficher.</p>
             </div>
           ) : (
             <ChartErrorBoundary fallbackTitle="Flux indisponibles" minHeightClassName="min-h-[220px]" resetKey={safeFluxData.length}>
@@ -213,20 +213,20 @@ const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData,
 
       <div
         onClick={() => setActiveMenu('categories')}
-        className="glass min-h-[320px] cursor-pointer overflow-hidden rounded-[2rem] border-white/5 bg-[#0b1121]/60 p-5 transition-all hover:border-blue-500/20 group sm:p-6"
+        className="glass min-h-[320px] cursor-pointer overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 transition-all hover:border-blue-500/20 group shadow-card dark:border-white/5 dark:bg-[#0b1121]/60 sm:p-6"
       >
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <PieChart size={18} className="text-blue-500" />
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-white">Repartition par Categorie</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-[color:var(--text-primary)] dark:text-white">Répartition par Catégorie</h3>
           </div>
           <ArrowUpRight className="text-slate-700 transition-colors group-hover:text-blue-500" size={16} />
         </div>
 
-        <div className="h-full flex-1 w-full rounded-3xl bg-slate-950/20 p-4">
+        <div className="h-full flex-1 w-full rounded-3xl bg-[color:var(--surface-2)] p-4 dark:bg-slate-950/20">
           {safeCategoryData.length === 0 ? (
-            <div className="flex min-h-[220px] h-full items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/20 text-center">
-              <p className="max-w-[180px] text-[11px] font-black uppercase tracking-widest text-slate-500">Aucune categorie depensee pour l&apos;instant.</p>
+            <div className="flex min-h-[220px] h-full items-center justify-center rounded-[1.5rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] text-center dark:border-white/10 dark:bg-slate-950/20">
+              <p className="max-w-[180px] text-[11px] font-black uppercase tracking-widest text-[color:var(--text-muted)] dark:text-slate-500">Aucune catégorie dépensée pour l&apos;instant.</p>
             </div>
           ) : (
             <ChartErrorBoundary fallbackTitle="Repartition indisponible" minHeightClassName="min-h-[220px]" resetKey={safeCategoryData.length}>

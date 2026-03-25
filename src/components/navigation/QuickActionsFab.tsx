@@ -58,7 +58,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
         {isOpen && (
           <button
             aria-label="Fermer le menu d'actions rapides"
-            className="pointer-events-auto fixed inset-0 bg-slate-950/58 backdrop-blur-[10px] saturate-75 md:bg-slate-950/48 md:backdrop-blur-[12px]"
+            className="pointer-events-auto fixed inset-0 bg-[color:var(--overlay)] backdrop-blur-[10px] saturate-75 md:backdrop-blur-[12px]"
             onClick={() => setIsOpen(false)}
             type="button"
           />
@@ -80,17 +80,17 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
                   setIsOpen(false);
                 }}
                 type="button"
-                className="group flex w-[min(88vw,20rem)] items-center gap-4 rounded-[1.75rem] border border-white/10 bg-[#0b1121]/95 px-4 py-3 text-left shadow-[0_12px_40px_rgba(2,6,23,0.55)] backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/20"
+                className="group glass-panel flex w-[min(88vw,20rem)] items-center gap-4 rounded-[1.75rem] px-4 py-3 text-left shadow-card backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
                 style={{
                   transitionDelay: isOpen ? `${index * 35}ms` : '0ms'
                 }}
               >
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/80 ${item.accentClassName}`}>
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] ${item.accentClassName}`}>
                   <Icon size={18} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white">{item.label}</p>
-                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 transition-colors group-hover:text-slate-300">
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-primary)]">{item.label}</p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--text-muted)] transition-colors group-hover:text-[color:var(--text-secondary)]">
                     {item.description}
                   </p>
                 </div>
@@ -104,7 +104,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
           type="button"
           aria-expanded={isOpen}
           aria-label={isOpen ? "Fermer les actions rapides" : "Ouvrir les actions rapides"}
-          className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-amber-500 text-slate-950 shadow-[0_16px_45px_rgba(245,158,11,0.35)] transition-all duration-300 ease-out motion-reduce:transition-none ${
+          className={`pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500 text-slate-950 shadow-[0_16px_45px_rgba(245,158,11,0.35)] transition-all duration-300 ease-out motion-reduce:transition-none ${
             isOpen ? 'scale-105 rotate-45' : 'hover:scale-[1.03]'
           }`}
         >

@@ -36,6 +36,22 @@ const waitForPaintInWindow = (targetWindow: Window) =>
     });
   });
 
+const waitForDelay = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(() => resolve(), ms);
+  });
+
+const waitForFonts = async (targetWindow: Window) => {
+  const doc = (targetWindow as unknown as { document?: Document }).document;
+  const fonts = (doc as unknown as { fonts?: { ready?: Promise<unknown> } })?.fonts;
+  if (!fonts?.ready) return;
+  try {
+    await fonts.ready;
+  } catch {
+    // ignore font readiness issues
+  }
+};
+
 const COPYABLE_FORM_VALUE_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 const UNSUPPORTED_COLOR_PATTERN = /oklch\(|oklab\(|color-mix\(|color\(/i;
 const COLOR_LIKE_PROPERTIES = new Set([
@@ -172,7 +188,7 @@ const oklabToSrgb = (L: number, a: number, b: number) => {
 
 const tryConvertOklabLikeToRgb = (value: string) => {
   const trimmed = value.trim();
-  const match = /^(oklch|oklab)\\((.*)\\)$/.exec(trimmed);
+  const match = /^(oklch|oklab)\((.*)\)$/.exec(trimmed);
   if (!match) return null;
 
   const fn = match[1].toLowerCase();
@@ -181,7 +197,7 @@ const tryConvertOklabLikeToRgb = (value: string) => {
 
   const tokens = mainPart
     .replace(/,/g, ' ')
-    .split(/\\s+/)
+    .split(/\s+/)
     .map((token) => token.trim())
     .filter(Boolean);
 
@@ -246,7 +262,26 @@ const sanitizePropertyValue = (
   rawValue: string,
   computed: CSSStyleDeclaration,
   resolveValue: (property: string, value: string) => string,
+  safeMode: boolean,
 ) => {
+  if (safeMode) {
+    if (property === 'background-image' || property === 'mask-image' || property === '-webkit-mask-image') {
+      return 'none';
+    }
+
+    if (property === 'filter' || property === 'backdrop-filter') {
+      return 'none';
+    }
+
+    if (property.includes('shadow')) {
+      return 'none';
+    }
+
+    if (property.startsWith('transition') || property.startsWith('animation')) {
+      return 'none';
+    }
+  }
+
   if (!UNSUPPORTED_COLOR_PATTERN.test(rawValue)) {
     return rawValue;
   }
@@ -283,6 +318,7 @@ const applyResolvedInlineStyles = (
   source: Element,
   target: Element,
   resolveValue: (property: string, value: string) => string,
+  safeMode: boolean,
 ) => {
   if (!(target instanceof HTMLElement || target instanceof SVGElement)) return;
   const computed = window.getComputedStyle(source);
@@ -294,7 +330,7 @@ const applyResolvedInlineStyles = (
     const rawValue = computed.getPropertyValue(property);
     if (!rawValue) continue;
 
-    const sanitizedValue = sanitizePropertyValue(property, rawValue, computed, resolveValue);
+    const sanitizedValue = sanitizePropertyValue(property, rawValue, computed, resolveValue, safeMode);
 
     if (sanitizedValue) {
       target.style.setProperty(property, sanitizedValue, computed.getPropertyPriority(property));
@@ -311,6 +347,7 @@ const applyResolvedInlineStyles = (
 const cloneNodeForPdf = (
   sourceNode: Node,
   resolveValue: (property: string, value: string) => string,
+  safeMode: boolean,
 ): Node => {
   if (sourceNode.nodeType === Node.TEXT_NODE) {
     return document.createTextNode(sourceNode.textContent || '');
@@ -321,20 +358,20 @@ const cloneNodeForPdf = (
   }
 
   const clone = sourceNode.cloneNode(false) as Element;
-  applyResolvedInlineStyles(sourceNode, clone, resolveValue);
+  applyResolvedInlineStyles(sourceNode, clone, resolveValue, safeMode);
   copyFormValueState(sourceNode, clone);
 
   Array.from(sourceNode.childNodes).forEach((childNode) => {
-    clone.appendChild(cloneNodeForPdf(childNode, resolveValue));
+    clone.appendChild(cloneNodeForPdf(childNode, resolveValue, safeMode));
   });
 
   return clone;
 };
 
-export const sanitizeColorsForExport = (element: HTMLElement) => {
+export const sanitizeColorsForExport = (element: HTMLElement, options?: { safeMode?: boolean }) => {
   const { resolveValue, dispose } = createStyleResolver();
   try {
-    const clone = cloneNodeForPdf(element, resolveValue) as HTMLElement;
+    const clone = cloneNodeForPdf(element, resolveValue, Boolean(options?.safeMode)) as HTMLElement;
     clone.setAttribute('data-pdf-render-root', 'true');
     return clone;
   } finally {
@@ -389,6 +426,36 @@ const createPdfRenderTarget = (element: HTMLElement, backgroundColor: string) =>
   return { iframe, clone, frameWindow, cleanup };
 };
 
+const createPdfRenderTargetInDocument = (element: HTMLElement, backgroundColor: string) => {
+  const clone = sanitizeColorsForExport(element, { safeMode: true });
+  const host = document.createElement('div');
+  host.setAttribute('aria-hidden', 'true');
+  host.style.position = 'fixed';
+  host.style.left = '-200vw';
+  host.style.top = '0';
+  host.style.pointerEvents = 'none';
+  host.style.opacity = '0';
+  host.style.border = '0';
+  host.style.zIndex = '-1';
+  host.style.background = backgroundColor;
+
+  document.body.appendChild(host);
+  host.appendChild(clone);
+
+  const width = Math.max(clone.scrollWidth, clone.clientWidth, element.scrollWidth, element.clientWidth, 794);
+  const height = Math.max(clone.scrollHeight, clone.clientHeight, element.scrollHeight, element.clientHeight, 1123);
+  host.style.width = `${width}px`;
+  host.style.height = `${height}px`;
+
+  const cleanup = () => {
+    if (host.parentNode) {
+      host.parentNode.removeChild(host);
+    }
+  };
+
+  return { clone, frameWindow: window, cleanup };
+};
+
 const sanitizeFileName = (fileName: string) =>
   fileName
     .trim()
@@ -401,6 +468,10 @@ const normalizePdfText = (value: string) => value.replace(/\s+/g, ' ').trim();
 const isMobilePdfEnvironment = () =>
   Capacitor.getPlatform() !== 'web' ||
   (typeof navigator !== 'undefined' && /android|iphone|ipad|ipod/i.test(navigator.userAgent));
+
+const isAndroidWebView = () =>
+  Capacitor.getPlatform() !== 'web' ||
+  (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent));
 
 const createHostFromHtml = (html: string, backgroundColor: string, widthPx = 794) => {
   const host = document.createElement('div');
@@ -574,7 +645,9 @@ export const exportToPdf = async ({
   backgroundColor = '#ffffff',
   marginMm = 10,
 }: ExportToPdfOptions) => {
+  await waitForFonts(window);
   await waitForPaint();
+  await waitForDelay(220);
   const host = html ? createHostFromHtml(html, backgroundColor, 794) : null;
   const sourceElement = element || host;
 
@@ -584,12 +657,18 @@ export const exportToPdf = async ({
 
   try {
     const renderViaCanvas = async () => {
-      const { clone, frameWindow, cleanup } = createPdfRenderTarget(sourceElement, backgroundColor);
+      const target = isAndroidWebView()
+        ? createPdfRenderTargetInDocument(sourceElement, backgroundColor)
+        : createPdfRenderTarget(sourceElement, backgroundColor);
+
+      const { clone, frameWindow, cleanup } = target;
+      await waitForFonts(frameWindow);
       await waitForPaintInWindow(frameWindow);
+      await new Promise<void>((resolve) => frameWindow.setTimeout(() => resolve(), 140));
       try {
         const canvas = await html2canvas(clone, {
           backgroundColor,
-          scale: Math.min(2.2, Math.max(1.5, window.devicePixelRatio || 1)),
+          scale: isAndroidWebView() ? 1.4 : Math.min(2.2, Math.max(1.5, window.devicePixelRatio || 1)),
           useCORS: true,
           logging: false,
           windowWidth: Math.max(clone.scrollWidth, clone.clientWidth, 794),

@@ -124,14 +124,14 @@ const ModalContainer: React.FC<{
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
-        className="fixed inset-0 z-[360] bg-slate-950/96 backdrop-blur-xl"
+        className="fixed inset-0 z-[360] bg-[color:var(--overlay)] backdrop-blur-xl"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 16 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="h-[100dvh] overflow-y-auto bg-[#020617]"
+          className="h-[100dvh] overflow-y-auto bg-[color:var(--app-bg)]"
         >
           <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-4 pb-6 pt-4">
             {children}

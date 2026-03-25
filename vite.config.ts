@@ -16,12 +16,8 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         alias: {
-<<<<<<< HEAD
           '@': path.resolve(__dirname, './src'),
           'lodash': 'lodash-es',
-=======
-          '@': path.resolve(__dirname, '.'),
->>>>>>> 453c6cc5cc6fc0fcbdf647c9e7a3d7f2c7f3bb55
         }
       }
     };

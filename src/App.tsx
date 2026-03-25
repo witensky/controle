@@ -7,6 +7,7 @@ import QuickActionsFab from './components/navigation/QuickActionsFab';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import AppReminderCenter from './components/common/AppReminderCenter';
 import { AppDialogProvider } from './components/common/AppDialogProvider';
+import { ThemeProvider } from './theme/ThemeProvider';
 import DailyRoutineScheduler from './components/settings/DailyRoutineScheduler';
 import StudyReminderScheduler from './components/studies/StudyReminderScheduler';
 import { dispatchQuickAction, quickActionTargetView, QuickActionType } from './lib/quickActions';
@@ -181,59 +182,63 @@ const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppDialogProvider>
-        <DailyRoutineScheduler />
-        <StudyReminderScheduler />
-        <AppReminderCenter />
-        {!isAppReady ? (
-          <div className="h-screen bg-slate-950 flex items-center justify-center">
-            <Loader2 className="animate-spin text-amber-500" size={40} />
-          </div>
-        ) : needsOnboarding ? (
-          <OnboardingFlow onComplete={() => setNeedsOnboarding(false)} />
-        ) : (
-        <div className="app-shell min-h-[100dvh] bg-[#020617] text-slate-50 flex flex-col md:flex-row font-outfit relative">
-          <AppNavigation
-            view={view}
-            onNavigate={handleNavigate}
-            isNavVisible={showMobileNav && isNavVisible}
-            showMobileUi={showMobileNav}
-          />
-
-          <main
-            ref={mainRef}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className={`app-main relative flex-1 min-h-0 overflow-y-auto bg-[#020617] md:h-screen ${
-              showMobileNav || showFab ? 'pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-0' : 'pb-0'
-            }`}
-          >
-            <div
-              className={`px-4 pt-3 pb-4 md:px-10 md:py-8 max-w-7xl mx-auto w-full ${
-                showMobileNav || showFab ? 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-10' : 'pb-6 md:pb-10'
-              }`}
-            >
-              <AnimatePresence mode="wait" custom={navDirection}>
-                <motion.div
-                  key={view}
-                  custom={navDirection}
-                  variants={SCREEN_SLIDE_VARIANTS}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                  className="motion-reduce:transform-none"
-                >
-                  <AppRouter view={view} onNavigate={handleNavigate} />
-                </motion.div>
-              </AnimatePresence>
+      <ThemeProvider>
+        <AppDialogProvider>
+          <DailyRoutineScheduler />
+          <StudyReminderScheduler />
+          <AppReminderCenter />
+          {!isAppReady ? (
+            <div className="flex h-screen items-center justify-center bg-[color:var(--app-bg)]">
+              <Loader2 className="animate-spin text-amber-500" size={40} />
             </div>
-          </main>
+          ) : needsOnboarding ? (
+            <OnboardingFlow onComplete={() => setNeedsOnboarding(false)} />
+          ) : (
+            <div className="app-shell relative flex min-h-[100dvh] flex-col bg-[color:var(--app-bg)] font-outfit text-[color:var(--app-fg)] md:flex-row">
+              <AppNavigation
+                view={view}
+                onNavigate={handleNavigate}
+                isNavVisible={showMobileNav && isNavVisible}
+                showMobileUi={showMobileNav}
+              />
 
-          {showFab ? <QuickActionsFab onAction={handleQuickAction} /> : null}
-        </div>
-        )}
-      </AppDialogProvider>
+              <main
+                ref={mainRef}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className={`app-main relative flex-1 min-h-0 overflow-y-auto bg-[color:var(--app-bg)] md:h-screen ${
+                  showMobileNav || showFab ? 'pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-0' : 'pb-0'
+                }`}
+              >
+                <div
+                  className={`mx-auto w-full max-w-7xl px-4 pb-4 pt-3 md:px-10 md:py-8 ${
+                    showMobileNav || showFab
+                      ? 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-10'
+                      : 'pb-6 md:pb-10'
+                  }`}
+                >
+                  <AnimatePresence mode="wait" custom={navDirection}>
+                    <motion.div
+                      key={view}
+                      custom={navDirection}
+                      variants={SCREEN_SLIDE_VARIANTS}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                      className="motion-reduce:transform-none"
+                    >
+                      <AppRouter view={view} onNavigate={handleNavigate} />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </main>
+
+              {showFab ? <QuickActionsFab onAction={handleQuickAction} /> : null}
+            </div>
+          )}
+        </AppDialogProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

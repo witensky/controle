@@ -24,6 +24,7 @@ import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBu
 import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurrence } from '../utils/financeReset';
 import { isFutureDateOnly, isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
+import { useTheme } from '../theme/ThemeProvider';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
 import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
@@ -39,6 +40,7 @@ type FinanceAlert = {
 };
 
 const Finance: React.FC = () => {
+  const { theme } = useTheme();
   const { data: transactionsRaw, isLoading: loadingTx } = useTransactions();
   const { data: budgetsRaw, isLoading: loadingBudgets } = useBudgets();
   const { data: savingsRaw, isLoading: loadingSavings } = useSavings();
@@ -754,21 +756,33 @@ const Finance: React.FC = () => {
   if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin text-amber-500 w-10 h-10 border-4 border-current border-t-transparent rounded-full" /></div>;
 
   return (
-    <div className="space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:space-y-10 md:pb-24 animate-in fade-in duration-700">
+      <div className="space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:space-y-10 md:pb-24 animate-in fade-in duration-700">
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none">MES <span className="text-amber-500 font-outfit">FINANCES</span></h2>
-          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 italic">GESTION DU BUDGET & SUIVI DES DÉPENSES</p>
+          <h2 className="text-3xl md:text-4xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase leading-none">
+            MES <span className="text-amber-500 font-outfit">FINANCES</span>
+          </h2>
+          <p className="text-[color:var(--text-muted)] text-[10px] font-bold uppercase tracking-[0.2em] mt-2 italic">
+            GESTION DU BUDGET & SUIVI DES DÉPENSES
+          </p>
         </div>
 
-        <div className="flex w-full overflow-x-auto rounded-3xl border border-white/5 bg-slate-900 p-1 shadow-2xl scrollbar-hide md:w-auto md:rounded-[2rem]">
+        <div className="flex w-full justify-center overflow-x-auto rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1 shadow-card scrollbar-hide md:w-auto md:rounded-[2rem]">
           {[
             { id: 'summary', label: 'Synthèse', icon: Sparkles },
             { id: 'forecast', label: 'Provisions', icon: Calculator },
             { id: 'table', label: 'Registre', icon: History }
           ].map((tab) => (
-            <button key={tab.id} onClick={() => setViewMode(tab.id as any)} className={`flex shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[9px] font-black uppercase tracking-widest transition-all md:rounded-3xl md:px-6 md:py-4 md:text-xs ${viewMode === tab.id ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-500 hover:text-white'}`}>
+            <button
+              key={tab.id}
+              onClick={() => setViewMode(tab.id as any)}
+              className={`flex shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[9px] font-black uppercase tracking-widest transition-all md:rounded-3xl md:px-6 md:py-4 md:text-xs ${
+                viewMode === tab.id
+                  ? 'bg-[color:var(--surface)] text-[color:var(--text-primary)] shadow-[0_14px_40px_var(--shadow)]'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--muted)]'
+              }`}
+            >
               <tab.icon size={14} /> {tab.label}
             </button>
           ))}
@@ -809,6 +823,7 @@ const Finance: React.FC = () => {
                   max={100}
                   label="Brule"
                   color={amciStats.isOver ? '#f43f5e' : '#f59e0b'}
+                  theme={theme}
                   gradient={
                     amciStats.isOver
                       ? { start: '#fb7185', end: '#f43f5e' }
@@ -820,20 +835,24 @@ const Finance: React.FC = () => {
               </button>
 
               <div className="relative z-10 w-full flex-1 space-y-5">
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter sm:text-3xl">BUDGET <span className="text-amber-500">MENSUEL</span></h3>
+                <h3 className="text-2xl font-black text-[color:var(--text-primary)] uppercase tracking-tighter sm:text-3xl">
+                  BUDGET <span className="text-amber-500">MENSUEL</span>
+                </h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/60 p-4 shadow-inner sm:p-5">
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Reste disponible</p>
-                    <p className="text-2xl font-black text-white italic sm:text-3xl">{amciStats.remaining.toLocaleString()} DH</p>
+                  <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-inner dark:border-white/5 dark:bg-slate-950/60 sm:p-5">
+                    <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest mb-1">Reste disponible</p>
+                    <p className="text-2xl font-black text-[color:var(--text-primary)] italic sm:text-3xl">{amciStats.remaining.toLocaleString()} DH</p>
                   </div>
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/60 p-4 shadow-inner cursor-pointer hover:border-amber-500/30 transition-all group sm:p-5" onClick={() => setShowQuotaDetail(true)}>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1 flex items-center justify-between">
+                  <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-inner cursor-pointer transition-all group hover:border-amber-500/30 dark:border-white/5 dark:bg-slate-950/60 sm:p-5" onClick={() => setShowQuotaDetail(true)}>
+                    <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest mb-1 flex items-center justify-between">
                       Quota / Jour <ArrowRight size={10} className="text-amber-500" />
                     </p>
-                    <p className="text-2xl font-black text-white italic sm:text-3xl">{amciStats.dailyBudget} <span className="text-xs text-emerald-500">DH</span></p>
+                    <p className="text-2xl font-black text-[color:var(--text-primary)] italic sm:text-3xl">
+                      {amciStats.dailyBudget} <span className="text-xs text-emerald-600 dark:text-emerald-500">DH</span>
+                    </p>
                   </div>
                 </div>
-                <p className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
+                <p className="text-[10px] sm:text-xs font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em] flex items-center gap-3">
                   <Calendar size={16} className="text-amber-500" /> RESET DANS {amciStats.daysLeft} JOURS ({nextAmciDate})
                 </p>
               </div>
@@ -878,17 +897,17 @@ const Finance: React.FC = () => {
                 </p>
                 <HelpTooltip content="Total cumulé des dépenses déjà exécutées. Le compteur journalier reste isolé pour le pilotage quotidien." />
               </div>
-              <h2 className="text-3xl font-black text-white tracking-tighter transition-colors sm:text-4xl">
+              <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
                 {financialState.totalExpenses.toLocaleString()} DH
               </h2>
-              <p className="text-[11px] text-slate-500 mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
+              <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
                 AUJOURD'HUI {financialState.todaySpent.toLocaleString()} DH <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
               </p>
             </div>
 
             <div
               onClick={() => setShowProvisionsDetail(true)}
-              className="glass rounded-[2rem] min-h-[172px] p-5 border-amber-500/10 bg-[#0f172a]/40 cursor-pointer transition-all group overflow-hidden relative sm:min-h-[196px] sm:p-6"
+              className="glass rounded-[2rem] min-h-[172px] p-5 border-amber-500/20 bg-amber-500/[0.03] cursor-pointer transition-all group overflow-hidden relative sm:min-h-[196px] sm:p-6 dark:border-amber-500/10 dark:bg-[#0f172a]/40"
             >
               <div className="absolute -right-4 -bottom-4 opacity-5 text-amber-500 group-hover:scale-125 transition-transform duration-1000">
                 <Calculator size={100} />
@@ -899,10 +918,10 @@ const Finance: React.FC = () => {
                 </p>
                 <HelpTooltip content="Dépenses futures planifiées mais non encore exécutées. Elles ne sont pas déduites du solde actuel." />
               </div>
-              <h2 className="text-3xl font-black text-white tracking-tighter transition-colors sm:text-4xl">
+              <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
                 {financialState.futureExpenses.toLocaleString()} DH
               </h2>
-              <p className="text-[11px] text-slate-500 mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
+              <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
                 {financialState.futureTransactions.length} OPÉRATIONS <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
               </p>
             </div>
@@ -1361,7 +1380,7 @@ const Finance: React.FC = () => {
                           event.preventDefault();
                           openTransactionDetail(t);
                         }
-                      }} className="block w-full rounded-[1.5rem] border border-white/5 bg-[#020617]/70 p-4 text-left">
+                      }} className="block w-full rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left">
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{t.date}</p>
@@ -1402,7 +1421,7 @@ const Finance: React.FC = () => {
                           const categoryBudget = budgetAnalysis.find((budget) => budget.category === t.category);
                           const categoryProjection = categoryBudget ? categoryBudget.limit - categoryBudget.spent - categoryBudget.future : null;
                           return (
-                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[#020617]/60 transition-all rounded-3xl border-l-4 border-blue-500">
+                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[color:var(--surface)] transition-all rounded-3xl border-l-4 border-blue-500">
                             <td className="px-4 py-6 text-center">
                               <div className="flex items-center justify-center">
                                 <input
@@ -1506,7 +1525,7 @@ const Finance: React.FC = () => {
                         event.preventDefault();
                         openTransactionDetail(t);
                       }
-                    }} className="block w-full rounded-[1.5rem] border border-white/5 bg-[#020617]/70 p-4 text-left">
+                    }} className="block w-full rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.date}</p>
@@ -1535,7 +1554,7 @@ const Finance: React.FC = () => {
                     </thead>
                     <tbody>
                       {pastTransactions.map(t => (
-                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[#020617]/60 transition-all rounded-3xl">
+                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[color:var(--surface)] transition-all rounded-3xl">
                           <td className="px-8 py-6 rounded-l-[1.5rem] font-black text-xs text-slate-500 italic">{t.date}</td>
                           <td className="px-8 py-6 text-sm font-black text-white uppercase italic tracking-tight">{t.title}</td>
                           <td className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.category}</td>
@@ -1580,20 +1599,20 @@ const Finance: React.FC = () => {
         }
       >
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-white/5 bg-slate-950 p-1.5">
-            <button onClick={() => { setType('expense'); setCategoryValue('Courses'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'expense' ? 'bg-rose-500 text-slate-950 shadow-lg' : 'text-slate-600'}`}>DÉPENSE</button>
-            <button onClick={() => { setType('deposit'); setCategoryValue('AMCI'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'deposit' ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-slate-600'}`}>DÉPÔT</button>
+          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1.5">
+            <button onClick={() => { setType('expense'); setCategoryValue('Courses'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'expense' ? 'bg-rose-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPENSE</button>
+            <button onClick={() => { setType('deposit'); setCategoryValue('AMCI'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'deposit' ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPÔT</button>
           </div>
 
           <div className="space-y-4">
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00 DH" className="w-full rounded-[1.5rem] border border-white/10 bg-[#020617] px-6 py-5 text-center text-3xl font-black italic text-white outline-none transition-all placeholder:text-slate-800 focus:border-amber-500 sm:text-4xl" />
-            <input id="finance-transaction-title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TITRE DE L'OPÉRATION" className="w-full rounded-[1.25rem] border border-white/10 bg-[#020617] px-5 py-4 text-sm font-bold uppercase tracking-widest text-white outline-none transition-all placeholder:text-slate-800 focus:border-amber-500/30" />
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00 DH" className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
+            <input id="finance-transaction-title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TITRE DE L'OPÉRATION" className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-sm font-bold uppercase tracking-widest outline-none transition-all focus:border-amber-500/30" />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Catégorie</label>
-              <select value={categoryValue} onChange={e => setCategoryValue(e.target.value)} className="w-full rounded-[1.25rem] border border-white/10 bg-[#020617] px-5 py-4 text-[11px] font-black uppercase text-white outline-none focus:border-amber-500/30">
+              <select value={categoryValue} onChange={e => setCategoryValue(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none focus:border-amber-500/30">
                 {type === 'expense' ? (
                   <>
                     {budgets.map(b => <option key={b.category} value={b.category}>{b.category.toUpperCase()}</option>)}
@@ -1612,7 +1631,7 @@ const Finance: React.FC = () => {
             </div>
             <div className="space-y-2">
               <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Date d'exécution</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full rounded-[1.25rem] border border-white/10 bg-[#020617] px-5 py-4 text-[11px] font-black uppercase text-white outline-none focus:border-amber-500/30" />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none focus:border-amber-500/30" />
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ export interface RadialProgressChartProps {
   color?: string;
   gradient?: GradientConfig;
   className?: string;
-  theme?: 'dark' | 'light';
+  theme?: 'dark' | 'light' | 'auto';
   showTooltip?: boolean;
   multiLayer?: boolean;
   showSurface?: boolean;
@@ -39,11 +39,11 @@ const ProgressTooltip = ({
   const { percentage, displayValue, max } = payload[0].payload;
 
   return (
-    <div className="rounded-[1rem] border border-white/10 bg-[#020617]/95 px-4 py-3 text-white shadow-[0_18px_48px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{label}</p>
+    <div className="rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 text-[color:var(--text-primary)] shadow-[0_18px_48px_var(--shadow)] backdrop-blur-xl">
+      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">{label}</p>
       <div className="mt-2 flex items-end justify-between gap-6">
         <span className="text-lg font-black italic">{Math.round(percentage)}%</span>
-        <span className="text-[11px] font-bold text-slate-300">
+        <span className="text-[11px] font-bold text-[color:var(--text-secondary)]">
           {formatChartNumber(displayValue)} / {formatChartNumber(max)}
         </span>
       </div>
@@ -58,11 +58,19 @@ const RadialProgressChart = ({
   color = '#f59e0b',
   gradient,
   className = '',
-  theme = 'dark',
+  theme = 'auto',
   showTooltip = true,
   multiLayer = true,
   showSurface = true,
 }: RadialProgressChartProps) => {
+  const resolvedTheme = useMemo<'dark' | 'light'>(() => {
+    if (theme === 'dark' || theme === 'light') return theme;
+    const isDark =
+      typeof document !== 'undefined' &&
+      (document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme === 'dark');
+    return isDark ? 'dark' : 'light';
+  }, [theme]);
+
   const safeMax = Number.isFinite(Number(max)) && Number(max) > 0 ? Number(max) : 100;
   const safeValue = clamp(Number.isFinite(Number(value)) ? Number(value) : 0, 0, safeMax);
   const targetPercentage = clamp((safeValue / safeMax) * 100, 0, 100);
@@ -103,7 +111,7 @@ const RadialProgressChart = ({
 
   const gradientStops = gradient ?? {
     start: color,
-    end: theme === 'light' ? '#38bdf8' : '#facc15',
+    end: resolvedTheme === 'light' ? '#38bdf8' : '#facc15',
   };
 
   const data = useMemo(
@@ -132,13 +140,13 @@ const RadialProgressChart = ({
   const { ref: chartRef, size, isReady } = useChartContainerSize<HTMLDivElement>();
 
   const surfaceClasses =
-    theme === 'light'
+    resolvedTheme === 'light'
       ? 'from-white via-slate-50 to-slate-100 text-slate-950'
       : 'from-[#020617] via-[#0b1121] to-[#111827] text-white';
 
-  const trackFill = theme === 'light' ? 'rgba(15, 23, 42, 0.08)' : 'rgba(30, 41, 59, 0.42)';
-  const centerLabelClass = theme === 'light' ? 'text-slate-500' : 'text-slate-400';
-  const captionClass = theme === 'light' ? 'text-slate-400' : 'text-slate-500';
+  const trackFill = resolvedTheme === 'light' ? 'rgba(15, 23, 42, 0.08)' : 'rgba(30, 41, 59, 0.42)';
+  const centerLabelClass = resolvedTheme === 'light' ? 'text-slate-500' : 'text-slate-400';
+  const captionClass = resolvedTheme === 'light' ? 'text-slate-400' : 'text-slate-500';
 
   return (
     <div
@@ -147,7 +155,11 @@ const RadialProgressChart = ({
     >
       {showSurface ? (
         <div className="pointer-events-none absolute inset-0 opacity-60">
-          <div className="absolute inset-6 rounded-full border border-white/5" />
+          <div
+            className={`absolute inset-6 rounded-full border ${
+              resolvedTheme === 'light' ? 'border-[color:var(--border)]' : 'border-white/5'
+            }`}
+          />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05),transparent_62%)]" />
         </div>
       ) : null}
@@ -244,10 +256,14 @@ const RadialProgressChart = ({
 
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div
-            className={`flex h-[52%] w-[52%] flex-col items-center justify-center rounded-full px-4 text-center backdrop-blur-xl transition-all duration-300 group-hover:scale-[1.03] ${
-              showSurface
-                ? 'border border-white/6 bg-[linear-gradient(180deg,rgba(2,6,23,0.78),rgba(15,23,42,0.72))]'
-                : 'border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(15,23,42,0.9))] shadow-[0_12px_40px_rgba(2,6,23,0.45)]'
+            className={`flex h-[52%] w-[52%] flex-col items-center justify-center rounded-full px-4 text-center transition-all duration-300 group-hover:scale-[1.03] ${
+              resolvedTheme === 'light'
+                ? 'border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_12px_40px_var(--shadow)] backdrop-blur-[2px]'
+                : `backdrop-blur-xl ${
+                    showSurface
+                      ? 'border border-white/6 bg-[linear-gradient(180deg,rgba(2,6,23,0.78),rgba(15,23,42,0.72))]'
+                      : 'border border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(15,23,42,0.9))] shadow-[0_12px_40px_rgba(2,6,23,0.45)]'
+                  }`
             }`}
           >
             <span className="animate-in fade-in duration-500 text-4xl font-black italic tracking-tight sm:text-5xl">

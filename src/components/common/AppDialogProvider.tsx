@@ -103,7 +103,7 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 <button
                   type="button"
                   onClick={() => closeDialog(dialog.kind === 'confirm' ? false : null)}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300 transition-colors hover:text-white"
+                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
                 >
                   {dialog.cancelLabel || 'Annuler'}
                 </button>
@@ -121,15 +121,15 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       >
         {dialog ? (
           <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-slate-300">{dialog.message}</p>
+            <p className="text-sm leading-relaxed text-[color:var(--text-secondary)]">{dialog.message}</p>
 
             {dialog.kind === 'prompt' ? (
               <div className="space-y-2">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                <label className="ml-1 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                   Nouveau texte
                 </label>
                 <div className="relative">
-                  <PencilLine size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <PencilLine size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
                   <input
                     autoFocus
                     value={promptValue}
@@ -141,7 +141,7 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                       }
                     }}
                     placeholder={dialog.placeholder || 'Saisir une valeur'}
-                    className="w-full rounded-2xl border border-white/10 bg-[#020617] py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-cyan-300/40"
+                    className="ui-field w-full rounded-2xl border py-4 pl-11 pr-4 text-sm font-bold outline-none focus:border-cyan-300/40"
                   />
                 </div>
               </div>

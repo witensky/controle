@@ -38,10 +38,10 @@ class ChartErrorBoundary extends React.Component<ChartErrorBoundaryProps, ChartE
       } = this.props;
 
       return (
-        <div className={`flex w-full items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/35 px-5 py-6 text-center ${minHeightClassName}`}>
+        <div className={`flex w-full items-center justify-center rounded-[1.5rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] px-5 py-6 text-center shadow-card ${minHeightClassName}`}>
           <div className="space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">{fallbackTitle}</p>
-            <p className="max-w-sm text-sm leading-6 text-slate-400">{fallbackMessage}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">{fallbackTitle}</p>
+            <p className="max-w-sm text-sm leading-6 text-[color:var(--text-secondary)]">{fallbackMessage}</p>
           </div>
         </div>
       );

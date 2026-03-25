@@ -62,7 +62,7 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ onClose, missionId, default
     };
 
     return (
-        <div className="fixed inset-0 z-[200] bg-slate-950/98 backdrop-blur-3xl animate-in fade-in duration-500 flex flex-col items-center justify-center p-6">
+        <div className="fixed inset-0 z-[200] bg-[color:var(--overlay)] backdrop-blur-3xl animate-in fade-in duration-500 flex flex-col items-center justify-center p-6">
             <button
                 onClick={() => {
                     if (isActive) {
@@ -75,7 +75,7 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ onClose, missionId, default
                     }
                     onClose();
                 }}
-                className="absolute top-10 right-10 p-4 bg-white/5 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all group"
+                className="absolute top-10 right-10 p-4 rounded-full border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] transition-all group"
             >
                 <X size={24} className="group-hover:rotate-90 transition-transform" />
             </button>
@@ -87,17 +87,17 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ onClose, missionId, default
                             <Zap size={40} fill="currentColor" />
                         </div>
                     </div>
-                    <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase font-outfit">
+                    <h2 className="text-4xl font-black text-[color:var(--text-primary)] italic tracking-tighter uppercase font-outfit">
                         {sessionType === 'focus' ? 'CONCENTRATION' : 'RÉCUPÉRATION'}
                     </h2>
-                    <p className="text-slate-500 text-xs font-black uppercase tracking-[0.4em]">
+                    <p className="text-[color:var(--text-muted)] text-xs font-black uppercase tracking-[0.4em]">
                         {sessionType === 'focus' ? 'Focus optimal activé' : 'Reprenez des forces pour la suite'}
                     </p>
                 </div>
 
                 <div className="relative inline-block">
                     {/* Circular Progress (simplified with text shadow for vibe) */}
-                    <div className="text-[120px] md:text-[160px] font-black text-white italic tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                    <div className="text-[120px] md:text-[160px] font-black text-[color:var(--text-primary)] italic tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(2,6,23,0.16)]">
                         {formatTime(timeLeft)}
                     </div>
                 </div>
@@ -105,20 +105,20 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ onClose, missionId, default
                 <div className="flex items-center justify-center gap-8">
                     <button
                         onClick={resetTimer}
-                        className="p-5 bg-white/5 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all shadow-xl"
+                        className="p-5 rounded-full border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] transition-all shadow-card"
                     >
                         <RotateCcw size={24} />
                     </button>
 
                     <button
                         onClick={togglePause}
-                        className="w-24 h-24 bg-white text-slate-950 rounded-[2.5rem] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                        className="w-24 h-24 rounded-[2.5rem] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-card border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-primary)]"
                     >
                         {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-2" />}
                     </button>
 
                     <button
-                        className="p-5 bg-white/5 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all shadow-xl"
+                        className="p-5 rounded-full border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] transition-all shadow-card"
                         onClick={() => {
                             setSessionType(sessionType === 'focus' ? 'short_break' : 'focus');
                             setIsActive(false);
@@ -135,9 +135,9 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ onClose, missionId, default
                         { label: 'MÉMOIRE', icon: Sparkles, color: 'text-amber-500' },
                         { label: 'RÉSULTAT', icon: Trophy, color: 'text-emerald-500' },
                     ].map((item, i) => (
-                        <div key={i} className="glass p-4 rounded-2xl border-white/5 bg-[#0f172a]/40 flex flex-col items-center gap-2">
+                        <div key={i} className="glass p-4 rounded-2xl flex flex-col items-center gap-2">
                             <item.icon size={16} className={item.color} />
-                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{item.label}</span>
+                            <span className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest">{item.label}</span>
                         </div>
                     ))}
                 </div>

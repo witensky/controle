@@ -22,14 +22,14 @@ type OnboardingForm = {
 };
 
 const SLIDES = [
-  { id: 'identity', eyebrow: 'Identite', title: 'Qui utilise Myflow ?', subtitle: 'On commence par les informations de base pour personnaliser le profil.' },
+  { id: 'identity', eyebrow: 'Identité', title: 'Qui utilise Myflow ?', subtitle: 'On commence par les informations de base pour personnaliser le profil.' },
   { id: 'contact', eyebrow: 'Contact', title: 'Reste joignable', subtitle: 'Ces donnees serviront aux rapports, exports et rappels utiles.' },
   { id: 'finance', eyebrow: 'Finance', title: 'Initialise ton solde', subtitle: 'Le budget de depart alimente les modules finances, quota et projections.' },
-  { id: 'studies', eyebrow: 'Etudes', title: 'Definis ton contexte', subtitle: 'Le domaine d etude et l objectif principal rendent les analyses plus pertinentes.' },
+  { id: 'studies', eyebrow: 'Études', title: 'Définis ton contexte', subtitle: "Le domaine d'étude et l'objectif principal rendent les analyses plus pertinentes." },
 ] as const;
 
 const inputClassName =
-  'w-full rounded-[1.35rem] border border-white/10 bg-slate-950/70 px-4 py-4 text-sm font-semibold text-white outline-none transition-all placeholder:text-slate-600 focus:border-amber-500';
+  'ui-field w-full rounded-[1.35rem] border px-4 py-4 text-sm font-semibold outline-none transition-all focus:border-amber-500';
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const queryClient = useQueryClient();
@@ -131,37 +131,37 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#020617] text-white">
+    <div className="min-h-[100dvh] bg-[color:var(--bg)] text-[color:var(--text-primary)]">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col justify-between px-5 py-6 sm:px-6">
         <div>
           <div className="mb-8">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-500">Bienvenue</p>
-                <h1 className="mt-2 text-[2rem] font-black uppercase italic tracking-[-0.06em] text-white font-outfit">Configuration initiale</h1>
+                <h1 className="mt-2 text-[2rem] font-black uppercase italic tracking-[-0.06em] text-[color:var(--text-primary)] font-outfit">Configuration initiale</h1>
               </div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+              <div className="rounded-full border border-[color:var(--border)] bg-[color:var(--muted)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
                 {currentStep + 1}/{SLIDES.length}
               </div>
             </div>
 
-            <div className="h-2 rounded-full border border-white/5 bg-slate-950/70 p-0.5">
+            <div className="h-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-2)] p-0.5">
               <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${completionRatio}%` }} />
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/5 bg-white/[0.03] p-5 shadow-2xl">
-            <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-500">{SLIDES[currentStep].eyebrow}</p>
-            <h2 className="mt-3 text-[1.9rem] font-black uppercase italic leading-[0.92] tracking-[-0.05em] text-white font-outfit">
+          <div className="glass rounded-[2rem] p-5 shadow-2xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-muted)]">{SLIDES[currentStep].eyebrow}</p>
+            <h2 className="mt-3 text-[1.9rem] font-black uppercase italic leading-[0.92] tracking-[-0.05em] text-[color:var(--text-primary)] font-outfit">
               {SLIDES[currentStep].title}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{SLIDES[currentStep].subtitle}</p>
+            <p className="mt-3 text-sm leading-relaxed text-[color:var(--text-secondary)]">{SLIDES[currentStep].subtitle}</p>
 
             <div className="mt-6 space-y-4">
               {SLIDES[currentStep].id === 'identity' ? (
                 <>
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                       <User2 size={12} /> Nom complet
                     </span>
                     <input
@@ -173,7 +173,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                       <MapPin size={12} /> Ville / localisation
                     </span>
                     <input
@@ -189,7 +189,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               {SLIDES[currentStep].id === 'contact' ? (
                 <>
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                       <Mail size={12} /> Email
                     </span>
                     <input
@@ -202,8 +202,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-                      <Phone size={12} /> Telephone
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                      <Phone size={12} /> Téléphone
                     </span>
                     <input
                       value={form.phone}
@@ -219,8 +219,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 <>
                   <div className="grid grid-cols-1 gap-4">
                     <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-                        <BadgeDollarSign size={12} /> Solde actuel / budget de depart
+                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                        <BadgeDollarSign size={12} /> Solde actuel / budget de départ
                       </span>
                       <input
                         type="number"
@@ -233,8 +233,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                     </label>
 
                     <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-                        <BadgeDollarSign size={12} /> Limite de depense journaliere
+                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                        <BadgeDollarSign size={12} /> Limite de dépense journalière
                       </span>
                       <input
                         type="number"
@@ -248,9 +248,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   </div>
 
                   <div className="rounded-[1.35rem] border border-emerald-500/15 bg-emerald-500/10 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">Impact app</p>
-                    <p className="mt-2 text-sm leading-relaxed text-emerald-100/80">
-                      Le solde et la limite journaliere alimentent les quotas, projections, burn rate et toutes les analyses budgetaires.
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Impact app</p>
+                    <p className="mt-2 text-sm leading-relaxed text-emerald-700/80 dark:text-emerald-100/80">
+                      Le solde et la limite journalière alimentent les quotas, projections, burn rate et toutes les analyses budgétaires.
                     </p>
                   </div>
                 </>
@@ -259,8 +259,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               {SLIDES[currentStep].id === 'studies' ? (
                 <>
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-                      <GraduationCap size={12} /> Domaine d etude principal
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                      <GraduationCap size={12} /> Domaine d'étude principal
                     </span>
                     <input
                       value={form.studyDomain}
@@ -272,7 +272,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                         <Briefcase size={12} /> Niveau
                       </span>
                       <input
@@ -284,8 +284,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                     </label>
 
                     <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
-                        <GraduationCap size={12} /> Etablissement
+                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                        <GraduationCap size={12} /> Établissement
                       </span>
                       <input
                         value={form.institution}
@@ -297,14 +297,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   </div>
 
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                       <GraduationCap size={12} /> Objectif principal
                     </span>
                     <textarea
                       value={form.mainGoal}
                       onChange={(event) => handleFieldChange('mainGoal', event.target.value)}
                       rows={4}
-                      placeholder="Ex: Structurer mes objectifs, suivre mes finances et avancer sur mes etudes chaque semaine."
+                      placeholder="Ex: Structurer mes objectifs, suivre mes finances et avancer sur mes études chaque semaine."
                       className={`${inputClassName} resize-none`}
                     />
                   </label>
@@ -325,7 +325,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                     setCurrentStep(index);
                   }
                 }}
-                className={`h-2.5 rounded-full transition-all ${index === currentStep ? 'w-10 bg-amber-500' : index < currentStep ? 'w-6 bg-amber-500/60' : 'w-2.5 bg-white/10'}`}
+                className={`h-2.5 rounded-full transition-all ${index === currentStep ? 'w-10 bg-amber-500' : index < currentStep ? 'w-6 bg-amber-500/60' : 'w-2.5 bg-[color:var(--muted)]'}`}
                 aria-label={`Etape ${index + 1}`}
               />
             ))}
@@ -336,7 +336,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               type="button"
               onClick={() => setCurrentStep((previous) => Math.max(0, previous - 1))}
               disabled={currentStep === 0 || isSaving}
-              className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-white/10 bg-white/5 text-white transition-all hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-primary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ArrowLeft size={18} />
             </button>
@@ -355,7 +355,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 type="button"
                 onClick={() => setCurrentStep((previous) => Math.min(SLIDES.length - 1, previous + 1))}
                 disabled={!isCurrentStepValid}
-                className="flex flex-1 items-center justify-center gap-2 rounded-[1.35rem] bg-white px-5 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-slate-950 transition-all hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-5 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-primary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Continuer <ArrowRight size={16} />
               </button>

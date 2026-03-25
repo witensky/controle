@@ -9,16 +9,16 @@ type ReminderItem = AppReminderPayload & {
 
 const TONE_STYLES: Record<AppReminderTone, { shell: string; icon: React.ReactNode }> = {
   info: {
-    shell: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-100',
-    icon: <Info size={16} className="text-cyan-300" />,
+    shell: 'border-cyan-500/20 bg-cyan-400/12 text-cyan-900 dark:text-cyan-100',
+    icon: <Info size={16} className="text-cyan-700 dark:text-cyan-300" />,
   },
   success: {
-    shell: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-100',
-    icon: <CheckCircle2 size={16} className="text-emerald-300" />,
+    shell: 'border-emerald-500/20 bg-emerald-400/12 text-emerald-900 dark:text-emerald-100',
+    icon: <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-300" />,
   },
   warning: {
-    shell: 'border-amber-400/20 bg-amber-400/10 text-amber-100',
-    icon: <BellRing size={16} className="text-amber-300" />,
+    shell: 'border-amber-500/20 bg-amber-400/14 text-amber-950 dark:text-amber-100',
+    icon: <BellRing size={16} className="text-amber-800 dark:text-amber-300" />,
   },
 };
 
@@ -79,13 +79,13 @@ const AppReminderCenter: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">{tone.icon}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-white/80">{item.body}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em]">{item.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed opacity-80">{item.body}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setItems((previous) => previous.filter((entry) => entry.id !== item.id))}
-                    className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/60 transition-colors hover:text-white"
+                    className="rounded-xl border border-[color:var(--border)] bg-[color:var(--muted)] p-1.5 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-primary)]"
                   >
                     <X size={13} />
                   </button>

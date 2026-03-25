@@ -41,7 +41,7 @@ const scheduleFromLegacyDateTime = (courseDateTime?: string | null): StudySchedu
 const STATUS_OPTIONS: Array<{ value: LawSubjectStatus; label: string; activeClass: string }> = [
   { value: 'En cours', label: 'En cours', activeClass: 'bg-amber-500 border-amber-500 text-slate-950' },
   { value: 'Termine', label: 'Termine', activeClass: 'bg-emerald-500 border-emerald-500 text-slate-950' },
-  { value: 'En attente', label: 'En attente', activeClass: 'bg-blue-500 border-blue-500 text-white' },
+  { value: 'En attente', label: 'En attente', activeClass: 'bg-blue-500 border-blue-500 text-[color:var(--text-on-accent)]' },
 ];
 
 const Studies: React.FC = () => {
@@ -233,20 +233,20 @@ const Studies: React.FC = () => {
       <div className="space-y-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-3xl font-black uppercase italic tracking-tight text-white md:text-4xl">
-              Mes <span className="font-outfit text-amber-500">Etudes</span>
+            <h2 className="text-3xl font-black uppercase italic tracking-tight text-[color:var(--text-primary)] md:text-4xl">
+              Mes <span className="font-outfit text-amber-500">Études</span>
             </h2>
-            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Modules, rappels et revision concentree</p>
+            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Modules, rappels et révision concentrée</p>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <div className="relative min-w-[16rem] flex-1 md:flex-none">
-              <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
               <input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Rechercher un module"
-                className="w-full rounded-2xl border border-white/5 bg-[#020617] py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-white/15"
+                className="ui-field w-full rounded-2xl border py-4 pl-11 pr-4 text-sm font-bold outline-none focus:border-[color:var(--border-strong)]"
               />
             </div>
             <button
@@ -273,10 +273,10 @@ const Studies: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[2rem] border border-dashed border-white/10 bg-white/[0.03] px-6 py-10 text-center"
+            className="rounded-[2rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center shadow-card"
           >
-            <p className="text-sm font-bold text-white">Aucun module ne correspond a cette recherche.</p>
-            <p className="mt-2 text-[11px] text-slate-500">Essaie un autre mot-cle ou ajoute un nouveau module.</p>
+            <p className="text-sm font-bold text-[color:var(--text-primary)]">Aucun module ne correspond à cette recherche.</p>
+            <p className="mt-2 text-[11px] text-[color:var(--text-muted)]">Essaie un autre mot-clé ou ajoute un nouveau module.</p>
           </motion.div>
         )}
       </div>
@@ -287,75 +287,78 @@ const Studies: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[400] flex items-start justify-center overflow-y-auto bg-slate-950/98 p-4 pt-6 backdrop-blur-2xl md:p-6 md:pt-10"
+            className="fixed inset-0 z-[400] flex items-start justify-center overflow-y-auto bg-[color:var(--overlay)] p-4 pt-6 backdrop-blur-2xl md:p-6 md:pt-10"
           >
             <motion.div
               initial={{ opacity: 0, y: 18, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.98 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-3xl rounded-[2.5rem] border border-white/10 bg-slate-900 p-6 shadow-2xl md:p-8"
+              className="glass-panel w-full max-w-3xl rounded-[2.5rem] p-6 shadow-2xl md:p-8"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tight text-white">
-                    Parametres du <span className="text-amber-500">module</span>
+                  <h3 className="text-2xl font-black uppercase italic tracking-tight text-[color:var(--text-primary)]">
+                    Paramètres du <span className="text-amber-500">module</span>
                   </h3>
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Cours, rappels et focus de revision</p>
+                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Cours, rappels et focus de révision</p>
                 </div>
-                <button onClick={() => { setIsModalOpen(false); resetForm(); }} className="rounded-2xl border border-white/8 bg-white/5 p-3 text-slate-400 transition-colors hover:text-white">
+                <button
+                  onClick={() => { setIsModalOpen(false); resetForm(); }}
+                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)] p-3 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-primary)]"
+                >
                   <X size={22} />
                 </button>
               </div>
 
               <div className="space-y-5">
                 <div className="space-y-1.5">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Nom du module</label>
+                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Nom du module</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(event) => setFormName(event.target.value)}
                     placeholder="Ex: module principal"
-                    className="w-full rounded-2xl border border-white/5 bg-[#020617] px-6 py-5 text-sm font-bold text-white outline-none focus:border-amber-500/40"
+                    className="ui-field w-full rounded-2xl border px-6 py-5 text-sm font-bold outline-none focus:border-amber-500/40"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Semestre</label>
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Semestre</label>
                     <select
                       value={formSemester}
                       onChange={(event) => setFormSemester(event.target.value)}
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[10px] font-black uppercase text-white outline-none focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[10px] font-black uppercase outline-none focus:border-amber-500/40"
                     >
                       {['S1', 'S2', 'S3', 'S4', 'S5', 'S6'].map((semester) => <option key={semester} value={semester}>{semester}</option>)}
                     </select>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Credits ECTS</label>
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Crédits ECTS</label>
                     <input
                       type="number"
                       value={formEcts}
                       onChange={(event) => setFormEcts(Number(event.target.value))}
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[11px] font-black text-white outline-none focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Professeur referent</label>
+                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Professeur référent</label>
                   <input
                     type="text"
                     value={formProf}
                     onChange={(event) => setFormProf(event.target.value)}
                     placeholder="Pr. Dupont"
-                    className="w-full rounded-2xl border border-white/5 bg-[#020617] px-6 py-4 text-sm font-bold text-white outline-none focus:border-amber-500/40"
+                    className="ui-field w-full rounded-2xl border px-6 py-4 text-sm font-bold outline-none focus:border-amber-500/40"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Statut</label>
+                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Statut</label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {STATUS_OPTIONS.map((status) => (
                       <button
@@ -365,7 +368,7 @@ const Studies: React.FC = () => {
                         className={`rounded-xl border py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all ${
                           formStatus === status.value
                             ? status.activeClass
-                            : 'border-white/5 bg-slate-950 text-slate-500 hover:bg-white/5 hover:text-white'
+                            : 'border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--text-primary)]'
                         }`}
                       >
                         {status.label}
@@ -376,22 +379,22 @@ const Studies: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Chapitres faits</label>
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Chapitres faits</label>
                     <input
                       type="number"
                       value={formChaptersDone}
                       onChange={(event) => setFormChaptersDone(Number(event.target.value))}
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[11px] font-black text-white outline-none focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Total chapitres</label>
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Total chapitres</label>
                     <input
                       type="number"
                       value={formChaptersTotal}
                       onChange={(event) => setFormChaptersTotal(Number(event.target.value))}
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[11px] font-black text-white outline-none focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
                     />
                   </div>
                 </div>
@@ -411,34 +414,34 @@ const Studies: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Date d'examen</label>
+                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Date d'examen</label>
                     <input
                       type="date"
                       value={formExamDate}
                       onChange={(event) => setFormExamDate(event.target.value)}
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-6 py-4 text-sm font-bold text-white outline-none [color-scheme:dark] focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-6 py-4 text-sm font-bold outline-none focus:border-amber-500/40"
                     />
                   </div>
 
-                  <div className="rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-4">
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+                  <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4">
+                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-secondary)]">
                       <GraduationCap size={14} className="text-cyan-300" />
-                      Revision gamifiee
+                      Révision gamifiée
                     </div>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                      Lance le mode revision depuis la carte du module pour suivre le temps, le niveau et les sessions.
+                    <p className="mt-3 text-sm leading-relaxed text-[color:var(--text-muted)]">
+                      Lance le mode révision depuis la carte du module pour suivre le temps, le niveau et les sessions.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">Notes de cours</label>
+                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Notes de cours</label>
                   <textarea
                     value={formNotes}
                     onChange={(event) => setFormNotes(event.target.value)}
-                    placeholder="Points cles, ressources, axes de revision..."
+                    placeholder="Points clés, ressources, axes de révision..."
                     rows={4}
-                    className="w-full resize-none rounded-2xl border border-white/5 bg-[#020617] px-6 py-4 text-sm text-white outline-none focus:border-amber-500/40"
+                    className="ui-field w-full resize-none rounded-2xl border px-6 py-4 text-sm outline-none focus:border-amber-500/40"
                   />
                 </div>
 
@@ -469,13 +472,13 @@ const Studies: React.FC = () => {
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            className="fixed bottom-24 left-1/2 z-[430] w-[min(calc(100vw-2rem),32rem)] -translate-x-1/2 rounded-full border border-white/10 bg-slate-950/90 px-5 py-4 shadow-2xl backdrop-blur-xl"
+            className="glass-panel fixed bottom-24 left-1/2 z-[430] w-[min(calc(100vw-2rem),32rem)] -translate-x-1/2 rounded-full px-5 py-4 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex items-center justify-center gap-3 text-center">
               <span className={`h-2.5 w-2.5 rounded-full ${
                 toast.type === 'success' ? 'bg-emerald-400' : toast.type === 'error' ? 'bg-rose-400' : 'bg-cyan-300'
               }`} />
-              <span className="text-[10px] font-black uppercase tracking-[0.28em] text-white">{toast.message}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-primary)]">{toast.message}</span>
             </div>
           </motion.div>
         ) : null}

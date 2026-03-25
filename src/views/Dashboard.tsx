@@ -534,7 +534,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             onNavigate('PROFILE');
           }
         }}
-        className="glass w-full rounded-3xl p-6 text-left md:p-10 border-amber-500/10 bg-amber-500/[0.02] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all hover:border-white/15 hover:bg-white/[0.03] active:scale-[0.99]"
+        className="glass w-full rounded-3xl p-6 text-left md:p-10 border-amber-500/10 bg-amber-500/[0.02] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] active:scale-[0.99]"
       >
         <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-amber-500"><Shield size={180} /></div>
         <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full">
@@ -555,8 +555,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">
               {profile?.username || 'Utilisateur'}
             </p>
-            <h2 className="text-xl md:text-3xl font-black text-white truncate font-outfit">NIVEAU {userProfile.rank}</h2>
-            <div className="mt-2 h-1.5 w-full max-w-[200px] bg-slate-950 rounded-full border border-white/5 overflow-hidden">
+            <h2 className="text-xl md:text-3xl font-black text-[color:var(--text-primary)] truncate font-outfit">NIVEAU {userProfile.rank}</h2>
+            <div className="mt-2 h-1.5 w-full max-w-[200px] bg-[color:var(--surface-2)] rounded-full border border-[color:var(--border)] overflow-hidden">
               <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: '65%' }} />
             </div>
           </div>
@@ -635,16 +635,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       {/* OLD CHARTS SECTION - For context or removal later */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* DEPENSES PAR CATEGORIE (STACKED) */}
-        <div className="lg:col-span-8 glass rounded-[2.5rem] p-8 border-white/5 bg-[#020617]/55">
+        <div className="lg:col-span-8 glass rounded-[2.5rem] p-8">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+            <h3 className="text-[9px] font-black text-[color:var(--text-primary)] uppercase tracking-widest flex items-center gap-2">
               <Wallet size={14} className="text-amber-500" /> Repartition categorielle (7J)
             </h3>
           </div>
           <div className="h-[280px] w-full relative">
             {transactions.filter(t => t.type === 'expense').length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest bg-slate-950/50 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">En attente de donnees financieres...</p>
+                <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest bg-[color:var(--surface-2)] px-4 py-2 rounded-full border border-[color:var(--border)] backdrop-blur-sm">En attente de données financières...</p>
               </div>
             )}
             <ChartErrorBoundary fallbackTitle="Repartition indisponible" minHeightClassName="min-h-[200px]">
@@ -767,7 +767,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <div
                 key={idx}
                 onClick={() => setSelectedDate(day)}
-                className={`aspect-square rounded-2xl border transition-all flex flex-col items-center justify-between p-2 cursor-pointer group hover:scale-105 hover:bg-white/5 hover:border-white/20 relative overflow-hidden ${isToday ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_15px_rgba(251,191,36,0.1)]' : 'border-white/5 glass bg-[#0b1121]/50'
+                className={`aspect-square rounded-2xl border transition-all flex flex-col items-center justify-between p-2 cursor-pointer group hover:scale-105 hover:bg-[color:var(--muted)] hover:border-[color:var(--border-strong)] relative overflow-hidden ${isToday ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_15px_rgba(251,191,36,0.1)]' : 'border-[color:var(--border)] bg-[color:var(--surface)] shadow-card'
                   }`}
               >
                 <span className={`text-xs md:text-sm font-black ${isToday ? 'text-amber-500' : 'text-slate-500 group-hover:text-white'}`}>
@@ -789,56 +789,64 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {/* DAY DETAILS MODAL */}
       {selectedDate && dayDetails && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-950/90 backdrop-blur-2xl animate-in zoom-in-95 duration-200">
-          <div className="w-full max-w-xl bg-[#0b1121] border border-white/10 rounded-[2.5rem] p-6 md:p-8 shadow-3xl relative overflow-hidden flex flex-col max-h-[85vh]">
-            <button onClick={() => setSelectedDate(null)} className="absolute top-8 right-8 p-3 bg-white/5 hover:bg-white/10 rounded-full text-slate-500 hover:text-white transition-all"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[color:var(--overlay)] backdrop-blur-2xl animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-xl rounded-[2.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_30px_120px_var(--shadow-strong)] relative overflow-hidden flex flex-col max-h-[85vh] md:p-8">
+            <button
+              onClick={() => setSelectedDate(null)}
+              className="absolute top-8 right-8 p-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--muted)] transition-all"
+              aria-label="Fermer"
+            >
+              <X size={20} />
+            </button>
 
             <div className="mb-8">
               <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Rapport Journalier</p>
-              <h2 className="text-3xl font-black text-white italic uppercase">{selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+              <h2 className="text-3xl font-black text-[color:var(--text-primary)] italic uppercase">
+                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h2>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
 
               {/* FINANCES */}
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Wallet size={14} /> Flux Financiers</h3>
+                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Wallet size={14} /> Flux Financiers</h3>
                 {dayDetails.expenses.length > 0 ? (
                   <div className="space-y-3">
                     {dayDetails.expenses.map((t: any) => (
-                      <div key={t.id} className="flex justify-between items-center p-4 bg-slate-950 rounded-2xl border border-white/5">
+                      <div key={t.id} className="flex justify-between items-center p-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)]">
                         <div>
-                          <p className="font-bold text-white text-sm">{t.title}</p>
-                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{t.category}</p>
+                          <p className="font-bold text-[color:var(--text-primary)] text-sm">{t.title}</p>
+                          <p className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-wider">{t.category}</p>
                         </div>
-                        <span className="font-black text-rose-500 italic">-{t.amount} DH</span>
+                        <span className="font-black text-rose-600 dark:text-rose-500 italic">-{t.amount} DH</span>
                       </div>
                     ))}
                   </div>
-                ) : <p className="text-xs text-slate-600 italic pl-4 border-l-2 border-slate-800 ml-1 py-1">Aucune dépense enregistrée.</p>}
+                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune dépense enregistrée.</p>}
               </div>
 
               {/* MISSIONS DONE */}
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Missions Accomplies</h3>
+                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Missions Accomplies</h3>
                 {dayDetails.missionsDone.length > 0 ? (
                   <div className="space-y-3">
                     {dayDetails.missionsDone.map((m: any) => (
                       <div key={m.id} className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex items-center gap-4">
                         <div className="p-2 bg-emerald-500/20 rounded-full text-emerald-500"><Trophy size={14} /></div>
                         <div>
-                          <p className="font-bold text-white text-sm">{m.title}</p>
+                          <p className="font-bold text-[color:var(--text-primary)] text-sm">{m.title}</p>
                           <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-wider">XP ACQUISE</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                ) : <p className="text-xs text-slate-600 italic pl-4 border-l-2 border-slate-800 ml-1 py-1">Aucune mission terminée ce jour.</p>}
+                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune mission terminée ce jour.</p>}
               </div>
 
               {/* LEARNING */}
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><BrainCircuit size={14} /> Acquisition Savoir</h3>
+                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><BrainCircuit size={14} /> Acquisition Savoir</h3>
                 {dayDetails.wordsLearned.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {dayDetails.wordsLearned.map((w: any) => (
@@ -847,29 +855,29 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       </span>
                     ))}
                   </div>
-                ) : <p className="text-xs text-slate-600 italic pl-4 border-l-2 border-slate-800 ml-1 py-1">Aucun concept mémorisé.</p>}
+                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucun concept mémorisé.</p>}
               </div>
 
               {/* PLANNED */}
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Clock size={14} /> Programmation</h3>
+                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Clock size={14} /> Programmation</h3>
                 {dayDetails.missionsPlanned.length > 0 ? (
                   <div className="space-y-3">
                     {dayDetails.missionsPlanned.map((m: any) => (
-                      <div key={m.id} className="flex justify-between items-center p-4 bg-slate-950 rounded-2xl border border-dashed border-slate-700 opacity-60 hover:opacity-100 transition-opacity">
-                        <p className="font-bold text-slate-300 text-sm">{m.title}</p>
+                      <div key={m.id} className="flex justify-between items-center p-4 rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] opacity-80 hover:opacity-100 transition-opacity">
+                        <p className="font-bold text-[color:var(--text-primary)] text-sm">{m.title}</p>
                         <span className="text-[9px] font-black text-amber-500 uppercase">PRÉVU</span>
                       </div>
                     ))}
                   </div>
-                ) : <p className="text-xs text-slate-600 italic pl-4 border-l-2 border-slate-800 ml-1 py-1">Rien de prévu.</p>}
+                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Rien de prévu.</p>}
               </div>
 
             </div>
 
-            <div className="mt-8 pt-6 border-t border-white/5 flex gap-4">
-              <button onClick={() => { onNavigate('DISCIPLINE'); }} className="flex-1 py-4 bg-white text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-colors">Gérer les Tâches</button>
-              <button onClick={() => { onNavigate('FINANCE'); }} className="flex-1 py-4 bg-slate-900 text-white border border-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-colors">Ajouter Dépense</button>
+            <div className="mt-8 pt-6 border-t border-[color:var(--border)] flex gap-4">
+              <button onClick={() => { onNavigate('DISCIPLINE'); }} className="flex-1 py-4 bg-amber-500 text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-400 transition-colors">Gérer les Tâches</button>
+              <button onClick={() => { onNavigate('FINANCE'); }} className="flex-1 py-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-primary)] font-black uppercase text-[10px] tracking-widest hover:bg-[color:var(--muted)] transition-colors">Ajouter Dépense</button>
             </div>
           </div>
         </div>

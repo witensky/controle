@@ -68,17 +68,17 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 8, scale: 0.98 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(calc(100vw-2rem),22rem)] max-w-[22rem] rounded-[1.5rem] border border-white/10 bg-[#081120]/95 p-4 shadow-[0_24px_60px_rgba(2,6,23,0.55)] backdrop-blur-2xl sm:right-0"
+          className="glass-panel absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(calc(100vw-2rem),22rem)] max-w-[22rem] rounded-[1.5rem] p-4 shadow-[0_24px_60px_var(--shadow-strong)] backdrop-blur-2xl sm:right-0"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">Rappels intelligents</p>
-              <p className="mt-1 text-[11px] text-slate-400">Chaque rappel suit automatiquement les creneaux du module.</p>
+              <p className="mt-1 text-[11px] text-[color:var(--text-secondary)]">Chaque rappel suit automatiquement les créneaux du module.</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-400 transition-colors hover:text-white"
+              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--muted)] p-2 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-primary)]"
             >
               <X size={14} />
             </button>
@@ -86,7 +86,7 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
 
           <div className="mt-4 space-y-3">
             <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-slate-500">Raccourcis</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Raccourcis</p>
               <div className="flex flex-wrap gap-1.5">
                 {STUDY_REMINDER_PRESETS.map((preset) => {
                   const active = activePresetIds.includes(preset.id);
@@ -98,7 +98,7 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
                       className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.16em] transition-all ${
                         active
                           ? 'border-amber-400/30 bg-amber-400/12 text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.15)]'
-                          : 'border-white/8 bg-slate-950/70 text-slate-400 hover:border-white/20 hover:text-white'
+                          : 'border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)]'
                       }`}
                     >
                       {preset.label}
@@ -108,10 +108,10 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
               </div>
             </div>
 
-            <div className="rounded-[1.2rem] border border-white/8 bg-slate-950/60 p-3">
-              <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">
+            <div className="rounded-[1.2rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-3">
+              <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.24em] text-[color:var(--text-secondary)]">
                 <CalendarClock size={13} className="text-cyan-300" />
-                Personnalise
+                Personnalisé
               </div>
               <div className="mt-2 flex flex-col gap-2">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr,auto,auto]">
@@ -122,12 +122,12 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
                     value={customMinutes}
                     onChange={(event) => setCustomMinutes(event.target.value)}
                     placeholder="Valeur"
-                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#020617] px-3 py-2.5 text-xs font-bold text-white outline-none focus:border-cyan-400/40"
+                    className="ui-field min-w-0 flex-1 rounded-xl border px-3 py-2.5 text-xs font-bold outline-none focus:border-cyan-400/40"
                   />
                   <select
                     value={customUnit}
                     onChange={(event) => setCustomUnit(event.target.value as 'minutes' | 'days')}
-                    className="rounded-xl border border-white/10 bg-[#020617] px-3 py-2.5 text-[9px] font-black uppercase text-white outline-none focus:border-cyan-400/40"
+                    className="ui-field rounded-xl border px-3 py-2.5 text-[9px] font-black uppercase outline-none focus:border-cyan-400/40"
                   >
                     <option value="minutes">Minute(s)</option>
                     <option value="days">Jour(s)</option>
@@ -141,24 +141,24 @@ const ReminderPopover: React.FC<ReminderPopoverProps> = ({
                     Ajouter
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-500">Exemple: `10 minutes avant` ou `2 jours avant`.</p>
+                <p className="text-[10px] text-[color:var(--text-muted)]">Exemple: `10 minutes avant` ou `2 jours avant`.</p>
               </div>
             </div>
 
             <div className="space-y-2">
               {reminders.length > 0 ? reminders.map((reminder) => (
-                <div key={reminder.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
-                  <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-slate-300">
+                <div key={reminder.id} className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--muted)] px-3 py-2.5">
+                  <div className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">
                     <BellRing size={13} className="text-amber-400" />
                     {reminder.label}
                   </div>
-                  <button type="button" onClick={() => removeReminder(reminder.id)} className="text-slate-500 transition-colors hover:text-rose-400">
+                  <button type="button" onClick={() => removeReminder(reminder.id)} className="text-[color:var(--text-muted)] transition-colors hover:text-rose-500">
                     <X size={14} />
                   </button>
                 </div>
               )) : (
-                <p className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-center text-[11px] text-slate-500">
-                  Aucun rappel programme.
+                <p className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-center text-[11px] text-[color:var(--text-muted)]">
+                  Aucun rappel programmé.
                 </p>
               )}
             </div>

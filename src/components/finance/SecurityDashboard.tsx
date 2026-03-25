@@ -48,7 +48,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       Array.from({ length: 6 }, (_, index) => {
         const progress = index / 5;
         const projectedStep = currentBalance + (projectedBalance - currentBalance) * progress;
-        const resilienceOffset = (sources.total * 0.06) * (1 - progress);
+        const resilienceOffset = sources.total * 0.06 * (1 - progress);
 
         return {
           day: `J-${30 - index * 6}`,
@@ -64,7 +64,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
       onClose={onClose}
       title={
         <>
-          SUIVI DE <span className={color}>TRÉSORERIE</span>
+          Suivi de <span className={color}>trésorerie</span>
         </>
       }
       icon={<ShieldCheck size={20} className={color} />}
@@ -73,44 +73,46 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
     >
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(280px,0.82fr)_minmax(0,1.18fr)]">
         <div className="space-y-4">
-          <h4 className="pl-1 text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Répartition des sources</h4>
+          <h4 className="pl-1 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">
+            Répartition des sources
+          </h4>
 
-          <div className="glass flex items-center gap-4 rounded-[1.75rem] border-emerald-500/20 bg-emerald-500/[0.02] p-5 border-l-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+          <div className="flex items-center gap-4 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card border-l-4 border-emerald-500/40">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Wallet size={22} />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Alimentation AMCI</p>
-              <p className="text-2xl font-black italic text-white">{sources.amci.toLocaleString()} DH</p>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Alimentation AMCI</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.amci.toLocaleString()} DH</p>
             </div>
           </div>
 
-          <div className="glass flex items-center gap-4 rounded-[1.75rem] border-blue-500/20 bg-blue-500/[0.02] p-5 border-l-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+          <div className="flex items-center gap-4 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card border-l-4 border-blue-500/40">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Heart size={22} />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">Flux externes</p>
-              <p className="text-2xl font-black italic text-white">{sources.don.toLocaleString()} DH</p>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Flux externes</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.don.toLocaleString()} DH</p>
             </div>
           </div>
 
-          <div className="glass flex items-center gap-4 rounded-[1.75rem] border-slate-500/20 bg-slate-500/[0.02] p-5 border-l-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-500/10 text-slate-500">
+          <div className="flex items-center gap-4 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card border-l-4 border-slate-400/40">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400">
               <Layers size={22} />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Autres sources</p>
-              <p className="text-2xl font-black italic text-white">{sources.autres.toLocaleString()} DH</p>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Autres sources</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.autres.toLocaleString()} DH</p>
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/5 bg-slate-900/40 p-5">
+          <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 shadow-card">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Capacité totale</span>
-              <span className="text-xl font-black italic text-white">{sources.total.toLocaleString()} DH</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Capacité totale</span>
+              <span className="text-xl font-black italic text-[color:var(--text-primary)]">{sources.total.toLocaleString()} DH</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-950">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--muted)]">
               <div className="h-full w-full bg-blue-500" />
             </div>
           </div>
@@ -118,38 +120,45 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
 
         <div className="space-y-5">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className={`glass rounded-[1.9rem] border ${borderColor}/30 bg-slate-900/40 p-5 sm:p-6`}>
+            <div className={`rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card sm:p-6`}>
               <p className={`mb-4 text-[10px] font-black uppercase tracking-widest ${color}`}>Indice de solidité</p>
-              <h3 className="mb-4 text-4xl font-black italic text-white sm:text-5xl">{safetyRatio.toFixed(1)}%</h3>
-              <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-slate-950">
+              <h3 className="mb-4 text-4xl font-black italic text-[color:var(--text-primary)] sm:text-5xl">{safetyRatio.toFixed(1)}%</h3>
+              <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-[color:var(--muted)]">
                 <div className={`h-full ${bgColor} transition-all duration-1000`} style={{ width: `${Math.max(0, Math.min(100, safetyRatio))}%` }} />
               </div>
+              <p className="text-[11px] font-medium leading-relaxed text-[color:var(--text-muted)]">
+                Plus ce score est élevé, plus ton solde projeté couvre ton budget total.
+              </p>
             </div>
 
-            <div className="glass rounded-[1.9rem] border-white/5 bg-slate-900/30 p-5 sm:p-6">
+            <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card sm:p-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Solde brut actuel</span>
-                  <span className="text-base font-black text-white">{currentBalance.toLocaleString()} DH</span>
+                <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Solde brut actuel</span>
+                  <span className="text-base font-black text-[color:var(--text-primary)]">{currentBalance.toLocaleString()} DH</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Engagements futurs</span>
-                  <span className="text-base font-black text-amber-500">-{provisionsAmount.toLocaleString()} DH</span>
+                <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500">Engagements futurs</span>
+                  <span className="text-base font-black text-amber-600 dark:text-amber-500">-{provisionsAmount.toLocaleString()} DH</span>
                 </div>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Solde projeté</span>
-                  <span className="text-2xl font-black italic text-emerald-400">{projectedBalance.toLocaleString()} DH</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Solde projeté</span>
+                  <span className="text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{projectedBalance.toLocaleString()} DH</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="glass rounded-[1.9rem] border-white/5 bg-slate-900/15 p-5 sm:p-6">
-            <h4 className="mb-5 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card sm:p-6">
+            <h4 className="mb-5 flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">
               <TrendingUp size={16} className="text-emerald-500" /> État de la trésorerie (30 j)
             </h4>
             <div className="h-[240px] sm:h-[280px]">
-              <ChartErrorBoundary fallbackTitle="Tresorerie indisponible" minHeightClassName="min-h-[240px]" resetKey={`${currentBalance}-${projectedBalance}-${sources.total}`}>
+              <ChartErrorBoundary
+                fallbackTitle="Trésorerie indisponible"
+                minHeightClassName="min-h-[240px]"
+                resetKey={`${currentBalance}-${projectedBalance}-${sources.total}`}
+              >
                 <SparklineChart
                   data={trendData.map((item) => ({
                     label: String(item.day || ''),
@@ -169,3 +178,4 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
     </ModalShell>
   );
 };
+

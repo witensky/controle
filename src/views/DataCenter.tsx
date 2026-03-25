@@ -403,7 +403,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                               setCollectionFilter(event.target.value as 'all' | DataCollectionKey);
                               setCategoryFilter('all');
                            }}
-                           className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-[11px] font-black uppercase text-white outline-none"
+                           className="ui-field w-full rounded-2xl border px-4 py-3 text-[11px] font-black uppercase outline-none"
                         >
                            {DATA_COLLECTION_OPTIONS.map((option) => (
                               <option key={option.key} value={option.key}>
@@ -418,7 +418,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                         <select
                            value={categoryFilter}
                            onChange={(event) => setCategoryFilter(event.target.value)}
-                           className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-[11px] font-black uppercase text-white outline-none"
+                           className="ui-field w-full rounded-2xl border px-4 py-3 text-[11px] font-black uppercase outline-none"
                         >
                            {categoryOptions.map((option) => (
                               <option key={option} value={option}>
@@ -460,16 +460,16 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                            value={searchQuery}
                            onChange={(event) => setSearchQuery(event.target.value)}
                            placeholder="Titre, categorie, resume"
-                           className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-sm font-medium text-white outline-none placeholder:text-slate-700"
+                           className="ui-field w-full rounded-2xl border px-4 py-3 text-sm font-medium outline-none"
                         />
                      </div>
 
                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl border border-white/5 bg-[#020617] p-4">
+                        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
                            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">Filtres</p>
                            <p className="mt-2 text-2xl font-black text-white">{filteredRecords.length}</p>
                         </div>
-                        <div className="rounded-2xl border border-white/5 bg-[#020617] p-4">
+                        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
                            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">Selection</p>
                            <p className="mt-2 text-2xl font-black text-white">{selectedRecordIds.length}</p>
                         </div>

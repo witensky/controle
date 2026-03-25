@@ -39,45 +39,45 @@ const TONE_STYLES: Record<
   }
 > = {
   rose: {
-    shell: 'bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
+    shell: 'bg-[color:var(--card)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
     border: 'border-rose-500/14 hover:border-rose-400/30',
     glow: 'hover:shadow-[0_24px_60px_rgba(244,63,94,0.14)]',
     iconShell: 'bg-rose-500/10',
     iconColor: 'text-rose-400',
-    valueColor: 'text-white',
+    valueColor: 'text-[color:var(--text-primary)] dark:text-white',
     accentLine: 'from-rose-400/0 via-rose-400/75 to-rose-400/0',
     sparkStroke: '#f43f5e',
     sparkFill: '#f43f5e',
   },
   amber: {
-    shell: 'bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
+    shell: 'bg-[color:var(--card)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
     border: 'border-amber-500/14 hover:border-amber-400/30',
     glow: 'hover:shadow-[0_24px_60px_rgba(245,158,11,0.14)]',
     iconShell: 'bg-amber-500/10',
     iconColor: 'text-amber-400',
-    valueColor: 'text-white',
+    valueColor: 'text-[color:var(--text-primary)] dark:text-white',
     accentLine: 'from-amber-400/0 via-amber-400/75 to-amber-400/0',
     sparkStroke: '#f59e0b',
     sparkFill: '#f59e0b',
   },
   emerald: {
-    shell: 'bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
+    shell: 'bg-[color:var(--card)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
     border: 'border-emerald-500/14 hover:border-emerald-400/30',
     glow: 'hover:shadow-[0_24px_60px_rgba(16,185,129,0.14)]',
     iconShell: 'bg-emerald-500/10',
     iconColor: 'text-emerald-400',
-    valueColor: 'text-white',
+    valueColor: 'text-[color:var(--text-primary)] dark:text-white',
     accentLine: 'from-emerald-400/0 via-emerald-400/75 to-emerald-400/0',
     sparkStroke: '#10b981',
     sparkFill: '#10b981',
   },
   blue: {
-    shell: 'bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
+    shell: 'bg-[color:var(--card)] dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))]',
     border: 'border-blue-500/14 hover:border-blue-400/30',
     glow: 'hover:shadow-[0_24px_60px_rgba(59,130,246,0.14)]',
     iconShell: 'bg-blue-500/10',
     iconColor: 'text-blue-400',
-    valueColor: 'text-white',
+    valueColor: 'text-[color:var(--text-primary)] dark:text-white',
     accentLine: 'from-blue-400/0 via-blue-400/75 to-blue-400/0',
     sparkStroke: '#3b82f6',
     sparkFill: '#3b82f6',
@@ -246,7 +246,7 @@ const DashboardCard = ({
           />
           <motion.div
             aria-hidden="true"
-            className={`pointer-events-none absolute inset-x-[-8%] top-[40%] h-[78%] rounded-[42%] border border-white/6 ${
+            className={`pointer-events-none absolute inset-x-[-8%] top-[40%] h-[78%] rounded-[42%] border border-[color:var(--border)] dark:border-white/6 ${
               tone === 'emerald' ? 'bg-emerald-300/12' : 'bg-white/8'
             }`}
             style={{
@@ -278,22 +278,22 @@ const DashboardCard = ({
       <div className={`relative z-10 flex h-full ${featured ? '' : 'flex-col justify-between'}`}>
         {featured ? (
           <>
-            <div className={`absolute right-0 top-0 flex shrink-0 items-center justify-center rounded-xl border border-white/6 ${styles.iconShell} ${styles.iconColor} h-10 w-10`}>
+            <div className={`absolute right-0 top-0 flex shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] dark:border-white/6 ${styles.iconShell} ${styles.iconColor} h-10 w-10`}>
               <Icon size={16} strokeWidth={2.2} />
             </div>
 
-            <div className="absolute inset-0 grid place-items-center">
+              <div className="absolute inset-0 grid place-items-center">
               <div className="flex flex-col items-center justify-center text-center">
-              <p className="font-black uppercase tracking-[0.24em] text-slate-300/80 text-[9px] md:text-[10px]">
+              <p className="font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-300/80 text-[9px] md:text-[10px]">
                 {title}
               </p>
               <div className={`${subtitle ? 'space-y-2' : 'space-y-0'} mt-3 flex flex-col items-center justify-center`}>
                 <AnimatedMetric
                   value={value}
-                  className={`block translate-y-1 font-black italic leading-none tracking-[-0.06em] font-outfit drop-shadow-[0_10px_22px_rgba(255,255,255,0.12)] text-[2.3rem] md:text-[2.7rem] ${styles.valueColor}`}
+                  className={`block translate-y-1 font-black italic leading-none tracking-[-0.06em] font-outfit drop-shadow-none dark:drop-shadow-[0_10px_22px_rgba(255,255,255,0.12)] text-[2.3rem] md:text-[2.7rem] ${styles.valueColor}`}
                 />
                 {subtitle ? (
-                  <p className="font-bold uppercase italic leading-none tracking-[0.22em] text-slate-300/70 text-[9px]">
+                  <p className="font-bold uppercase italic leading-none tracking-[0.22em] text-[color:var(--text-secondary)] dark:text-slate-300/70 text-[9px]">
                     {subtitle}
                   </p>
                 ) : null}
@@ -304,10 +304,10 @@ const DashboardCard = ({
         ) : (
           <div>
             <div className="flex items-start justify-between gap-3">
-              <p className={`min-w-0 pr-1.5 font-black uppercase tracking-[0.18em] text-slate-500 ${compact ? 'text-[7px] leading-[1.35] min-[430px]:pr-2 min-[430px]:text-[8px] md:text-[9px]' : 'text-[9px] md:text-[10px]'}`}>
+              <p className={`min-w-0 pr-1.5 font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] dark:text-slate-500 ${compact ? 'text-[7px] leading-[1.35] min-[430px]:pr-2 min-[430px]:text-[8px] md:text-[9px]' : 'text-[9px] md:text-[10px]'}`}>
                 {title}
               </p>
-              <div className={`flex shrink-0 items-center justify-center rounded-xl border border-white/6 ${styles.iconShell} ${styles.iconColor} ${compact ? 'h-6 w-6 min-[430px]:h-7 min-[430px]:w-7' : 'h-8 w-8'}`}>
+              <div className={`flex shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] dark:border-white/6 ${styles.iconShell} ${styles.iconColor} ${compact ? 'h-6 w-6 min-[430px]:h-7 min-[430px]:w-7' : 'h-8 w-8'}`}>
                 <Icon size={compact ? 11 : 14} strokeWidth={2.2} />
               </div>
             </div>
@@ -315,10 +315,10 @@ const DashboardCard = ({
             <div className={`${subtitle ? 'space-y-1.5' : ''} ${compact ? 'mt-1 md:mt-1.5' : 'mt-2'}`}>
               <AnimatedMetric
                 value={value}
-                className={`block font-black italic leading-none tracking-[-0.06em] font-outfit drop-shadow-[0_6px_18px_rgba(255,255,255,0.08)] ${compact ? 'text-[1.28rem] min-[430px]:text-[1.5rem] md:text-[1.7rem]' : 'text-[1.95rem] md:text-[2.15rem]'} ${styles.valueColor}`}
+                className={`block font-black italic leading-none tracking-[-0.06em] font-outfit drop-shadow-none dark:drop-shadow-[0_6px_18px_rgba(255,255,255,0.08)] ${compact ? 'text-[1.28rem] min-[430px]:text-[1.5rem] md:text-[1.7rem]' : 'text-[1.95rem] md:text-[2.15rem]'} ${styles.valueColor}`}
               />
               {subtitle ? (
-                <p className={`font-bold uppercase italic leading-none tracking-[0.18em] text-slate-500 ${compact ? 'text-[7px] min-[430px]:text-[8px]' : 'text-[9px]'}`}>
+                <p className={`font-bold uppercase italic leading-none tracking-[0.18em] text-[color:var(--text-secondary)] dark:text-slate-500 ${compact ? 'text-[7px] min-[430px]:text-[8px]' : 'text-[9px]'}`}>
                   {subtitle}
                 </p>
               ) : null}

@@ -518,28 +518,28 @@ const Discipline: React.FC = () => {
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-amber-500" size={40} /></div>;
 
   return (
-    <div className="space-y-4 pb-44 animate-in fade-in duration-700 min-h-screen bg-[#020617]">
+    <div className="space-y-4 pb-44 animate-in fade-in duration-700 min-h-screen bg-[color:var(--app-bg)]">
 
       {/* --- HUD HEADER --- */}
-      <div className="sticky top-0 z-30 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5 py-4 px-2 md:px-0">
+      <div className="sticky top-0 z-30 bg-[color:var(--card)] backdrop-blur-xl border-b border-[color:var(--border)] py-4 px-2 md:px-0">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
               <ShieldCheck size={24} strokeWidth={3} />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-white tracking-tighter uppercase italic font-outfit">MES <span className="text-amber-500">OBJECTIFS</span></h2>
+              <h2 className="text-xl md:text-2xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase italic font-outfit">MES <span className="text-amber-500">OBJECTIFS</span></h2>
               <div className="flex items-center gap-3 mt-1">
-                <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-1.5 w-24 bg-[color:var(--border)] rounded-full overflow-hidden">
                   <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${stats.score}%` }} />
                 </div>
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{stats.score}% accompli</span>
+                <span className="text-[9px] font-bold text-[color:var(--text-muted)] uppercase tracking-widest">{stats.score}% accompli</span>
               </div>
             </div>
           </div>
 
           {/* TABS */}
-          <div className="flex p-1 bg-slate-900/80 border border-white/5 rounded-xl shadow-lg w-full md:w-auto overflow-x-auto custom-scrollbar no-scrollbar">
+          <div className="flex p-1 bg-[color:var(--surface)] border border-[color:var(--border)] rounded-xl shadow-card w-full md:w-auto overflow-x-auto custom-scrollbar no-scrollbar">
             {[
               { id: 'planner', label: 'OBJECTIFS', icon: ListTodo },
               { id: 'rituals', label: 'ROUTINES', icon: Zap },
@@ -548,7 +548,7 @@ const Discipline: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-fit ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 shadow-lg' : 'text-slate-500 hover:text-white hover:bg-white/5'
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap min-w-fit ${activeTab === tab.id ? 'bg-amber-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--muted)]'
                   }`}
               >
                 <tab.icon size={13} strokeWidth={3} className="shrink-0" /> <span>{tab.label}</span>
@@ -567,20 +567,24 @@ const Discipline: React.FC = () => {
             {/* 1. QUICK CAPTURE BAR */}
             <div className="relative group animate-in slide-in-from-top-4 duration-500">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              <div className="relative glass bg-[#0b1121]/90 border border-white/10 rounded-[2rem] p-4 sm:p-6 shadow-2xl flex flex-col gap-4 sm:gap-5">
+              <div className="relative glass rounded-[2rem] p-4 sm:p-6 shadow-2xl flex flex-col gap-4 sm:gap-5">
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className="min-w-0 flex-1">
                     <input
                       id="discipline-mission-title"
                       type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                       placeholder="Ajouter un objectif"
-                      className="w-full min-w-0 bg-transparent border-none outline-none text-white font-black text-base sm:text-lg uppercase placeholder:text-slate-600 placeholder:text-xs sm:placeholder:text-sm tracking-tight"
+                      className="w-full min-w-0 bg-transparent border-none outline-none font-black text-base sm:text-lg uppercase tracking-tight text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] placeholder:text-xs sm:placeholder:text-sm"
                       onKeyDown={(e) => e.key === 'Enter' && !showAdvancedCreate && handleCreateMission()}
                     />
                   </div>
                   <button
                     onClick={() => setShowAdvancedCreate(!showAdvancedCreate)}
-                    className={`mt-0.5 h-11 w-11 rounded-xl border transition-all shrink-0 flex items-center justify-center ${showAdvancedCreate ? 'border-white/15 bg-white/10 text-white shadow-lg shadow-white/5' : 'border-white/8 text-slate-500 hover:text-white hover:border-white/20 hover:bg-white/[0.03]'}`}
+                    className={`mt-0.5 h-11 w-11 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
+                      showAdvancedCreate
+                        ? 'border-[color:var(--border-strong)] bg-[color:var(--muted)] text-[color:var(--text-primary)] shadow-card'
+                        : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)]'
+                    }`}
                     aria-label="Afficher les options avancées"
                   >
                     <SlidersHorizontal size={18} />
@@ -589,33 +593,37 @@ const Discipline: React.FC = () => {
 
                 {/* ADVANCED FIELDS */}
                 {showAdvancedCreate && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 pt-2 border-t border-white/5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in slide-in-from-top-2 pt-2 border-t border-[color:var(--border)]">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-1">DESCRIPTION / NOTES</label>
+                      <label className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-widest pl-1">DESCRIPTION / NOTES</label>
                       <input
                         type="text" value={newDescription} onChange={e => setNewDescription(e.target.value)}
                         placeholder="Informations complémentaires..."
-                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-xs text-white font-medium outline-none focus:border-amber-500/50"
+                        className="w-full ui-field rounded-xl border px-4 py-3 text-xs font-medium outline-none focus:border-amber-500/50"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-1">DEADLINE</label>
+                      <label className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-widest pl-1">DEADLINE</label>
                       <input
                         type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
-                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-xs text-white font-medium outline-none focus:border-amber-500/50 [color-scheme:dark]"
+                        className="w-full ui-field rounded-xl border px-4 py-3 text-xs font-medium outline-none focus:border-amber-500/50"
                       />
                     </div>
                     <div className="col-span-1 md:col-span-2 space-y-2">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-1">EFFORT REQUIS</label>
+                      <label className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-widest pl-1">EFFORT REQUIS</label>
                       <div className="flex gap-2">
                         {[1, 2, 3].map(e => (
-                          <button
-                            key={e}
-                            onClick={() => setNewEnergy(e as 1 | 2 | 3)}
-                            className={`flex-1 py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${newEnergy === e ? 'bg-amber-500 text-slate-950 border-amber-500' : 'bg-slate-950 border-white/10 text-slate-600 hover:bg-white/5'}`}
-                          >
-                            {e === 1 ? 'LÉGER' : e === 2 ? 'MODÉRÉ' : 'INTENSE'}
-                          </button>
+                            <button
+                              key={e}
+                              onClick={() => setNewEnergy(e as 1 | 2 | 3)}
+                              className={`flex-1 py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${
+                                newEnergy === e
+                                  ? 'bg-amber-500 text-slate-950 border-amber-500'
+                                  : 'bg-[color:var(--surface-2)] border-[color:var(--border)] text-[color:var(--text-muted)] hover:bg-[color:var(--muted)] hover:text-[color:var(--text-primary)]'
+                              }`}
+                            >
+                              {e === 1 ? 'LÉGER' : e === 2 ? 'MODÉRÉ' : 'INTENSE'}
+                            </button>
                         ))}
                       </div>
                     </div>
@@ -624,10 +632,10 @@ const Discipline: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 sm:gap-4 items-end pt-1">
                   <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
-                    <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="w-full min-w-0 bg-slate-950 border border-white/10 rounded-xl py-3 px-3 sm:px-4 text-[10px] font-black text-slate-300 uppercase outline-none focus:border-amber-500">
+                    <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="w-full min-w-0 ui-field rounded-xl border py-3 px-3 sm:px-4 text-[10px] font-black uppercase outline-none focus:border-amber-500">
                       {missionCategories.map(c => <option key={c} value={c}>{displayMissionCategoryLabel(c, studyDomainLabel)}</option>)}
                     </select>
-                    <select value={priority} onChange={(e) => setPriority(e.target.value as any)} className="w-full min-w-0 bg-slate-950 border border-white/10 rounded-xl py-3 px-3 sm:px-4 text-[10px] font-black text-slate-300 uppercase outline-none focus:border-amber-500">
+                    <select value={priority} onChange={(e) => setPriority(e.target.value as any)} className="w-full min-w-0 ui-field rounded-xl border py-3 px-3 sm:px-4 text-[10px] font-black uppercase outline-none focus:border-amber-500">
                       <option value="medium">STANDARD</option>
                       <option value="high">HIGH</option>
                       <option value="critical">CRITICAL</option>
@@ -637,7 +645,7 @@ const Discipline: React.FC = () => {
                   <button
                     onClick={handleCreateMission}
                     disabled={isSaving || !title.trim()}
-                    className="w-full sm:w-auto sm:min-w-[168px] px-6 py-3.5 bg-white text-slate-950 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-amber-500 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto sm:min-w-[168px] px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-primary)] hover:bg-amber-500 hover:border-amber-500 hover:text-slate-950"
                   >
                     {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={16} strokeWidth={3} />}
                     AJOUTER
@@ -657,14 +665,15 @@ const Discipline: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {activeMissions.map(mission => (
                     // ACTIVE CARD
-                    <div key={mission.id} className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 to-[#0b1121] border border-amber-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(245,158,11,0.1)] group">
+                    <div key={mission.id} className="relative glass overflow-hidden border border-amber-500/30 rounded-2xl p-6 shadow-card group">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent" />
                       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={80} className="text-amber-500" /></div>
                       <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
                           <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-lg text-[8px] font-black uppercase tracking-widest border border-amber-500/20">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
                           {mission.id === focusMission?.id && <div className="flex items-center gap-2 text-rose-500 animate-pulse font-mono font-bold">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>}
                         </div>
-                        <h4 className="text-lg md:text-xl font-black text-white italic uppercase mb-6 leading-tight">{mission.title}</h4>
+                        <h4 className="text-lg md:text-xl font-black text-[color:var(--text-primary)] italic uppercase mb-6 leading-tight">{mission.title}</h4>
                         <div className="flex gap-3">
                           <button onClick={() => updateMissionStatus(mission.id, 'Terminé')} className="flex-1 py-3 bg-amber-500 text-slate-950 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-amber-400 transition-colors flex items-center justify-center gap-2 shadow-lg">
                             <CheckCircle2 size={14} /> TERMINER
@@ -693,12 +702,12 @@ const Discipline: React.FC = () => {
 
             {/* 3. TACTICAL QUEUE ZONE */}
             <div className="animate-in slide-in-from-bottom-8 duration-700 delay-100">
-              <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">LISTE ({pendingMissions.length})</h3>
+              <div className="flex items-center justify-between mb-4 border-b border-[color:var(--border)] pb-2 dark:border-white/5">
+                <h3 className="text-xs font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em]">LISTE ({pendingMissions.length})</h3>
               </div>
 
               {pendingMissions.length === 0 ? (
-                <div className="py-12 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-slate-600">
+                <div className="py-12 rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] flex flex-col items-center justify-center text-[color:var(--text-muted)] shadow-card dark:bg-transparent dark:border-white/10 dark:text-slate-600">
                   <Target size={32} className="mb-4 opacity-50" />
                   <p className="text-[10px] uppercase tracking-widest font-bold">AUCUN OBJECTIF PLANIFIÉ</p>
                 </div>
@@ -706,13 +715,13 @@ const Discipline: React.FC = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {pendingMissions.map(mission => (
                     // QUEUE CARD
-                    <div key={mission.id} className="group flex flex-col md:flex-row md:items-center justify-between p-4 bg-[#0b1121] border border-white/5 rounded-xl hover:border-white/10 hover:bg-white/[0.02] transition-all hover:translate-x-1 gap-4 md:gap-0">
+                    <div key={mission.id} className="group flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] dark:border-white/5 dark:bg-[#0b1121] dark:hover:border-white/10 dark:hover:bg-white/[0.02]">
                       <div className="flex items-center gap-4">
                         <div className={`w-1 h-12 rounded-full ${mission.priority === 'critical' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : mission.priority === 'high' ? 'bg-orange-500' : 'bg-slate-700'}`} />
                         <div>
-                          <h4 className="text-sm font-bold text-slate-200 uppercase tracking-tight group-hover:text-white transition-colors">{mission.title}</h4>
+                          <h4 className="text-sm font-bold text-[color:var(--text-primary)] uppercase tracking-tight transition-colors dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider bg-slate-900 px-1.5 py-0.5 rounded">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[color:var(--surface-2)] text-[color:var(--text-muted)] dark:bg-slate-900 dark:text-slate-600">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
                             {mission.priority === 'critical' && <span className="text-[8px] font-black text-rose-500 uppercase tracking-wider flex items-center gap-1"><AlertCircle size={8} /> CRITIQUE</span>}
                           </div>
                         </div>
@@ -769,9 +778,9 @@ const Discipline: React.FC = () => {
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* MORNING */}
-              <div className="group bg-[#0b1121] border border-white/5 rounded-[2rem] p-5 md:p-6 relative overflow-hidden hover:border-amber-500/30 transition-all">
+              <div className="glass group rounded-[2rem] p-5 md:p-6 relative overflow-hidden hover:border-amber-500/30 transition-all">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Sunrise size={120} className="text-amber-500" /></div>
-                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-5 flex items-center gap-3"><Sunrise className="text-amber-500" /> Matin (Routine)</h3>
+                <h3 className="text-xl font-black text-[color:var(--text-primary)] italic uppercase tracking-tighter mb-5 flex items-center gap-3"><Sunrise className="text-amber-500" /> Matin (Routine)</h3>
                 <div className="space-y-2.5 relative z-10">
                   {morningCatalog.map(item => (
                     <div key={item.id} className="space-y-2">
@@ -784,18 +793,18 @@ const Discipline: React.FC = () => {
                         onTouchCancel={clearRitualLongPress}
                         onContextMenu={(event) => event.preventDefault()}
                         onClick={() => handleRitualClick('morning', item.id)}
-                        className={`w-full px-4 py-3.5 rounded-xl border flex items-center justify-between transition-all ${morningRituals[item.id] ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg shadow-amber-500/20' : 'bg-slate-950/50 border-white/5 text-slate-500 hover:border-white/20'}`}
+                        className={`w-full px-4 py-3.5 rounded-xl border flex items-center justify-between transition-all ${morningRituals[item.id] ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg shadow-amber-500/20' : 'bg-[color:var(--surface)] border-[color:var(--border)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)]'}`}
                       >
                         <span className="text-[10px] font-black uppercase tracking-widest text-left">{item.label}</span>
-                        {morningRituals[item.id] ? <CheckSquare size={16} /> : <div className="w-4 h-4 border-2 border-slate-700 rounded-md shrink-0" />}
+                        {morningRituals[item.id] ? <CheckSquare size={16} /> : <div className="w-4 h-4 border-2 border-[color:var(--border-strong)] rounded-md shrink-0" />}
                       </button>
                       {ritualActionsTarget?.period === 'morning' && ritualActionsTarget.ritualId === item.id && (
                         <div className="flex justify-end gap-2 animate-in fade-in zoom-in-95 duration-200">
-                          <button onClick={() => editRitual('morning', item.id, item.label)} className="h-10 px-4 rounded-xl border border-white/5 bg-slate-950/70 text-slate-400 hover:text-amber-500 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2">
+                          <button onClick={() => editRitual('morning', item.id, item.label)} className="h-10 px-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] hover:text-amber-600 hover:border-amber-500/30 transition-colors flex items-center justify-center gap-2">
                             <Pencil size={14} />
                             <span className="text-[9px] font-black uppercase tracking-widest">Modifier</span>
                           </button>
-                          <button onClick={() => deleteRitual('morning', item.id)} className="h-10 px-4 rounded-xl border border-white/5 bg-slate-950/70 text-slate-500 hover:text-rose-500 hover:border-rose-500/30 transition-colors flex items-center justify-center gap-2">
+                          <button onClick={() => deleteRitual('morning', item.id)} className="h-10 px-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] hover:text-rose-500 hover:border-rose-500/30 transition-colors flex items-center justify-center gap-2">
                             <Trash2 size={14} />
                             <span className="text-[9px] font-black uppercase tracking-widest">Supprimer</span>
                           </button>
@@ -809,7 +818,7 @@ const Discipline: React.FC = () => {
                       onChange={e => setNewMorningRitual(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && addRitual('morning')}
                       placeholder="+ Ajouter ritual..."
-                      className="flex-1 bg-slate-950 border border-dashed border-white/10 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase outline-none focus:border-amber-500/40 placeholder:text-slate-700"
+                      className="ui-field flex-1 rounded-xl border border-dashed px-4 py-3 text-[10px] font-bold uppercase outline-none focus:border-amber-500/40"
                     />
                     <button onClick={() => addRitual('morning')} className="px-4 py-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl hover:bg-amber-500 hover:text-slate-950 transition-all">
                       <Plus size={16} />
@@ -819,9 +828,9 @@ const Discipline: React.FC = () => {
               </div>
 
               {/* EVENING */}
-              <div className="group bg-[#0b1121] border border-white/5 rounded-[2rem] p-5 md:p-6 relative overflow-hidden hover:border-blue-500/30 transition-all">
+              <div className="glass group rounded-[2rem] p-5 md:p-6 relative overflow-hidden hover:border-blue-500/30 transition-all">
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><Sunset size={120} className="text-blue-500" /></div>
-                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-5 flex items-center gap-3"><Sunset className="text-blue-500" /> Soir (Decompr)</h3>
+                <h3 className="text-xl font-black text-[color:var(--text-primary)] italic uppercase tracking-tighter mb-5 flex items-center gap-3"><Sunset className="text-blue-500" /> Soir (Decompr)</h3>
                 <div className="space-y-2.5 relative z-10">
                   {eveningCatalog.map(item => (
                     <div key={item.id} className="space-y-2">
@@ -834,10 +843,10 @@ const Discipline: React.FC = () => {
                         onTouchCancel={clearRitualLongPress}
                         onContextMenu={(event) => event.preventDefault()}
                         onClick={() => handleRitualClick('evening', item.id)}
-                        className={`w-full px-4 py-3.5 rounded-xl border flex items-center justify-between transition-all ${eveningRituals[item.id] ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-slate-950/50 border-white/5 text-slate-500 hover:border-white/20'}`}
+                        className={`w-full px-4 py-3.5 rounded-xl border flex items-center justify-between transition-all ${eveningRituals[item.id] ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-[color:var(--surface)] border-[color:var(--border)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)]'}`}
                       >
                         <span className="text-[10px] font-black uppercase tracking-widest text-left">{item.label}</span>
-                        {eveningRituals[item.id] ? <CheckSquare size={16} /> : <div className="w-4 h-4 border-2 border-slate-700 rounded-md shrink-0" />}
+                        {eveningRituals[item.id] ? <CheckSquare size={16} /> : <div className="w-4 h-4 border-2 border-[color:var(--border-strong)] rounded-md shrink-0" />}
                       </button>
                       {ritualActionsTarget?.period === 'evening' && ritualActionsTarget.ritualId === item.id && (
                         <div className="flex justify-end gap-2 animate-in fade-in zoom-in-95 duration-200">
@@ -1007,7 +1016,7 @@ const Discipline: React.FC = () => {
                     step={5}
                     value={startDurationMinutes}
                     onChange={(event) => setStartDurationMinutes(Math.max(5, Number(event.target.value) || 5))}
-                    className="w-full rounded-2xl border border-white/10 bg-[#020617] px-4 py-3 text-base font-black text-white outline-none transition-all focus:border-blue-500/40"
+                    className="ui-field w-full rounded-2xl border px-4 py-3 text-base font-black outline-none transition-all focus:border-blue-500/40"
                   />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">min</span>
                 </div>
@@ -1210,7 +1219,7 @@ const Discipline: React.FC = () => {
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Nom de l'objectif"
-                      className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-base font-black text-white outline-none transition-all placeholder:text-slate-700 focus:border-amber-500/40"
+                      className="ui-field w-full rounded-2xl border px-4 py-4 text-base font-black outline-none transition-all focus:border-amber-500/40"
                     />
                   </div>
                 </div>
@@ -1222,7 +1231,7 @@ const Discipline: React.FC = () => {
                       <select
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value as any)}
-                        className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[15px] font-black uppercase text-white outline-none transition-all focus:border-amber-500/40"
+                        className="ui-field w-full rounded-2xl border px-4 py-4 text-[15px] font-black uppercase outline-none transition-all focus:border-amber-500/40"
                       >
                         {missionCategories.map(c => <option key={c} value={c}>{displayMissionCategoryLabel(c, studyDomainLabel)}</option>)}
                       </select>
@@ -1235,7 +1244,7 @@ const Discipline: React.FC = () => {
                       <select
                         value={editPriority}
                         onChange={(e) => setEditPriority(e.target.value as any)}
-                        className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-[15px] font-black uppercase text-white outline-none transition-all focus:border-amber-500/40"
+                        className="ui-field w-full rounded-2xl border px-4 py-4 text-[15px] font-black uppercase outline-none transition-all focus:border-amber-500/40"
                       >
                         <option value="low">LOW</option>
                         <option value="medium">MEDIUM</option>
@@ -1253,7 +1262,7 @@ const Discipline: React.FC = () => {
                       value={editDescription}
                       onChange={e => setEditDescription(e.target.value)}
                       placeholder="Ajoute un contexte utile, le resultat attendu ou quelques details d'execution..."
-                      className="min-h-[118px] w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 text-sm font-medium leading-relaxed text-white outline-none transition-all placeholder:text-slate-700 focus:border-amber-500/40"
+                      className="ui-field min-h-[118px] w-full rounded-2xl border px-4 py-4 text-sm font-medium leading-relaxed outline-none transition-all focus:border-amber-500/40"
                     />
                   </div>
                 </div>
@@ -1267,7 +1276,7 @@ const Discipline: React.FC = () => {
                           type="date"
                           value={editDeadline}
                           onChange={e => setEditDeadline(e.target.value)}
-                          className="w-full rounded-2xl border border-white/5 bg-[#020617] px-4 py-4 pr-11 text-sm font-black uppercase text-white outline-none transition-all focus:border-amber-500/40 [color-scheme:dark]"
+                          className="ui-field w-full rounded-2xl border px-4 py-4 pr-11 text-sm font-black uppercase outline-none transition-all focus:border-amber-500/40"
                         />
                         <CalendarIcon size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-600" />
                       </div>
@@ -1282,7 +1291,7 @@ const Discipline: React.FC = () => {
                           Niveau {editEnergy}
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/5 bg-[#020617] p-1.5">
+                      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1.5">
                         {[1, 2, 3].map(e => (
                           <button
                             key={e}
@@ -1342,7 +1351,6 @@ const Discipline: React.FC = () => {
       <div className="w-full max-w-3xl mx-auto mt-8 opacity-50 hover:opacity-100 transition-opacity duration-500">
         <div className="flex justify-center flex-col items-center gap-2">
           <div className="h-1 w-24 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <p className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em]">TABLEAU DE BORD</p>
         </div>
       </div>
 

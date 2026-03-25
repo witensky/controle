@@ -35,11 +35,9 @@ export const sendBrowserNotification = (payload: { title: string; body?: string;
       body: payload.body,
       tag: payload.tag,
       silent: true,
-      renotify: false,
     });
     return true;
   } catch {
     return false;
   }
 };
-
