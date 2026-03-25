@@ -20,13 +20,21 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
+<<<<<<< HEAD
         "./src/*"
+=======
+        "./*"
+>>>>>>> 453c6cc5cc6fc0fcbdf647c9e7a3d7f2c7f3bb55
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
+<<<<<<< HEAD
   },
   "include": [
     "src"
   ]
+=======
+  }
+>>>>>>> 453c6cc5cc6fc0fcbdf647c9e7a3d7f2c7f3bb55
 }
