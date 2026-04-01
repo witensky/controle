@@ -375,14 +375,6 @@ html[data-theme='dark'] {
   -webkit-backdrop-filter: blur(22px);
 }
 
-html.theme-ready body,
-html.theme-ready .glass,
-html.theme-ready .glass-panel,
-html.theme-ready .app-navigation,
-html.theme-ready .app-bottom-nav {
-  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
-}
-
 html:not(.dark) .border-white\/5,
 html:not(.dark) .border-white\/6,
 html:not(.dark) .border-white\/8,

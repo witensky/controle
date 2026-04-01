@@ -299,14 +299,6 @@ html:not(.dark) .bg-slate-950\/98 .text-white {
     border: 1px solid var(--panel-border);
 }
 
-html.theme-ready body,
-html.theme-ready .glass,
-html.theme-ready .glass-panel,
-html.theme-ready .app-navigation,
-html.theme-ready .app-bottom-nav {
-  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
-}
-
 /* Animations */
 @keyframes pulse-glow {
 

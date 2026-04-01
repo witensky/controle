@@ -15,6 +15,5 @@ export const applyThemeToDom = (theme: Theme) => {
   if (theme === 'dark') root.classList.add('dark');
   else root.classList.remove('dark');
   root.dataset.theme = theme;
-  root.classList.add('theme-ready');
+  root.classList.remove('theme-ready');
 };
-
