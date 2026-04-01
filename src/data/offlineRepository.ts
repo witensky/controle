@@ -242,14 +242,14 @@ async function seedDefaults(): Promise<void> {
   if (!profile) {
     await putRecord<Profile>('profiles', {
       id: LOCAL_PROFILE_ID,
-      username: 'Utilisateur local',
+      username: '',
       rank_title: 'Opérateur',
       total_xp: 0,
       total_missions_completed: 0,
       amci_monthly_amount: DEFAULT_MONTHLY_BUDGET,
       next_amci_date: computeUpcomingMonthlyResetDate(DEFAULT_SETTINGS.amci_day_of_month),
-      location: 'Casablanca, MA',
-      bio: 'Profil local offline-first.',
+      location: '',
+      bio: '',
       motto: 'Discipline, clarté, constance.',
       avatar_url: '',
       settings_config: { ...DEFAULT_SETTINGS },

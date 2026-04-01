@@ -2,6 +2,7 @@ import React, { memo, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import useChartContainerSize from '../../hooks/useChartContainerSize';
 import { formatChartNumber } from '../../utils/chartHelpers';
+import { chartToneByIntent } from '../../theme/tokens';
 
 type GradientConfig = {
   start: string;
@@ -55,7 +56,7 @@ const RadialProgressChart = ({
   value = 0,
   max = 100,
   label = 'Progression',
-  color = '#f59e0b',
+  color = chartToneByIntent.warning,
   gradient,
   className = '',
   theme = 'auto',
@@ -111,7 +112,7 @@ const RadialProgressChart = ({
 
   const gradientStops = gradient ?? {
     start: color,
-    end: resolvedTheme === 'light' ? '#38bdf8' : '#facc15',
+    end: resolvedTheme === 'light' ? chartToneByIntent.info : chartToneByIntent.warning,
   };
 
   const data = useMemo(
@@ -141,8 +142,8 @@ const RadialProgressChart = ({
 
   const surfaceClasses =
     resolvedTheme === 'light'
-      ? 'from-white via-slate-50 to-slate-100 text-slate-950'
-      : 'from-[#020617] via-[#0b1121] to-[#111827] text-white';
+      ? 'from-[color:var(--surface)] via-[color:var(--surface)] to-[color:var(--surface-2)] text-[color:var(--text-primary)]'
+      : 'from-[color:var(--background)] via-[color:var(--surface)] to-[color:var(--surface-elevated)] text-[color:var(--heading)]';
 
   const trackFill = resolvedTheme === 'light' ? 'rgba(15, 23, 42, 0.08)' : 'rgba(30, 41, 59, 0.42)';
   const centerLabelClass = resolvedTheme === 'light' ? 'text-slate-500' : 'text-slate-400';

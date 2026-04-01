@@ -14,7 +14,8 @@ import { formatChartCurrency } from '../utils/chartHelpers';
 import { exportHtmlToPdf } from '../utils/pdfExport';
 import { generatePdfTemplate } from '../utils/reportPdfTemplate';
 import { formatWeeklySchedule } from '../utils/studyReminders';
-import { isFutureDateOnly, normalizeDateOnly } from '../utils/transactionDates';
+import { normalizeDateOnly } from '../utils/transactionDates';
+import { isPlannedProvision } from '../utils/financeProvisions';
 
 const isCompletedMission = (status: string) => {
   const normalized = String(status || '')
@@ -225,7 +226,7 @@ const Reports: React.FC = () => {
   const futurePlannedExpenses = useMemo(
     () =>
       [...finance]
-        .filter((item) => item.type === 'expense' && isFutureDateOnly(item.date, normalizeDateOnly(new Date().toISOString())))
+        .filter((item) => item.type === 'expense' && isPlannedProvision(item))
         .sort((a, b) => normalizeDateOnly(a.date).localeCompare(normalizeDateOnly(b.date))),
     [finance]
   );
@@ -237,7 +238,7 @@ const Reports: React.FC = () => {
 
   const budgetReportRows = useMemo(() => budgets.map((budget) => {
     const spent = finance
-      .filter((item) => item.type === 'expense' && !isFutureDateOnly(item.date, normalizeDateOnly(new Date().toISOString())) && item.category === budget.category)
+      .filter((item) => item.type === 'expense' && !isPlannedProvision(item) && item.category === budget.category)
       .reduce((sum, item) => sum + item.amount, 0);
     const planned = futurePlannedExpenses
       .filter((item) => item.category === budget.category)
@@ -255,7 +256,9 @@ const Reports: React.FC = () => {
 
   const financeSummary = useMemo(() => {
     const income = periodFinance.filter((item) => item.type === 'deposit').reduce((sum, item) => sum + item.amount, 0);
-    const expense = periodFinance.filter((item) => item.type === 'expense').reduce((sum, item) => sum + item.amount, 0);
+    const expense = periodFinance
+      .filter((item) => item.type === 'expense' && !isPlannedProvision(item))
+      .reduce((sum, item) => sum + item.amount, 0);
     return {
       income,
       expense,
@@ -463,17 +466,17 @@ const Reports: React.FC = () => {
       <div className="report-screen space-y-8">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <div>
-            <h2 className="text-4xl font-black italic text-white">ANALYSES & <span className="font-outfit text-amber-500">BILANS</span></h2>
-            <p className="mt-2 text-xs font-bold uppercase tracking-widest text-slate-400">Suivi global • {periodLabel} • {new Date().toLocaleDateString('fr-FR')}</p>
+            <h2 className="text-4xl font-black italic text-[color:var(--text-primary)]">ANALYSES & <span className="font-outfit text-amber-500">BILANS</span></h2>
+            <p className="mt-2 text-xs font-bold uppercase tracking-widest text-[color:var(--text-muted)]">Suivi global • {periodLabel} • {new Date().toLocaleDateString('fr-FR')}</p>
           </div>
           <div className="flex items-center gap-3 report-controls">
-            <div className="flex max-w-full overflow-x-auto rounded-xl border border-white/5 bg-slate-950/40 p-1 scrollbar-hide">
+            <div className="flex max-w-full overflow-x-auto rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1 scrollbar-hide">
               {REPORT_RANGE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setRange(option.value)}
                   className={`shrink-0 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase ${
-                    range === option.value ? 'bg-amber-500 text-slate-950' : 'text-slate-500'
+                    range === option.value ? 'bg-amber-500 text-slate-950' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
                   }`}
                 >
                   {option.label}
@@ -492,47 +495,47 @@ const Reports: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {quickStats.map((stat) => (
-            <div key={stat.label} className="glass flex flex-col items-center rounded-3xl border-white/5 bg-slate-900/40 p-6 text-center">
+            <div key={stat.label} className="glass flex flex-col items-center rounded-3xl p-6 text-center">
               <span className={`text-2xl font-black italic ${stat.color}`}>{stat.val}</span>
-              <span className="mt-1 text-[8px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
-              <span className="mt-1 text-[7px] font-bold uppercase text-slate-600">{stat.sub}</span>
+              <span className="mt-1 text-[8px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{stat.label}</span>
+              <span className="mt-1 text-[7px] font-bold uppercase text-[color:var(--text-muted)]">{stat.sub}</span>
             </div>
           ))}
         </div>
 
-        <div className="glass flex flex-col gap-4 rounded-[2rem] border border-amber-500/15 bg-amber-500/[0.03] p-6 md:flex-row md:items-center md:justify-between">
+          <div className="glass flex flex-col gap-4 rounded-[2rem] border border-amber-500/15 bg-amber-500/[0.03] p-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.32em] text-amber-400">Dépenses futures synchronisées</p>
-            <h3 className="mt-2 text-2xl font-black italic text-white">{futureExpenseStats.total.toLocaleString()} DH</h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            <h3 className="mt-2 text-2xl font-black italic text-[color:var(--text-primary)]">{futureExpenseStats.total.toLocaleString()} DH</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--text-secondary)]">
               {futureExpenseStats.count > 0
                 ? `${futureExpenseStats.count} dépense${futureExpenseStats.count > 1 ? 's' : ''} planifiée${futureExpenseStats.count > 1 ? 's' : ''} encore à exécuter.`
                 : 'Aucune dépense future planifiée pour le moment.'}
             </p>
           </div>
-          <div className="min-w-[12rem] rounded-[1.5rem] border border-white/8 bg-slate-950/40 px-4 py-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">Prochaine sortie</p>
-            <p className="mt-2 text-lg font-black text-white">
+          <div className="min-w-[12rem] rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Prochaine sortie</p>
+            <p className="mt-2 text-lg font-black text-[color:var(--text-primary)]">
               {futurePlannedExpenses[0] ? formatShortDate(futurePlannedExpenses[0].date) : '--'}
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-[color:var(--text-muted)]">
               {futurePlannedExpenses[0] ? futurePlannedExpenses[0].title : 'Rien de planifié'}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="glass flex min-h-[420px] flex-col rounded-[2.5rem] border-white/5 bg-[#0f172a]/40 p-8 lg:col-span-2">
-            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-white"><ShieldCheck size={20} className="text-amber-500" /> Progression globale</h3>
-            <p className="mb-8 text-[10px] font-bold uppercase text-slate-400">Comparaison des domaines sur {periodLabel}</p>
+          <div className="glass flex min-h-[420px] flex-col rounded-[2.5rem] p-8 lg:col-span-2">
+            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-[color:var(--text-primary)]"><ShieldCheck size={20} className="text-amber-500" /> Progression globale</h3>
+            <p className="mb-8 text-[10px] font-bold uppercase text-[color:var(--text-muted)]">Comparaison des domaines sur {periodLabel}</p>
             <div className="min-h-[300px] flex-1">
               <RadarChartComponent data={masteryData} angleKey="subject" valueKey="A" color="#f59e0b" emptyMessage="Aucune comparaison disponible." fallbackTitle="Progression indisponible" heightClassName="h-[300px]" minHeightClassName="min-h-[300px]" />
             </div>
           </div>
 
-          <div className="glass flex flex-col rounded-[2.5rem] border-white/5 bg-[#0f172a]/40 p-8">
-            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-white"><TrendingUp size={20} className="text-blue-500" /> Courbe de discipline</h3>
-            <p className="mb-8 text-[10px] font-bold uppercase text-slate-400">Prévu vs fait (7 jours)</p>
+          <div className="glass flex flex-col rounded-[2.5rem] p-8">
+            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-[color:var(--text-primary)]"><TrendingUp size={20} className="text-blue-500" /> Courbe de discipline</h3>
+            <p className="mb-8 text-[10px] font-bold uppercase text-[color:var(--text-muted)]">Prévu vs fait (7 jours)</p>
             <div className="min-h-[250px] flex-1">
               <AreaChartComponent data={disciplineCurveData} xKey="date" emptyMessage="Aucune discipline récente à afficher." fallbackTitle="Discipline indisponible" heightClassName="h-[250px]" minHeightClassName="min-h-[250px]" hideYAxis series={[{ key: 'planned', label: 'Prévu', color: '#3b82f6', opacity: 0.18, strokeWidth: 2 }, { key: 'done', label: 'Fait', color: '#10b981', opacity: 0.28, strokeWidth: 3 }]} />
             </div>
@@ -540,17 +543,17 @@ const Reports: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="glass flex min-h-[340px] flex-col rounded-[2.5rem] border-white/5 bg-[#0f172a]/40 p-8">
-            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-white"><LucideBarChart size={20} className="text-emerald-500" /> Flux financiers</h3>
-            <p className="mb-8 text-[10px] font-bold uppercase text-slate-400">Évolution mensuelle revenus / dépenses</p>
+          <div className="glass flex min-h-[340px] flex-col rounded-[2.5rem] p-8">
+            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-[color:var(--text-primary)]"><LucideBarChart size={20} className="text-emerald-500" /> Flux financiers</h3>
+            <p className="mb-8 text-[10px] font-bold uppercase text-[color:var(--text-muted)]">Évolution mensuelle revenus / dépenses</p>
             <div className="min-h-[250px] flex-1">
               <BarChartComponent data={financeFluxData} xKey="name" emptyMessage="Aucun flux financier agrégé." fallbackTitle="Flux indisponibles" heightClassName="h-[250px]" minHeightClassName="min-h-[250px]" hideYAxis tooltipValueFormatter={(value) => formatChartCurrency(value)} series={[{ key: 'income', label: 'Revenus', color: '#10b981', radius: [6, 6, 0, 0] }, { key: 'expense', label: 'Dépenses', color: '#ef4444', radius: [6, 6, 0, 0] }]} />
             </div>
           </div>
 
-          <div className="glass flex min-h-[340px] flex-col rounded-[2.5rem] border-white/5 bg-[#0f172a]/40 p-8">
-            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-white"><Zap size={20} className="text-purple-500" /> Equilibre de vie</h3>
-            <p className="mb-8 text-[10px] font-bold uppercase text-slate-400">Répartition de charge sur {periodLabel}</p>
+          <div className="glass flex min-h-[340px] flex-col rounded-[2.5rem] p-8">
+            <h3 className="mb-2 flex items-center gap-3 text-lg font-black uppercase text-[color:var(--text-primary)]"><Zap size={20} className="text-purple-500" /> Équilibre de vie</h3>
+            <p className="mb-8 text-[10px] font-bold uppercase text-[color:var(--text-muted)]">Répartition de charge sur {periodLabel}</p>
             <div className="flex flex-1 items-center justify-center">
               <PieChartComponent data={lifeBalanceData} dataKey="value" nameKey="name" colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']} emptyMessage="Aucune repartition disponible." fallbackTitle="Equilibre indisponible" heightClassName="h-[250px]" minHeightClassName="min-h-[250px]" />
             </div>

@@ -21,6 +21,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { offlineRepository } from '../data/offlineRepository';
 import { useProfile, useUpdateProfile } from '../features/profile/hooks/useProfile';
 import { resolveProfileRankTitle } from '../utils/profileRank';
+import { cx, uiRecipes } from '../theme/recipes';
+import { toneClassNames } from '../theme/tokens';
 
 type ProfileView = {
     onNavigate: (view: any) => void;
@@ -173,10 +175,10 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
 
     const profileStats = useMemo(
         () => [
-            { label: 'Discipline', value: '88%', icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/5', view: 'DISCIPLINE' },
-            { label: 'Finances', value: '92%', icon: Zap, color: 'text-emerald-500', bg: 'bg-emerald-500/5', view: 'FINANCE' },
-            { label: 'Savoir', value: '74%', icon: Award, color: 'text-blue-500', bg: 'bg-blue-500/5', view: 'STUDIES' },
-            { label: 'Serie', value: '24J', icon: Flame, color: 'text-rose-500', bg: 'bg-rose-500/5', view: 'REPORTS' },
+            { label: 'Discipline', value: '88%', icon: Target, tone: toneClassNames.warning, view: 'DISCIPLINE' },
+            { label: 'Finances', value: '92%', icon: Zap, tone: toneClassNames.success, view: 'FINANCE' },
+            { label: 'Savoir', value: '74%', icon: Award, tone: toneClassNames.info, view: 'STUDIES' },
+            { label: 'Serie', value: '24J', icon: Flame, tone: toneClassNames.danger, view: 'REPORTS' },
         ],
         [],
     );
@@ -184,7 +186,7 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
     if (isLoading) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-amber-500/20 border-t-amber-500" />
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[color:var(--tone-warning-border)] border-t-[color:var(--warning)]" />
             </div>
         );
     }
@@ -199,14 +201,14 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                 onChange={handleAvatarUpload}
             />
 
-            <div className="relative overflow-hidden rounded-[2.25rem] border border-white/5 bg-slate-950/40 p-5 shadow-2xl md:rounded-[2.5rem] md:p-10">
-                <div className="pointer-events-none absolute right-0 top-0 p-10 text-amber-500 opacity-[0.05]">
+            <div className={cx(uiRecipes.cardElevated, 'relative overflow-hidden rounded-[2.25rem] p-5 md:rounded-[2.5rem] md:p-10')}>
+                <div className="pointer-events-none absolute right-0 top-0 p-10 text-[color:var(--warning)] opacity-[0.05]">
                     <Shield size={220} />
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center gap-6 md:flex-row md:items-center md:gap-8">
                     <div className="relative shrink-0">
-                        <div className="flex h-28 w-28 rotate-3 items-center justify-center overflow-hidden rounded-[2rem] border-4 border-slate-950 bg-amber-500 text-4xl font-black text-slate-950 shadow-2xl shadow-amber-500/20 transition-all duration-500 md:h-36 md:w-36 md:text-6xl">
+                        <div className="flex h-28 w-28 rotate-3 items-center justify-center overflow-hidden rounded-[2rem] border-4 border-[color:var(--surface)] bg-[color:var(--accent)] text-4xl font-black text-[#18212d] shadow-premium transition-all duration-500 md:h-36 md:w-36 md:text-6xl">
                             {previewAvatar ? (
                                 <img src={previewAvatar} alt="Profil" className="h-full w-full object-cover" />
                             ) : (
@@ -216,7 +218,7 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                         <button
                             type="button"
                             onClick={() => avatarInputRef.current?.click()}
-                            className="absolute -bottom-2 -right-2 rounded-2xl bg-white p-3 text-slate-950 shadow-xl transition-all hover:scale-110 active:scale-95"
+                            className={cx(uiRecipes.secondaryButton, 'absolute -bottom-2 -right-2 rounded-2xl p-3 text-[#18212d] hover:scale-110 active:scale-95')}
                             aria-label="Choisir une photo"
                         >
                             <Camera size={18} />
@@ -225,26 +227,26 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
 
                     <div className="flex-1 text-center md:text-left">
                         <div className="mb-4">
-                            <h1 className="text-3xl font-black uppercase tracking-tighter text-white italic md:text-5xl">
+                            <h1 className="text-3xl font-black uppercase tracking-tighter text-[color:var(--heading)] italic md:text-5xl">
                                 {profile?.username || 'UTILISATEUR'}
                             </h1>
                         </div>
 
-                        <p className="font-mono text-sm italic text-amber-500/80">
+                        <p className="font-mono text-sm italic text-[color:var(--tone-warning-text)]">
                             "{profile?.motto || 'Discipline, clarte, constance.'}"
                         </p>
 
-                        <div className="mt-5 flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500 md:justify-start">
+                        <div className="mt-5 flex flex-wrap justify-center gap-4 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)] md:justify-start">
                             <div className="flex items-center gap-2">
-                                <MapPin size={14} className="text-amber-500" />
+                                <MapPin size={14} className="text-[color:var(--tone-warning-text)]" />
                                 {profile?.location || 'Casablanca, MA'}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Award size={14} className="text-amber-500" />
+                                <Award size={14} className="text-[color:var(--tone-warning-text)]" />
                                 {studyDomain}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Calendar size={14} className="text-amber-500" />
+                                <Calendar size={14} className="text-[color:var(--tone-warning-text)]" />
                                 Membre depuis {new Date(profile?.created_at || Date.now()).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                             </div>
                         </div>
@@ -252,18 +254,18 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                         <div className="mt-6 flex flex-wrap justify-center gap-3 md:justify-start">
                             <button
                                 onClick={() => setIsEditModalOpen(true)}
-                                className="flex items-center gap-2 rounded-2xl bg-white px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950 shadow-xl transition-all hover:bg-slate-200"
+                                className={cx(uiRecipes.primaryButton, 'flex items-center gap-2 rounded-2xl px-6 py-4')}
                             >
                                 <Edit3 size={16} />
                                 Editer profil
                             </button>
                             <button
                                 onClick={handleShare}
-                                className="relative rounded-2xl border border-white/5 bg-slate-900 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-slate-800"
+                                className={cx(uiRecipes.secondaryButton, 'relative rounded-2xl px-6 py-4')}
                             >
-                                {showCopySuccess ? <CheckCircle2 size={16} className="mx-auto text-emerald-500" /> : 'Partager'}
+                                {showCopySuccess ? <CheckCircle2 size={16} className="mx-auto text-[color:var(--success)]" /> : 'Partager'}
                                 {showCopySuccess ? (
-                                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-emerald-500 px-3 py-1 text-[8px] font-black text-slate-950">
+                                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[color:var(--success)] px-3 py-1 text-[8px] font-black text-[#18212d]">
                                         Copie
                                     </span>
                                 ) : null}
@@ -275,22 +277,22 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="space-y-6 lg:col-span-2">
-                    <div className="rounded-[2.25rem] border border-white/5 bg-[#0f172a]/40 p-6 shadow-2xl md:rounded-[2.5rem] md:p-8">
+                    <div className={cx(uiRecipes.cardElevated, 'rounded-[2.25rem] p-6 md:rounded-[2.5rem] md:p-8')}>
                         <div className="mb-6 flex items-center justify-between gap-4">
                             <div className="min-w-0">
-                                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.35em] text-amber-500">Mon profil</p>
+                                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.35em] text-[color:var(--tone-warning-text)]">Mon profil</p>
                                 <div className="flex flex-wrap items-baseline gap-3">
-                                    <h3 className="text-3xl font-black text-white">{currentRankTitle}</h3>
-                                    <span className="text-sm font-black uppercase italic text-amber-500">Lv.{currentLevel}</span>
+                                    <h3 className="text-3xl font-black text-[color:var(--heading)]">{currentRankTitle}</h3>
+                                    <span className="text-sm font-black uppercase italic text-[color:var(--tone-warning-text)]">Lv.{currentLevel}</span>
                                 </div>
-                                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-500">{currentXP} XP actifs</p>
+                                <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{currentXP} XP actifs</p>
                             </div>
                             <div className="shrink-0">
-                                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-slate-900 shadow-xl md:h-20 md:w-20">
+                                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.35rem] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-soft md:h-20 md:w-20">
                                     {previewAvatar ? (
                                         <img src={previewAvatar} alt="Profil" className="h-full w-full object-cover" />
                                     ) : (
-                                        <span className="text-xl font-black uppercase text-white md:text-2xl">
+                                        <span className="text-xl font-black uppercase text-[color:var(--heading)] md:text-2xl">
                                             {profile?.username?.charAt(0) || 'U'}
                                         </span>
                                     )}
@@ -298,15 +300,15 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <div className="relative h-4 w-full overflow-hidden rounded-full border border-white/5 bg-slate-950 p-1 shadow-inner">
+                        <div className="relative h-4 w-full overflow-hidden rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-1 shadow-inner">
                             <div
-                                className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all duration-1000"
+                                className="h-full rounded-full bg-gradient-to-r from-[color:var(--primary)] to-[color:var(--accent)] shadow-[0_0_15px_rgba(220,156,45,0.25)] transition-all duration-1000"
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
-                        <div className="mt-4 flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-600">
+                        <div className="mt-4 flex justify-between text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">
                             <span>{currentLevel * 1000 - 1000} XP</span>
-                            <span className="text-slate-400">{1000 - (currentXP % 1000)} XP restants</span>
+                            <span>{1000 - (currentXP % 1000)} XP restants</span>
                             <span>{nextLevelXP} XP</span>
                         </div>
                     </div>
@@ -316,14 +318,14 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                             <button
                                 key={item.label}
                                 onClick={() => onNavigate(item.view as any)}
-                                className={`flex min-h-[148px] flex-col items-center justify-center gap-3 rounded-[2rem] border border-white/5 p-5 text-center shadow-xl transition-all hover:scale-[1.02] active:scale-95 ${item.bg}`}
+                                className={cx(uiRecipes.card, 'flex min-h-[148px] flex-col items-center justify-center gap-3 rounded-[2rem] p-5 text-center shadow-soft transition-all hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)] active:scale-95')}
                             >
-                                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950/40 shadow-inner ${item.color}`}>
+                                <div className={cx('flex h-12 w-12 items-center justify-center rounded-2xl shadow-soft', item.tone.shell, item.tone.icon)}>
                                     <item.icon size={22} />
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-slate-500">{item.label}</p>
-                                    <h4 className="text-xl font-black italic text-white">{item.value}</h4>
+                                    <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{item.label}</p>
+                                    <h4 className={cx('text-xl font-black italic', item.tone.text)}>{item.value}</h4>
                                 </div>
                             </button>
                         ))}
@@ -331,25 +333,25 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="rounded-[2.25rem] border border-white/5 bg-[#080e1a] p-6 shadow-2xl md:rounded-[2.5rem] md:p-7">
+                    <div className={cx(uiRecipes.cardElevated, 'rounded-[2.25rem] p-6 md:rounded-[2.5rem] md:p-7')}>
                         <div className="mb-6 flex items-center justify-between">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.32em] italic text-white">Heure locale</h3>
-                            <Clock size={16} className="text-amber-500" />
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.32em] italic text-[color:var(--heading)]">Heure locale</h3>
+                            <Clock size={16} className="text-[color:var(--tone-warning-text)]" />
                         </div>
-                        <div className="mb-3 text-center text-4xl font-black italic tracking-tighter text-white md:text-5xl">
+                        <div className="mb-3 text-center text-4xl font-black italic tracking-tighter text-[color:var(--heading)] md:text-5xl">
                             {currentTime}
                         </div>
-                        <div className="flex items-center justify-center gap-4 text-[8px] font-black uppercase tracking-widest text-slate-600">
-                            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-emerald-500" /> Latence 14ms</span>
-                            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-emerald-500" /> Version 1.2.0</span>
+                        <div className="flex items-center justify-center gap-4 text-[8px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">
+                            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-[color:var(--success)]" /> Latence 14ms</span>
+                            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-[color:var(--success)]" /> Version 1.2.0</span>
                         </div>
                     </div>
 
-                    <div className="rounded-[2.25rem] border border-white/5 bg-[#080e1a] p-6 shadow-2xl md:rounded-[2.5rem] md:p-7">
+                    <div className={cx(uiRecipes.cardElevated, 'rounded-[2.25rem] p-6 md:rounded-[2.5rem] md:p-7')}>
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div>
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.32em] italic text-white">Coordonnees</h3>
-                                <p className="mt-2 text-[9px] font-black uppercase tracking-widest text-slate-600">Enregistrement auto</p>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.32em] italic text-slate-900 dark:text-white">Coordonnees</h3>
+                                <p className="mt-2 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-600">Enregistrement auto</p>
                             </div>
                             <span className={`text-[8px] font-black uppercase tracking-widest ${
                                 contactSaveState === 'saving'
@@ -358,43 +360,43 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                                         ? 'text-emerald-500'
                                         : contactSaveState === 'error'
                                             ? 'text-rose-500'
-                                            : 'text-slate-600'
+                                            : 'text-slate-500 dark:text-slate-600'
                             }`}>
                                 {contactSaveState === 'saving' ? 'Sauvegarde...' : contactSaveState === 'saved' ? 'Enregistre' : contactSaveState === 'error' ? 'Erreur' : 'Local'}
                             </span>
                         </div>
 
                         <div className="space-y-4">
-                            <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/40 p-4">
+                            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/40 dark:shadow-none">
                                 <div className="flex items-start gap-4">
-                                    <div className="rounded-xl bg-slate-900 p-3 text-slate-500">
+                                    <div className="rounded-xl bg-white p-3 text-slate-500 shadow-sm dark:bg-slate-900">
                                         <Mail size={18} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-600">Email personnel</p>
+                                        <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-600">Email personnel</p>
                                         <input
                                             type="email"
                                             value={contactForm.email}
                                             onChange={(event) => setContactForm({ ...contactForm, email: event.target.value })}
-                                            className="w-full bg-transparent text-sm font-bold text-white outline-none placeholder:text-slate-700"
+                                            className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-700"
                                             placeholder="email@exemple.com"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="rounded-[1.75rem] border border-white/5 bg-slate-950/40 p-4">
+                            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/40 dark:shadow-none">
                                 <div className="flex items-start gap-4">
-                                    <div className="rounded-xl bg-slate-900 p-3 text-slate-500">
+                                    <div className="rounded-xl bg-white p-3 text-slate-500 shadow-sm dark:bg-slate-900">
                                         <Phone size={18} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-600">Telephone</p>
+                                        <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-600">Telephone</p>
                                         <input
                                             type="text"
                                             value={contactForm.phone}
                                             onChange={(event) => setContactForm({ ...contactForm, phone: event.target.value })}
-                                            className="w-full bg-transparent text-sm font-bold text-white outline-none placeholder:text-slate-700"
+                                            className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-700"
                                             placeholder="+212 6 00 00 00 00"
                                         />
                                     </div>

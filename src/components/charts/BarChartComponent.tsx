@@ -80,7 +80,7 @@ function BarChartComponent<T extends ChartRecord>({
             tickFormatter={yTickFormatter}
           />
           <Tooltip
-            cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }}
+            cursor={{ fill: 'var(--surface-muted)' }}
             content={(
               <ChartTooltipContent
                 labelFormatter={tooltipLabelFormatter}

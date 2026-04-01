@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, BellRing, PencilLine } from 'lucide-react';
 import ModalShell from './ModalShell';
+import { cx, uiRecipes } from '../../theme/recipes';
+import { toneClassNames } from '../../theme/tokens';
 
 type DialogTone = 'default' | 'danger' | 'warning';
 
@@ -33,18 +35,21 @@ type AppDialogContextValue = {
 
 const AppDialogContext = createContext<AppDialogContextValue | null>(null);
 
-const TONE_META: Record<DialogTone, { icon: React.ReactNode; button: string }> = {
+const TONE_META: Record<DialogTone, { icon: React.ReactNode; button: string; buttonTone?: keyof typeof toneClassNames }> = {
   default: {
-    icon: <BellRing size={18} className="text-cyan-300" />,
-    button: 'bg-white text-slate-950 hover:bg-slate-200',
+    icon: <BellRing size={18} className="text-[color:var(--tone-info-text)]" />,
+    button: uiRecipes.secondaryButton,
+    buttonTone: 'info',
   },
   warning: {
-    icon: <AlertTriangle size={18} className="text-amber-300" />,
-    button: 'bg-amber-400 text-slate-950 hover:bg-amber-300',
+    icon: <AlertTriangle size={18} className="text-[color:var(--tone-warning-text)]" />,
+    button: uiRecipes.primaryButton,
+    buttonTone: 'warning',
   },
   danger: {
-    icon: <AlertTriangle size={18} className="text-rose-300" />,
-    button: 'bg-rose-500 text-white hover:bg-rose-400',
+    icon: <AlertTriangle size={18} className="text-[color:var(--tone-danger-text)]" />,
+    button: uiRecipes.primaryButton,
+    buttonTone: 'danger',
   },
 };
 
@@ -103,7 +108,7 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 <button
                   type="button"
                   onClick={() => closeDialog(dialog.kind === 'confirm' ? false : null)}
-                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)] px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
+                  className={uiRecipes.ghostButton}
                 >
                   {dialog.cancelLabel || 'Annuler'}
                 </button>
@@ -111,7 +116,11 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               <button
                 type="button"
                 onClick={() => closeDialog(dialog.kind === 'prompt' ? promptValue.trim() || null : true)}
-                className={`rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-colors ${tone.button}`}
+                className={cx(
+                  tone.button,
+                  tone.buttonTone === 'danger' ? 'border-[color:var(--tone-danger-border)] bg-[color:var(--danger)] text-white hover:brightness-105' : '',
+                  tone.buttonTone === 'info' ? 'border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] hover:border-[color:var(--tone-info-border)] hover:bg-[color:var(--tone-info-surface)]' : '',
+                )}
               >
                 {dialog.confirmLabel || 'Valider'}
               </button>
@@ -141,7 +150,7 @@ export const AppDialogProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                       }
                     }}
                     placeholder={dialog.placeholder || 'Saisir une valeur'}
-                    className="ui-field w-full rounded-2xl border py-4 pl-11 pr-4 text-sm font-bold outline-none focus:border-cyan-300/40"
+                    className={cx(uiRecipes.field, 'py-4 pl-11 pr-4')}
                   />
                 </div>
               </div>

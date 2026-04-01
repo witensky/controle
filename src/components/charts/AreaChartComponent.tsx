@@ -112,7 +112,7 @@ function AreaChartComponent<T extends ChartRecord>({
               fillOpacity={1}
               strokeWidth={entry.strokeWidth ?? 3}
               stackId={entry.stackId}
-              activeDot={{ r: 5, stroke: '#e2e8f0', strokeWidth: 2, fill: entry.color }}
+              activeDot={{ r: 5, stroke: 'var(--surface-elevated)', strokeWidth: 2, fill: entry.color }}
               animationDuration={config.animation.duration}
               animationBegin={config.animation.begin}
             />

@@ -3,6 +3,8 @@ import { Flame, TrendingDown, TrendingUp } from 'lucide-react';
 import ModalShell from '../common/ModalShell';
 import { PieChartComponent, RadialProgressChart } from '../charts';
 import { formatChartCurrency } from '../../utils/chartHelpers';
+import { chartPalette, chartToneByIntent, toneClassNames } from '../../theme/tokens';
+import { cx, uiRecipes } from '../../theme/recipes';
 
 interface BurnRateAnalyticsProps {
   isOpen: boolean;
@@ -21,7 +23,7 @@ interface BurnRateAnalyticsProps {
 type InsightTone = {
   title: string;
   description: string;
-  toneClassName: string;
+  tone: keyof typeof toneClassNames;
   icon: typeof TrendingUp;
 };
 
@@ -40,7 +42,6 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
 }) => {
   const idealBurnRate = totalDays > 0 ? (daysPassed / totalDays) * 100 : 0;
   const deviation = burnRate - idealBurnRate;
-  const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 
   const insight = useMemo<InsightTone>(() => {
     const safeQuota = Math.max(0, Number(dailyQuota) || 0);
@@ -52,7 +53,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
       return {
         title: 'Projection negative',
         description: `Les engagements futurs font basculer la trajectoire sous zero. Le solde projete descend a ${projectedBalance.toLocaleString()} DH.`,
-        toneClassName: 'text-rose-400',
+        tone: 'danger',
         icon: TrendingUp,
       };
     }
@@ -64,7 +65,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
           safeQuota > 0
             ? `Les depenses du jour (${safeTodaySpent.toLocaleString()} DH) depassent le quota cible de ${safeQuota.toLocaleString()} DH.`
             : 'La consommation accelere plus vite que le rythme ideal du cycle en cours.',
-        toneClassName: 'text-rose-400',
+        tone: 'danger',
         icon: TrendingUp,
       };
     }
@@ -76,7 +77,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
           projectedPressure > 0.45
             ? `Les provisions a venir (${futureExpenses.toLocaleString()} DH) commencent a peser sur la marge restante.`
             : 'Le rythme reste acceptable, mais la consommation depasse legerement la cible ideale.',
-        toneClassName: 'text-amber-300',
+        tone: 'warning',
         icon: TrendingUp,
       };
     }
@@ -85,7 +86,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
       return {
         title: 'Marge confortable',
         description: 'La consommation reste sous controle et laisse une reserve saine pour la suite du cycle.',
-        toneClassName: 'text-emerald-400',
+        tone: 'success',
         icon: TrendingDown,
       };
     }
@@ -93,52 +94,51 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
     return {
       title: 'Rythme sous controle',
       description: `La trajectoire reste coherente avec le cycle en cours, avec un solde projete de ${projectedBalance.toLocaleString()} DH.`,
-      toneClassName: 'text-emerald-400',
+      tone: 'success',
       icon: TrendingDown,
     };
   }, [currentBalance, dailyQuota, deviation, futureExpenses, projectedBalance, todaySpent]);
 
   const InsightIcon = insight.icon;
-  const radialColor = projectedBalance < 0 || deviation > 10 ? '#f43f5e' : deviation > 3 ? '#f59e0b' : '#10b981';
+  const radialColor =
+    projectedBalance < 0 || deviation > 10
+      ? chartToneByIntent.danger
+      : deviation > 3
+        ? chartToneByIntent.warning
+        : chartToneByIntent.success;
   const radialGradient =
     projectedBalance < 0 || deviation > 10
-      ? { start: '#fb7185', end: '#f43f5e' }
+      ? { start: chartToneByIntent.danger, end: chartPalette[4] }
       : deviation > 3
-        ? { start: '#fbbf24', end: '#f97316' }
-        : { start: '#34d399', end: '#10b981' };
+        ? { start: chartToneByIntent.warning, end: chartPalette[4] }
+        : { start: chartToneByIntent.success, end: chartToneByIntent.primary };
 
   return (
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      title="Analyse de Consommation"
+      title="Analyse de consommation"
       subtitle="Comparaison entre rythme reel, quota et projection"
-      icon={<Flame size={20} className="text-amber-500" />}
+      icon={<Flame size={20} className="text-[color:var(--tone-warning-text)]" />}
       maxWidthClassName="max-w-5xl"
       bodyClassName="space-y-6"
     >
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(300px,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 shadow-card dark:border-white/5 dark:bg-gradient-to-br dark:from-slate-900 dark:via-[#0b1121] dark:to-[#0b1121] sm:p-6">
+        <div className={cx(uiRecipes.cardElevated, 'p-5 sm:p-6')}>
           <div className="mb-6 flex flex-col items-center text-center">
             <div className="mb-5 h-48 w-48 sm:h-56 sm:w-56">
-              <RadialProgressChart
-                value={burnRate}
-                max={100}
-                label="Brule"
-                color={radialColor}
-                gradient={radialGradient}
-              />
+              <RadialProgressChart value={burnRate} max={100} label="Brule" color={radialColor} gradient={radialGradient} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-center dark:border-white/5 dark:bg-slate-950/50">
-              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Rythme idéal</p>
-              <p className="text-xl font-black text-blue-600 dark:text-blue-500">{idealBurnRate.toFixed(1)}%</p>
+            <div className={cx(uiRecipes.cardMuted, 'p-4 text-center')}>
+              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Rythme ideal</p>
+              <p className="text-xl font-black text-[color:var(--tone-info-text)]">{idealBurnRate.toFixed(1)}%</p>
             </div>
-            <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-center dark:border-white/5 dark:bg-slate-950/50">
-              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Déviation</p>
-              <p className={`text-xl font-black ${deviation > 0 ? 'text-rose-600 dark:text-rose-500' : 'text-emerald-600 dark:text-emerald-500'}`}>
+            <div className={cx(uiRecipes.cardMuted, 'p-4 text-center')}>
+              <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Deviation</p>
+              <p className={`text-xl font-black ${deviation > 0 ? 'text-[color:var(--tone-danger-text)]' : 'text-[color:var(--tone-success-text)]'}`}>
                 {deviation > 0 ? '+' : ''}
                 {deviation.toFixed(1)}%
               </p>
@@ -147,13 +147,13 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-[1.9rem] border border-[color:var(--border)] bg-[color:var(--card)] p-5 shadow-card dark:border-white/5 dark:bg-slate-950/25 sm:p-6">
-            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">Consommation par catégorie</h3>
+          <div className={cx(uiRecipes.cardElevated, 'p-5 sm:p-6')}>
+            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">Consommation par categorie</h3>
             <PieChartComponent
               data={expensesByCategory}
               dataKey="value"
               nameKey="name"
-              colors={colors}
+              colors={chartPalette as unknown as string[]}
               emptyMessage="Ajoute des depenses pour afficher la ventilation."
               fallbackTitle="Ventilation indisponible"
               heightClassName="h-[260px]"
@@ -163,27 +163,27 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
           </div>
 
           {expensesByCategory.length > 0 ? (
-            <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 dark:border-white/5 dark:bg-slate-900/35">
+            <div className={cx(uiRecipes.cardMuted, 'p-5')}>
               <div className="space-y-3">
                 {expensesByCategory.map((entry, index) => (
                   <div key={entry.name} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
-                      <span className="text-[10px] font-bold uppercase text-slate-300">{entry.name}</span>
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: chartPalette[index % chartPalette.length] }} />
+                      <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">{entry.name}</span>
                     </div>
-                    <span className="text-sm font-black text-white">{entry.value.toLocaleString()} DH</span>
+                    <span className="text-sm font-black text-[color:var(--heading)]">{entry.value.toLocaleString()} DH</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : null}
 
-          <div className="rounded-[1.75rem] border border-white/5 bg-slate-900 p-4">
-            <div className={`mb-2 flex items-center gap-3 ${insight.toneClassName}`}>
+          <div className={cx(uiRecipes.cardMuted, 'p-4')}>
+            <div className={cx('mb-2 flex items-center gap-3', toneClassNames[insight.tone].text)}>
               <InsightIcon size={16} />
               <span className="text-[10px] font-black uppercase tracking-widest">{insight.title}</span>
             </div>
-            <p className="text-[11px] leading-relaxed text-slate-400">{insight.description}</p>
+            <p className="text-[11px] leading-relaxed text-[color:var(--text-secondary)]">{insight.description}</p>
           </div>
         </div>
       </div>

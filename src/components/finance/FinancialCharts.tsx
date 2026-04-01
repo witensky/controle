@@ -23,6 +23,8 @@ import {
   mergeChartDatasets,
   sanitizeChartData,
 } from '../../utils/chartHelpers';
+import { chartPalette, chartToneByIntent } from '../../theme/tokens';
+import { cx, uiRecipes } from '../../theme/recipes';
 
 interface EvolutionChartProps {
   data: { date: string; amount: number }[];
@@ -42,10 +44,10 @@ export const ExpensesEvolutionChart: React.FC<EvolutionChartProps> = ({ data }) 
     <ChartContainer
       title="Evolution Depenses"
       subtitle="Lecture multi-periode avec aggregation stable"
-      icon={<Calendar size={18} className="text-sky-400" />}
+      icon={<Calendar size={18} className="text-[color:var(--tone-info-text)]" />}
       className="rounded-[3rem]"
       controls={(
-        <div className="flex rounded-2xl border border-white/5 bg-slate-950/70 p-1">
+        <div className="flex rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-1">
           {config.periodOptions.map((option) => (
             <button
               key={option.id}
@@ -53,8 +55,8 @@ export const ExpensesEvolutionChart: React.FC<EvolutionChartProps> = ({ data }) 
               onClick={() => setGranularity(option.id)}
               className={`rounded-xl px-4 py-2 text-[9px] font-black uppercase tracking-[0.18em] transition-all ${
                 granularity === option.id
-                  ? 'bg-sky-500 text-white shadow-[0_10px_25px_rgba(56,189,248,0.24)]'
-                  : 'text-slate-500 hover:text-white'
+                  ? 'bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] shadow-soft'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text)]'
               }`}
             >
               {option.label}
@@ -76,7 +78,7 @@ export const ExpensesEvolutionChart: React.FC<EvolutionChartProps> = ({ data }) 
           {
             key: 'amount',
             label: 'Depenses',
-            color: '#38bdf8',
+            color: chartToneByIntent.info,
             opacity: 0.36,
             strokeWidth: 3,
           },
@@ -115,7 +117,7 @@ interface ProjectionChartProps {
 }
 
 export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, projection }) => {
-  const config = useChartConfig(['#34d399', '#38bdf8', '#f59e0b', '#f43f5e']);
+  const config = useChartConfig([chartToneByIntent.success, chartToneByIntent.info, chartToneByIntent.warning, chartToneByIntent.danger]);
   const safeHistory = useMemo(
     () => sanitizeChartData(history).map((entry) => ({ date: entry.date, historyBalance: entry.balance })),
     [history],
@@ -154,12 +156,12 @@ export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, proje
           <AreaChart data={safeData} margin={{ top: 20, right: 18, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="projection-balance" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#34d399" stopOpacity={0.32} />
-                <stop offset="100%" stopColor="#34d399" stopOpacity={0.02} />
+                <stop offset="0%" stopColor={chartToneByIntent.success} stopOpacity={0.32} />
+                <stop offset="100%" stopColor={chartToneByIntent.success} stopOpacity={0.02} />
               </linearGradient>
               <linearGradient id="projection-optimistic" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.18} />
-                <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.02} />
+                <stop offset="0%" stopColor={chartToneByIntent.info} stopOpacity={0.18} />
+                <stop offset="100%" stopColor={chartToneByIntent.info} stopOpacity={0.02} />
               </linearGradient>
             </defs>
 
@@ -179,7 +181,7 @@ export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, proje
               type="monotone"
               dataKey="historyBalance"
               name="Solde reel"
-              stroke="#34d399"
+              stroke={chartToneByIntent.success}
               fill="url(#projection-balance)"
               strokeWidth={3}
               fillOpacity={1}
@@ -189,7 +191,7 @@ export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, proje
               type="monotone"
               dataKey="projectionBalance"
               name="Projection"
-              stroke="#34d399"
+              stroke={chartToneByIntent.success}
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
@@ -199,7 +201,7 @@ export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, proje
               type="monotone"
               dataKey="optimistic"
               name="Zone optimiste"
-              stroke="#38bdf8"
+              stroke={chartToneByIntent.info}
               fill="url(#projection-optimistic)"
               strokeWidth={2}
               fillOpacity={1}
@@ -209,7 +211,7 @@ export const ProjectionChart: React.FC<ProjectionChartProps> = ({ history, proje
               type="monotone"
               dataKey="pessimistic"
               name="Scenario prudent"
-              stroke="#f43f5e"
+              stroke={chartToneByIntent.danger}
               strokeWidth={2}
               strokeDasharray="4 4"
               dot={false}

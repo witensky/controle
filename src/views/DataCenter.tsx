@@ -322,7 +322,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
 
    const handleFlushMissionHistory = async () => {
       const confirmed = await showConfirm({
-         title: 'Purger l historique',
+         title: "Purger l'historique",
          message: "Tout l'historique des missions sera supprime. Cette action est irreversible.",
          confirmLabel: 'Purger',
          tone: 'danger',
@@ -335,24 +335,26 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
 
    return (
       <div className="space-y-8 pb-28 animate-in fade-in duration-500">
-         <div className="relative border-b border-white/5 pb-8 pt-1">
+         <div className="relative border-b border-[color:var(--border)] pb-8 pt-1">
             <button
                onClick={() => navigateBackWithFallback('SETTINGS')}
-               aria-label="Retour reglages"
-               className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white transition-all hover:border-white/20 hover:bg-white/10"
+               aria-label="Retour réglages"
+               className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-primary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)]"
             >
                <ArrowLeft size={16} />
             </button>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-               <div className="pl-14 md:pl-0">
-                  <div className="mb-3 flex items-center gap-3">
+               <div className="w-full px-10 text-center md:px-0 md:text-left">
+                  <div className="mb-3 flex items-center justify-center gap-3 md:justify-start">
                      <div className="rounded-lg bg-rose-500/10 p-2 text-rose-500">
                         <Database size={16} />
                      </div>
-                     <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Data Center</span>
+                     <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Data Center</span>
                   </div>
-                  <h2 className="text-4xl font-black uppercase italic tracking-tight text-white">Gestion globale des donnees</h2>
+                  <h2 className="w-full max-w-full truncate text-[1.12rem] font-black uppercase italic leading-none tracking-tight text-[color:var(--text-primary)] sm:text-[1.35rem] md:text-[1.6rem]">
+                     Gestion globale des données
+                  </h2>
                </div>
                <div className="grid grid-cols-3 gap-2 md:flex md:flex-nowrap md:justify-end md:gap-3">
                   <button
@@ -380,23 +382,23 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {[
                { label: 'Affiches', value: filteredRecords.length },
-               { label: 'Selection', value: selectedRecordIds.length },
+               { label: 'Sélection', value: selectedRecordIds.length },
                { label: 'Collections', value: new Set(records.map((record) => record.collection)).size },
                { label: 'Stockage', value: records.length },
             ].map((item) => (
-               <div key={item.label} className="rounded-[1.75rem] border border-white/5 bg-[#0f172a]/40 p-5">
-                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">{item.label}</p>
-                  <p className="mt-3 text-3xl font-black text-white">{item.value}</p>
+               <div key={item.label} className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-card">
+                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">{item.label}</p>
+                  <p className="mt-3 text-3xl font-black text-[color:var(--text-primary)]">{item.value}</p>
                </div>
             ))}
          </div>
 
-         <div className="glass overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1121] shadow-2xl">
+         <div className="glass overflow-hidden rounded-[2rem] shadow-2xl">
             <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
-               <div className="border-b border-white/5 bg-slate-950/35 p-5 lg:border-b-0 lg:border-r">
+               <div className="border-b border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 lg:border-b-0 lg:border-r">
                   <div className="space-y-4">
                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Collection</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Collection</label>
                         <select
                            value={collectionFilter}
                            onChange={(event) => {
@@ -414,7 +416,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Categorie</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Catégorie</label>
                         <select
                            value={categoryFilter}
                            onChange={(event) => setCategoryFilter(event.target.value)}
@@ -429,7 +431,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Periode</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Période</label>
                         <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                            {[
                               { key: 'all', label: 'Tout' },
@@ -443,8 +445,8 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                                  onClick={() => setPeriodFilter(option.key as PeriodFilter)}
                                  className={`min-w-[84px] shrink-0 rounded-xl px-3 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
                                     periodFilter === option.key
-                                       ? 'bg-white text-slate-950'
-                                       : 'border border-white/10 bg-slate-950 text-slate-500 hover:text-white'
+                                       ? 'bg-[color:var(--text-primary)] text-[color:var(--surface)]'
+                                       : 'border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--surface-2)]'
                                  }`}
                               >
                                  {option.label}
@@ -454,39 +456,39 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Recherche</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Recherche</label>
                         <input
                            type="text"
                            value={searchQuery}
                            onChange={(event) => setSearchQuery(event.target.value)}
-                           placeholder="Titre, categorie, resume"
+                           placeholder="Titre, catégorie, résumé"
                            className="ui-field w-full rounded-2xl border px-4 py-3 text-sm font-medium outline-none"
                         />
                      </div>
 
                      <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-                           <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">Filtres</p>
-                           <p className="mt-2 text-2xl font-black text-white">{filteredRecords.length}</p>
+                           <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Filtres</p>
+                           <p className="mt-2 text-2xl font-black text-[color:var(--text-primary)]">{filteredRecords.length}</p>
                         </div>
                         <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-                           <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-500">Selection</p>
-                           <p className="mt-2 text-2xl font-black text-white">{selectedRecordIds.length}</p>
+                           <p className="text-[9px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Sélection</p>
+                           <p className="mt-2 text-2xl font-black text-[color:var(--text-primary)]">{selectedRecordIds.length}</p>
                         </div>
                      </div>
 
                      <div className="space-y-2">
                         <button
                            onClick={() => setSelectedRecordIds(filteredRecords.map((record) => record.id))}
-                           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white"
+                           className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-primary)] transition-colors hover:bg-[color:var(--surface-2)]"
                         >
-                           Selectionner le resultat
+                           Sélectionner le résultat
                         </button>
                         <button
                            onClick={() => setSelectedRecordIds([])}
-                           className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400"
+                           className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)] transition-colors hover:bg-[color:var(--surface-2)]"
                         >
-                           Vider la selection
+                           Vider la sélection
                         </button>
                         <button
                            onClick={() => handleExportJson(filteredRecords, `export-filtre-${new Date().toISOString().split('T')[0]}.json`)}
@@ -517,11 +519,11 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                         <Loader2 className="animate-spin text-amber-500" size={28} />
                      </div>
                   ) : filteredRecords.length === 0 ? (
-                     <div className="flex min-h-[520px] flex-col items-center justify-center rounded-[2rem] border border-dashed border-white/10 bg-slate-950/20 px-6 text-center">
-                        <Database size={40} className="text-slate-700" />
-                        <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">Aucun resultat</p>
-                        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-                           Ajuste les filtres, la periode ou la recherche pour afficher des donnees.
+                     <div className="flex min-h-[520px] flex-col items-center justify-center rounded-[2rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] px-6 text-center">
+                        <Database size={40} className="text-[color:var(--text-muted)]" />
+                        <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Aucun résultat</p>
+                        <p className="mt-3 max-w-md text-sm leading-relaxed text-[color:var(--text-secondary)]">
+                           Ajuste les filtres, la période ou la recherche pour afficher des données.
                         </p>
                      </div>
                   ) : (
@@ -532,7 +534,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                               <div
                                  key={`${record.collection}-${record.id}`}
                                  className={`rounded-[1.5rem] border p-4 transition-all ${
-                                    isSelected ? 'border-amber-500/30 bg-amber-500/[0.04]' : 'border-white/5 bg-slate-950/35'
+                                    isSelected ? 'border-amber-500/30 bg-amber-500/[0.04]' : 'border-[color:var(--border)] bg-[color:var(--surface)]'
                                  }`}
                               >
                                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -540,24 +542,24 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                                        <button
                                           onClick={() => toggleSelection(record.id)}
                                           className={`mt-0.5 h-5 w-5 rounded border ${
-                                             isSelected ? 'border-amber-500 bg-amber-500' : 'border-white/15 bg-slate-950'
+                                             isSelected ? 'border-amber-500 bg-amber-500' : 'border-[color:var(--border-strong)] bg-[color:var(--surface-2)]'
                                           }`}
                                        />
                                        <div className="min-w-0">
-                                          <div className="flex flex-wrap items-center gap-2">
-                                             <span className="rounded-full bg-white/5 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.24em] text-slate-400">
+                                         <div className="flex flex-wrap items-center gap-2">
+                                             <span className="rounded-full bg-[color:var(--surface-2)] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.24em] text-[color:var(--text-secondary)]">
                                                 {record.collection}
                                              </span>
-                                             <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">
+                                             <span className="rounded-full bg-[color:var(--surface-2)] px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
                                                 {record.category}
                                              </span>
                                           </div>
-                                          <h4 className="mt-3 text-sm font-black uppercase text-white">{record.title}</h4>
-                                          <p className="mt-2 text-sm leading-relaxed text-slate-400">{record.summary}</p>
+                                          <h4 className="mt-3 text-sm font-black uppercase text-[color:var(--text-primary)]">{record.title}</h4>
+                                          <p className="mt-2 text-sm leading-relaxed text-[color:var(--text-secondary)]">{record.summary}</p>
                                        </div>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-3">
-                                       <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-500">
+                                       <span className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                                           {formatRecordDate(record.date)}
                                        </span>
                                        <button

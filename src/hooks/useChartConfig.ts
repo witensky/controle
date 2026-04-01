@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { chartPalette } from '../theme/tokens';
 
-export const DEFAULT_CHART_PALETTE = ['#38bdf8', '#34d399', '#f59e0b', '#f43f5e', '#a78bfa', '#f97316'];
+export const DEFAULT_CHART_PALETTE = [...chartPalette];
 
 export const useChartConfig = (palette: string[] = DEFAULT_CHART_PALETTE) =>
   useMemo(
@@ -8,7 +9,7 @@ export const useChartConfig = (palette: string[] = DEFAULT_CHART_PALETTE) =>
       palette,
       margin: { top: 12, right: 12, bottom: 0, left: 0 },
       grid: {
-        stroke: 'rgba(148, 163, 184, 0.12)',
+        stroke: 'var(--chart-grid)',
         strokeDasharray: '3 3',
         vertical: false,
       },
@@ -16,15 +17,15 @@ export const useChartConfig = (palette: string[] = DEFAULT_CHART_PALETTE) =>
         axisLine: false,
         tickLine: false,
         minTickGap: 24,
-        tick: { fill: '#64748b', fontSize: 10, fontWeight: 700 },
+        tick: { fill: 'var(--chart-axis)', fontSize: 10, fontWeight: 800 },
       },
       yAxis: {
         axisLine: false,
         tickLine: false,
-        tick: { fill: '#64748b', fontSize: 10, fontWeight: 700 },
+        tick: { fill: 'var(--chart-axis)', fontSize: 10, fontWeight: 800 },
       },
       tooltipCursor: {
-        stroke: 'rgba(148, 163, 184, 0.24)',
+        stroke: 'var(--chart-cursor)',
         strokeWidth: 1.5,
       },
       animation: {

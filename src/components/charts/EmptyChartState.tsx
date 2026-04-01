@@ -1,4 +1,5 @@
 import React from 'react';
+import { cx, uiRecipes } from '../../theme/recipes';
 
 interface EmptyChartStateProps {
   message: string;
@@ -10,9 +11,9 @@ const EmptyChartState: React.FC<EmptyChartStateProps> = ({
   minHeightClassName = 'min-h-[220px]',
 }) => (
   <div
-    className={`flex items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/25 px-6 text-center ${minHeightClassName}`}
+    className={cx(uiRecipes.emptyState, 'flex items-center justify-center px-6', minHeightClassName)}
   >
-    <p className="max-w-[260px] text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">
+    <p className="max-w-[260px] text-[11px] font-black uppercase tracking-[0.24em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
       {message}
     </p>
   </div>

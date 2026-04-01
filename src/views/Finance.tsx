@@ -1,11 +1,10 @@
 ﻿
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Plus, ShoppingCart, History, X, Banknote, ArrowUpCircle, Wallet, Tag, MessageSquare, Edit3, Trash2, Search, Loader2, Sparkles, AlertCircle, Calendar, TrendingDown, Target, ArrowRight, ShieldCheck, Save, Settings2, LineChart as LucideLineChart, FileDown, ArrowDownCircle, PieChart as LucidePieChart, Calculator, TrendingUp, Layers, PiggyBank, Pencil, BarChart3
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
-import { Tooltip as HelpTooltip } from '../components/common/Tooltip';
 import ModalShell from '../components/common/ModalShell';
 import { BarChartComponent, PieChartComponent, RadialProgressChart } from '../components/charts';
 import { AlertBanner } from '../components/finance/AlertBanner';
@@ -18,13 +17,14 @@ import { ExpensesEvolutionChart, VectorDistributionChart, ProjectionChart } from
 import ResteAVivreWidget from '../components/finance/ResteAVivreWidget';
 import TacticalFinanceCharts from '../components/finance/TacticalFinanceCharts';
 import TransactionDetailModal from '../components/finance/TransactionDetailModal';
-import { QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
+import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { localStore, LOCAL_KEYS } from '../lib/localStorage';
 import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBudget';
 import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurrence } from '../utils/financeReset';
-import { isFutureDateOnly, isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
+import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { useTheme } from '../theme/ThemeProvider';
+import { isPlannedProvision } from '../utils/financeProvisions';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
 import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
@@ -131,6 +131,7 @@ const Finance: React.FC = () => {
   const [categoryValue, setCategoryValue] = useState('Courses');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [comment, setComment] = useState('');
+  const [isPlanningProvision, setIsPlanningProvision] = useState(false);
 
   // New Category State
   const [newCatName, setNewCatName] = useState('');
@@ -141,6 +142,7 @@ const Finance: React.FC = () => {
   const [newSavingsReason, setNewSavingsReason] = useState('');
   const [editingSavingsId, setEditingSavingsId] = useState<string | null>(null);
   const today = useCurrentDayKey();
+  const migratedPlannedIdsRef = useRef<Set<string>>(new Set());
 
 
 
@@ -156,11 +158,17 @@ const Finance: React.FC = () => {
   // 2. Single Source of Truth Logic
   const financialState = useMemo(() => {
     // Partition transactions
-    const pastTransactions = transactions.filter((transaction) => isPastOrTodayDateOnly(transaction.date, today));
-    const futureTransactions = transactions.filter((transaction) => isFutureDateOnly(transaction.date, today));
+    // NOTE: "Provisions" are planned expenses that must NEVER auto-execute when the date is passed.
+    // They become real expenses only when the user clicks "Exécuter".
+    const plannedTransactions = transactions.filter((transaction) => isPlannedProvision(transaction));
+    const pastTransactions = transactions.filter(
+      (transaction) => !isPlannedProvision(transaction) && isPastOrTodayDateOnly(transaction.date, today),
+    );
 
     // Day specific
-    const todayTransactions = transactions.filter((transaction) => isSameDateOnly(transaction.date, today));
+    const todayTransactions = transactions.filter(
+      (transaction) => !isPlannedProvision(transaction) && isSameDateOnly(transaction.date, today),
+    );
     const todaySpent = todayTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
@@ -191,7 +199,7 @@ const Finance: React.FC = () => {
 
     const totalAvailable = amciPot + donPot + autresPot;
 
-    const futureExpenses = futureTransactions
+    const futureExpenses = plannedTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
@@ -228,7 +236,8 @@ const Finance: React.FC = () => {
       securityLevel,
       totalSavings,
       todayTransactions,
-      futureTransactions,
+      // Back-compat: keep the name used by the UI, but this is the list of planned provisions.
+      futureTransactions: plannedTransactions,
       sources: {
         amci: amciPot,
         don: donPot,
@@ -237,6 +246,35 @@ const Finance: React.FC = () => {
       }
     };
   }, [transactions, totalBudget, currentResetDate, savingsList, today, customDailyQuota]);
+
+  // Migration / safety net:
+  // Any expense dated in the future is treated as a planned provision (manual execution required).
+  // This prevents old data from auto-executing when its date becomes <= today.
+  useEffect(() => {
+    if (loadingTx) return;
+
+    const candidates = transactions.filter(
+      (transaction) => isPlannedProvision(transaction) && transaction.planned !== true,
+    );
+
+    const toMigrate = candidates.filter((transaction) => !migratedPlannedIdsRef.current.has(transaction.id));
+    if (toMigrate.length === 0) return;
+
+    (async () => {
+      for (const transaction of toMigrate) {
+        migratedPlannedIdsRef.current.add(transaction.id);
+        try {
+          await updateTransaction.mutateAsync({
+            id: transaction.id,
+            updates: { planned: true, planned_date: transaction.planned_date ?? transaction.date },
+          });
+        } catch (error) {
+          console.error('Failed to migrate planned provision', error);
+          migratedPlannedIdsRef.current.delete(transaction.id);
+        }
+      }
+    })();
+  }, [loadingTx, transactions, updateTransaction]);
 
   const handleSaveDailyQuota = async (nextQuota: number | null) => {
     await updateFinanceSettings.mutateAsync({
@@ -248,6 +286,7 @@ const Finance: React.FC = () => {
     resetForm();
     setEditingTransaction(null);
     setType('expense');
+    setIsPlanningProvision(true);
     setCategoryValue(budgets[0]?.category || 'Courses');
 
     if (defaultDate) {
@@ -418,11 +457,17 @@ const Finance: React.FC = () => {
   const budgetAnalysis = useMemo(() => {
     return budgets.map(b => {
       const spent = transactions
-        .filter(t => t.category === b.category && t.type === 'expense' && t.date <= today)
+        .filter(
+          (t) =>
+            t.category === b.category &&
+            t.type === 'expense' &&
+            !isPlannedProvision(t) &&
+            normalizeDateOnly(t.date) <= today,
+        )
         .reduce((acc, t) => acc + t.amount, 0);
 
       const future = transactions
-        .filter(t => t.category === b.category && t.type === 'expense' && t.date > today)
+        .filter((t) => t.category === b.category && t.type === 'expense' && isPlannedProvision(t))
         .reduce((acc, t) => acc + t.amount, 0);
 
       return {
@@ -438,11 +483,22 @@ const Finance: React.FC = () => {
   const localBudgetAnalysis = useMemo(() => {
     return localBudgets.map((budget) => {
       const spent = transactions
-        .filter((transaction) => transaction.category === budget.category && transaction.type === 'expense' && transaction.date <= today)
+        .filter(
+          (transaction) =>
+            transaction.category === budget.category &&
+            transaction.type === 'expense' &&
+            !isPlannedProvision(transaction) &&
+            normalizeDateOnly(transaction.date) <= today,
+        )
         .reduce((sum, transaction) => sum + transaction.amount, 0);
 
       const future = transactions
-        .filter((transaction) => transaction.category === budget.category && transaction.type === 'expense' && transaction.date > today)
+        .filter(
+          (transaction) =>
+            transaction.category === budget.category &&
+            transaction.type === 'expense' &&
+            isPlannedProvision(transaction),
+        )
         .reduce((sum, transaction) => sum + transaction.amount, 0);
 
       const remaining = budget.limit - spent;
@@ -469,9 +525,44 @@ const Finance: React.FC = () => {
     });
   }, [localBudgets, transactions, today]);
 
+  const localBudgetTotals = useMemo(() => {
+    const allocated = localBudgetAnalysis.reduce((sum, item) => sum + Number(item.limit || 0), 0);
+    const spent = localBudgetAnalysis.reduce((sum, item) => sum + Number(item.spent || 0), 0);
+    const planned = localBudgetAnalysis.reduce((sum, item) => sum + Number(item.future || 0), 0);
+
+    const remainingNow = allocated - spent;
+    const remainingAfterPlanned = allocated - spent - planned;
+
+    const usedPercent = allocated > 0 ? (spent / allocated) * 100 : spent > 0 ? 100 : 0;
+    const remainingPercent = allocated > 0 ? Math.max(0, (remainingAfterPlanned / allocated) * 100) : 0;
+
+    const tone: 'critical' | 'warning' | 'healthy' | 'idle' =
+      remainingAfterPlanned < 0 || usedPercent >= 100
+        ? 'critical'
+        : usedPercent >= 75
+          ? 'warning'
+          : usedPercent > 0 || planned > 0
+            ? 'healthy'
+            : 'idle';
+
+    return {
+      allocated,
+      spent,
+      planned,
+      remainingNow,
+      remainingAfterPlanned,
+      usedPercent,
+      remainingPercent,
+      tone,
+    };
+  }, [localBudgetAnalysis]);
+
   const futureTransactions = useMemo(
-    () => transactions.filter((transaction) => isFutureDateOnly(transaction.date, today)).sort((a, b) => normalizeDateOnly(a.date).localeCompare(normalizeDateOnly(b.date))),
-    [transactions, today]
+    () =>
+      transactions
+        .filter((transaction) => isPlannedProvision(transaction))
+        .sort((a, b) => normalizeDateOnly(a.date).localeCompare(normalizeDateOnly(b.date))),
+    [transactions]
   );
 
   const futureExpenseTransactions = useMemo(
@@ -505,7 +596,10 @@ const Finance: React.FC = () => {
     : 0;
 
   const pastTransactions = useMemo(
-    () => transactions.filter((transaction) => isPastOrTodayDateOnly(transaction.date, today)).sort((a, b) => normalizeDateOnly(b.date).localeCompare(normalizeDateOnly(a.date))),
+    () =>
+      transactions
+        .filter((transaction) => !isPlannedProvision(transaction) && isPastOrTodayDateOnly(transaction.date, today))
+        .sort((a, b) => normalizeDateOnly(b.date).localeCompare(normalizeDateOnly(a.date))),
     [transactions, today]
   );
 
@@ -519,7 +613,12 @@ const Finance: React.FC = () => {
         return {
           date: dateRef.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
           amount: transactions
-            .filter(transaction => transaction.type === 'expense' && isSameDateOnly(transaction.date, dateKey))
+            .filter(
+              (transaction) =>
+                transaction.type === 'expense' &&
+                !isPlannedProvision(transaction) &&
+                isSameDateOnly(transaction.date, dateKey),
+            )
             .reduce((sum, transaction) => sum + transaction.amount, 0),
         };
       }),
@@ -527,11 +626,7 @@ const Finance: React.FC = () => {
   );
 
   useEffect(() => {
-    const handleQuickAction = (event: Event) => {
-      const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
-
-      if (action !== 'add-transaction') return;
-
+    const openQuickTransactionModal = () => {
       resetForm();
       setType('expense');
       setCategoryValue('Courses');
@@ -544,6 +639,19 @@ const Finance: React.FC = () => {
       }, 120);
     };
 
+    const handleQuickAction = (event: Event) => {
+      const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
+
+      if (action !== 'add-transaction') return;
+
+      consumeQueuedQuickAction('add-transaction');
+      openQuickTransactionModal();
+    };
+
+    if (consumeQueuedQuickAction('add-transaction')) {
+      openQuickTransactionModal();
+    }
+
     window.addEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);
     return () => window.removeEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);
   }, []);
@@ -554,14 +662,23 @@ const Finance: React.FC = () => {
     setSaving(true);
     try {
       const requestedAmount = Number(amount);
-      const editingFutureExpenseAmount =
-        editingTransaction && editingTransaction.type === 'expense' && editingTransaction.date > today
+
+      const isProvisionDraft =
+        type === 'expense' &&
+        (isPlanningProvision ||
+          (editingTransaction ? isPlannedProvision(editingTransaction) : false) ||
+          normalizeDateOnly(date) > today);
+
+      const editingProvisionAmount =
+        editingTransaction && editingTransaction.type === 'expense' && isPlannedProvision(editingTransaction)
           ? editingTransaction.amount
           : 0;
-      const availableProjectedBalance = financialState.projectedBalance + editingFutureExpenseAmount;
+
+      const availableProjectedBalance = financialState.projectedBalance + editingProvisionAmount;
 
       // BLOCK SPENDING IF PROJECTED BALANCE (RESTE À VIVRE) INSUFFICIENT
-      if (type === 'expense') {
+      // NOTE: We do NOT block saving a provision; provisions are forecasts, not auto-spending.
+      if (type === 'expense' && !isProvisionDraft) {
         if (availableProjectedBalance <= 0) {
           await showAlert({
             title: 'Depense bloquee',
@@ -589,7 +706,8 @@ const Finance: React.FC = () => {
         category: type === 'expense' ? categoryValue : 'Dépôt',
         source: type === 'deposit' ? categoryValue : undefined,
         date,
-        comment
+        comment,
+        ...(isProvisionDraft ? { planned: true as const, planned_date: normalizeDateOnly(date) } : {}),
       };
 
       if (editingTransaction) {
@@ -688,6 +806,7 @@ const Finance: React.FC = () => {
   const resetForm = () => {
     setAmount(''); setTitle(''); setDate(new Date().toISOString().split('T')[0]); setComment('');
     setEditingTransaction(null);
+    setIsPlanningProvision(false);
   };
 
   const openTransactionDetail = (transaction: Transaction) => {
@@ -700,6 +819,7 @@ const Finance: React.FC = () => {
     setShowProvisionsDetail(false);
     setEditingTransaction(transaction);
     setType(transaction.type);
+    setIsPlanningProvision(isPlannedProvision(transaction));
     setAmount(transaction.amount.toString());
     setTitle(transaction.title);
     setCategoryValue(transaction.type === 'deposit' ? (transaction.source || 'AMCI') : transaction.category);
@@ -721,22 +841,29 @@ const Finance: React.FC = () => {
   };
 
   const handleExecuteTransaction = async (transactionId: string) => {
-    // Find transaction to check amount (only if it's currently a future one)
     const tx = transactions.find(t => t.id === transactionId);
-    if (tx && tx.date > today && tx.type === 'expense') {
-      if (financialState.currentBalance - tx.amount < 0) {
-        await showAlert({
-          title: 'Execution impossible',
-          message: "Le solde reel est insuffisant pour executer cette operation maintenant.",
-          tone: 'danger',
-        });
-        return;
-      }
+    if (!tx) return;
+    if (!isPlannedProvision(tx)) return;
+
+    if (financialState.currentBalance - tx.amount < 0) {
+      await showAlert({
+        title: 'Execution impossible',
+        message: "Le solde reel est insuffisant pour executer cette operation maintenant.",
+        tone: 'danger',
+      });
+      return;
     }
 
     try {
       const todayDate = new Date().toISOString().split('T')[0];
-      await updateTransaction.mutateAsync({ id: transactionId, updates: { date: todayDate } });
+      await updateTransaction.mutateAsync({
+        id: transactionId,
+        updates: {
+          planned: false,
+          planned_date: tx.planned_date ?? tx.date,
+          date: todayDate,
+        },
+      });
     } catch (err) {
       console.error('Error executing transaction:', err);
     }
@@ -752,6 +879,12 @@ const Finance: React.FC = () => {
     if (!confirmed) return;
     await deleteTransaction.mutateAsync(transactionId);
   };
+
+  const isProvisionForm =
+    type === 'expense' &&
+    (isPlanningProvision ||
+      (editingTransaction ? isPlannedProvision(editingTransaction) : false) ||
+      normalizeDateOnly(date) > today);
 
   if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin text-amber-500 w-10 h-10 border-4 border-current border-t-transparent rounded-full" /></div>;
 
@@ -838,17 +971,20 @@ const Finance: React.FC = () => {
                 <h3 className="text-2xl font-black text-[color:var(--text-primary)] uppercase tracking-tighter sm:text-3xl">
                   BUDGET <span className="text-amber-500">MENSUEL</span>
                 </h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-inner dark:border-white/5 dark:bg-slate-950/60 sm:p-5">
-                    <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest mb-1">Reste disponible</p>
-                    <p className="text-2xl font-black text-[color:var(--text-primary)] italic sm:text-3xl">{amciStats.remaining.toLocaleString()} DH</p>
+                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm sm:p-5">
+                    <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">Reste disponible</p>
+                    <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">{amciStats.remaining.toLocaleString()} DH</p>
                   </div>
-                  <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-inner cursor-pointer transition-all group hover:border-amber-500/30 dark:border-white/5 dark:bg-slate-950/60 sm:p-5" onClick={() => setShowQuotaDetail(true)}>
-                    <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest mb-1 flex items-center justify-between">
-                      Quota / Jour <ArrowRight size={10} className="text-amber-500" />
+                  <div
+                    className="group cursor-pointer rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm transition-all hover:border-amber-500/30 hover:bg-[color:var(--surface)] sm:p-5"
+                    onClick={() => setShowQuotaDetail(true)}
+                  >
+                    <p className="mb-1 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">
+                      Quota / Jour <ArrowRight size={10} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
                     </p>
-                    <p className="text-2xl font-black text-[color:var(--text-primary)] italic sm:text-3xl">
-                      {amciStats.dailyBudget} <span className="text-xs text-emerald-600 dark:text-emerald-500">DH</span>
+                    <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">
+                      {amciStats.dailyBudget} <span className="text-xs font-black text-emerald-600 dark:text-emerald-500">DH</span>
                     </p>
                   </div>
                 </div>
@@ -859,24 +995,24 @@ const Finance: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-1">
-              <button onClick={() => { setLocalBudgets(budgets); setShowAddCat(false); setShowBudgetModal(true); }} className="glass min-h-[136px] rounded-[1.5rem] p-4 border-emerald-500/20 bg-emerald-500/[0.03] transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-emerald-400/40 hover:bg-emerald-500/10">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-emerald-500/10 text-emerald-400 transition-all group-hover:bg-slate-950 sm:h-16 sm:w-16 sm:rounded-3xl">
+              <button onClick={() => { setLocalBudgets(budgets); setShowAddCat(false); setShowBudgetModal(true); }} className="min-h-[136px] rounded-[1.5rem] border border-emerald-500/20 bg-[color:var(--surface)] p-4 shadow-card transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-emerald-400/40 hover:bg-emerald-500/[0.05] dark:glass dark:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/10">
+                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-emerald-500/10 text-emerald-500 transition-all group-hover:bg-emerald-500/15 sm:h-16 sm:w-16 sm:rounded-3xl dark:text-emerald-400 dark:group-hover:bg-slate-950">
                   <Target size={26} strokeWidth={2.5} className="sm:hidden" />
                   <Target size={32} strokeWidth={2.5} className="hidden sm:block" />
                 </div>
                 <div>
-                  <h4 className="font-black text-white group-hover:text-slate-950 uppercase italic text-[11px] sm:text-sm">GÉRER BUDGETS</h4>
-                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-slate-500 group-hover:text-slate-900 sm:text-[8px] sm:tracking-widest">PLANIFIER UNE DÉPENSE</p>
+                  <h4 className="font-black text-[color:var(--text-primary)] uppercase italic text-[11px] sm:text-sm">GÉRER BUDGETS</h4>
+                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] sm:text-[8px] sm:tracking-widest">PLANIFIER UNE DÉPENSE</p>
                 </div>
               </button>
-              <button onClick={() => setShowModal(true)} className="glass min-h-[136px] rounded-[1.5rem] p-4 border-white/10 bg-white/5 transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-white/20 hover:bg-white/10">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-white/10 text-white transition-all group-hover:bg-slate-950 sm:h-16 sm:w-16 sm:rounded-3xl">
+              <button onClick={() => { resetForm(); setType('expense'); setIsPlanningProvision(false); setShowModal(true); }} className="min-h-[136px] rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-card transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)] dark:glass dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[color:var(--surface-2)] text-[color:var(--text-primary)] transition-all sm:h-16 sm:w-16 sm:rounded-3xl dark:bg-white/10 dark:text-white dark:group-hover:bg-slate-950">
                   <Plus size={26} strokeWidth={3} className="sm:hidden" />
                   <Plus size={32} strokeWidth={3} className="hidden sm:block" />
                 </div>
                 <div>
-                  <h4 className="font-black text-white group-hover:text-slate-950 uppercase italic text-[11px] sm:text-sm">NOUVEAU FLUX</h4>
-                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-slate-500 group-hover:text-slate-900 sm:text-[8px] sm:tracking-widest">AJOUTER UNE TRANSACTION</p>
+                  <h4 className="font-black text-[color:var(--text-primary)] uppercase italic text-[11px] sm:text-sm">NOUVEAU FLUX</h4>
+                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] sm:text-[8px] sm:tracking-widest">AJOUTER UNE TRANSACTION</p>
                 </div>
               </button>
             </div>
@@ -895,7 +1031,6 @@ const Finance: React.FC = () => {
                 <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest italic flex items-center gap-2">
                   <ArrowDownCircle size={14} /> Dépenses Totales
                 </p>
-                <HelpTooltip content="Total cumulé des dépenses déjà exécutées. Le compteur journalier reste isolé pour le pilotage quotidien." />
               </div>
               <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
                 {financialState.totalExpenses.toLocaleString()} DH
@@ -916,7 +1051,6 @@ const Finance: React.FC = () => {
                 <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
                   <Calculator size={14} /> Provisions Totales
                 </p>
-                <HelpTooltip content="Dépenses futures planifiées mais non encore exécutées. Elles ne sont pas déduites du solde actuel." />
               </div>
               <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
                 {financialState.futureExpenses.toLocaleString()} DH
@@ -928,7 +1062,7 @@ const Finance: React.FC = () => {
 
             <ResteAVivreWidget
               amount={financialState.projectedBalance}
-              totalBudget={totalBudget}
+              totalBudget={financialState.sources.total}
               onClick={() => setShowSecurityDetail(true)}
             />
 
@@ -946,9 +1080,6 @@ const Finance: React.FC = () => {
               whileTap={{ scale: 0.99 }}
               className="glass group relative flex min-h-[172px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-emerald-500/20 bg-[linear-gradient(180deg,rgba(6,78,59,0.12),rgba(2,6,23,0.96))] p-5 text-center shadow-xl transition-all hover:border-emerald-400/35 hover:bg-[linear-gradient(180deg,rgba(6,95,70,0.16),rgba(2,6,23,0.98))] sm:min-h-[196px] sm:p-6"
             >
-              <div className="absolute right-4 top-4 z-10">
-                <HelpTooltip content="Fonds mis de côté pour des objectifs spécifiques. Protégés du budget courant." />
-              </div>
               <div className="absolute -right-5 -bottom-5 opacity-[0.06] text-emerald-400 transition-transform duration-1000 group-hover:scale-125">
                 <Wallet size={112} />
               </div>
@@ -1033,24 +1164,24 @@ const Finance: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
           <div className="space-y-4">
             {savingsList.length === 0 ? (
-              <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-slate-950/30 px-6 py-14 text-center">
-                <PiggyBank size={42} className="mx-auto mb-4 text-slate-700" />
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">Aucune réserve scellée</p>
+              <div className="rounded-[1.75rem] border border-dashed border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-6 py-14 text-center dark:border-white/10 dark:bg-slate-950/30">
+                <PiggyBank size={42} className="mx-auto mb-4 text-[color:var(--tone-info-text)] dark:text-slate-700" />
+                <p className="text-[11px] font-black uppercase tracking-widest text-[color:var(--tone-info-text)] dark:text-slate-500">Aucune réserve scellée</p>
               </div>
             ) : (
               savingsList.map((s) => (
                 <div
                   key={s.id}
                   className={`glass rounded-[1.75rem] border p-5 shadow-xl sm:p-6 ${s.executed
-                    ? 'border-emerald-500/30 bg-emerald-950/20 opacity-75'
-                    : 'border-white/5 bg-slate-950/60'
+                    ? 'border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] opacity-75 dark:border-emerald-500/30 dark:bg-emerald-950/20'
+                    : 'border-[color:var(--tone-info-border)] bg-[color:var(--surface-elevated)] dark:border-white/5 dark:bg-slate-950/60'
                     }`}
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{s.date}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-600">{s.date}</span>
                       {s.executed && s.execution_date && (
-                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--tone-success-text)] dark:text-emerald-500">
                           Exécuté le {s.execution_date}
                         </span>
                       )}
@@ -1063,29 +1194,29 @@ const Finance: React.FC = () => {
                             setNewSavingsAmount(s.amount.toString());
                             setNewSavingsReason(s.reason);
                           }}
-                          className="rounded-xl p-2 text-slate-500 transition-colors hover:text-blue-400"
+                          className="rounded-xl p-2 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--tone-info-text)] dark:text-slate-500 dark:hover:text-blue-400"
                         >
                           <Edit3 size={15} />
                         </button>
                       )}
-                      <button onClick={() => handleDeleteSaving(s.id)} className="rounded-xl p-2 text-slate-500 transition-colors hover:text-rose-500">
+                      <button onClick={() => handleDeleteSaving(s.id)} className="rounded-xl p-2 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--tone-danger-text)] dark:text-slate-500 dark:hover:text-rose-500">
                         <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
 
-                  <h4 className={`text-lg font-black uppercase italic tracking-tight ${s.executed ? 'text-slate-500 line-through' : 'text-white'}`}>{s.reason}</h4>
+                  <h4 className={`text-lg font-black uppercase italic tracking-tight ${s.executed ? 'text-[color:var(--text-muted)] line-through dark:text-slate-500' : 'text-[color:var(--heading)] dark:text-white'}`}>{s.reason}</h4>
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className={`text-2xl font-black italic ${s.executed ? 'text-emerald-600' : 'text-blue-500'}`}>{s.amount.toLocaleString()} DH</p>
+                    <p className={`text-2xl font-black italic ${s.executed ? 'text-[color:var(--tone-success-text)] dark:text-emerald-600' : 'text-[color:var(--tone-info-text)] dark:text-blue-500'}`}>{s.amount.toLocaleString()} DH</p>
                     {!s.executed && (
-                      <label className="flex items-center gap-3 rounded-2xl border border-white/5 bg-slate-950/60 px-4 py-3">
+                      <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-4 py-3 dark:border-white/5 dark:bg-slate-950/60">
                         <input
                           type="checkbox"
                           onChange={() => handleExecuteSaving(s.id, s.amount, s.reason)}
-                          className="h-5 w-5 rounded-md border-2 border-blue-500/40 bg-slate-950 accent-blue-500"
+                          className="h-5 w-5 rounded-md border-2 border-blue-500/40 bg-[color:var(--surface)] accent-blue-500 dark:bg-slate-950"
                         />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Exécuter</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-info-text)] dark:text-slate-400">Exécuter</span>
                       </label>
                     )}
                   </div>
@@ -1094,29 +1225,29 @@ const Finance: React.FC = () => {
             )}
           </div>
 
-          <div className="glass rounded-[1.9rem] border border-white/5 bg-[#0b1121] p-5 sm:p-6">
+          <div className="rounded-[1.9rem] border border-[color:var(--tone-info-border)] bg-[color:var(--surface)] p-5 shadow-card sm:p-6 dark:glass dark:border-white/5 dark:bg-[#0b1121]">
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.32em] text-blue-400 italic">OPÉRATION D'ÉPARGNE</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.32em] italic text-[color:var(--tone-info-text)] dark:text-blue-400">OPÉRATION D'ÉPARGNE</h4>
 
               <div className="space-y-2">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Montant</label>
+                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-600">Montant</label>
                 <input
                   type="number"
                   value={newSavingsAmount}
                   onChange={e => setNewSavingsAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-[1.5rem] border border-white/10 bg-slate-950 px-6 py-5 text-center text-3xl font-black italic text-white outline-none focus:border-blue-500"
+                  className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Libellé</label>
+                <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-600">Libellé</label>
                 <input
                   type="text"
                   value={newSavingsReason}
                   onChange={e => setNewSavingsReason(e.target.value)}
                   placeholder="NOM DE LA RÉSERVE..."
-                  className="w-full rounded-[1.25rem] border border-white/10 bg-slate-950 px-5 py-4 text-sm font-bold uppercase text-white outline-none focus:border-blue-500/30"
+                  className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-sm font-bold uppercase outline-none focus:border-blue-500/30"
                 />
               </div>
             </div>
@@ -1136,8 +1267,8 @@ const Finance: React.FC = () => {
                     METTRE À JOUR
                   </button>
                   <button
-                    onClick={() => { setEditingSavingsId(null); setNewSavingsAmount(''); setNewSavingsReason(''); }}
-                    className="rounded-3xl bg-slate-900 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                  onClick={() => { setEditingSavingsId(null); setNewSavingsAmount(''); setNewSavingsReason(''); }}
+                    className="rounded-3xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-info-text)] dark:bg-slate-900 dark:text-slate-500"
                   >
                     ANNULER
                   </button>
@@ -1146,7 +1277,7 @@ const Finance: React.FC = () => {
                 <button
                   onClick={handleAddSaving}
                   disabled={!newSavingsAmount || !newSavingsReason}
-                  className="w-full rounded-3xl border border-blue-500/20 bg-white/5 px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-blue-400 transition-all hover:bg-blue-500 hover:text-slate-950 disabled:opacity-40"
+                  className="w-full rounded-3xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-6 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--tone-info-text)] transition-all hover:bg-blue-500 hover:text-slate-950 disabled:opacity-40 dark:border-blue-500/20 dark:bg-white/5 dark:text-blue-400"
                 >
                   AJOUTER À L'ÉPARGNE
                 </button>
@@ -1183,6 +1314,80 @@ const Finance: React.FC = () => {
         }
       >
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="glass relative overflow-hidden rounded-[1.75rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-br from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--tone-warning-surface)] p-5 shadow-xl sm:p-6 lg:col-span-2 dark:border-white/5 dark:bg-slate-950/60">
+            <div className="absolute -right-10 -top-10 opacity-[0.08] text-emerald-500 dark:opacity-[0.06] dark:text-emerald-400">
+              <Layers size={180} />
+            </div>
+
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <h4 className="text-lg font-black uppercase italic tracking-tight leading-none text-[color:var(--heading)] sm:text-xl dark:text-white">
+                    Ensemble
+                  </h4>
+                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
+                    Total des allocations (toutes catégories)
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-end gap-2 text-[9px] font-black uppercase tracking-[0.22em]">
+                  <span className="rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] px-2.5 py-1 text-[color:var(--tone-warning-text)] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
+                    Base {totalBudget.toLocaleString()} DH
+                  </span>
+                  <span className="rounded-full border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] px-2.5 py-1 text-[color:var(--tone-success-text)] dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    Alloc {localBudgetTotals.allocated.toLocaleString()} DH
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-[1.25rem] border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
+                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-danger-text)] dark:text-[color:var(--text-muted)]">Utilisé</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-danger-text)] dark:text-rose-400">{localBudgetTotals.spent.toLocaleString()} DH</p>
+                </div>
+                <div className="rounded-[1.25rem] border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
+                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-info-text)] dark:text-[color:var(--text-muted)]">Prévu</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-sky-300">{localBudgetTotals.planned.toLocaleString()} DH</p>
+                </div>
+                <div className="rounded-[1.25rem] border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
+                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-success-text)] dark:text-[color:var(--text-muted)]">Restant</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-success-text)] dark:text-emerald-400">{localBudgetTotals.remainingNow.toLocaleString()} DH</p>
+                </div>
+                <div className="rounded-[1.25rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
+                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">Après prévu</p>
+                  <p className={`mt-2 text-lg font-black italic ${localBudgetTotals.remainingAfterPlanned < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : localBudgetTotals.remainingAfterPlanned === 0 ? 'text-[color:var(--tone-warning-text)] dark:text-amber-300' : 'text-[color:var(--tone-success-text)] dark:text-emerald-400'}`}>
+                    {localBudgetTotals.remainingAfterPlanned.toLocaleString()} DH
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
+                  <span>Projection globale</span>
+                  <span className="text-[color:var(--heading)] dark:text-white">{Math.round(localBudgetTotals.remainingPercent)}% restant</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-[color:var(--tone-warning-surface)] ring-1 ring-inset ring-[color:var(--tone-warning-border)] dark:bg-white/[0.06] dark:ring-white/5">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
+                      localBudgetTotals.tone === 'critical'
+                        ? 'from-rose-500 via-red-400 to-orange-400 shadow-[0_0_30px_rgba(244,63,94,0.28)]'
+                        : localBudgetTotals.tone === 'warning'
+                          ? 'from-amber-400 via-yellow-300 to-orange-300 shadow-[0_0_24px_rgba(251,191,36,0.24)]'
+                          : localBudgetTotals.tone === 'healthy'
+                            ? 'from-emerald-400 via-teal-300 to-cyan-300 shadow-[0_0_24px_rgba(16,185,129,0.2)]'
+                            : 'from-amber-500 via-orange-400 to-orange-300'
+                    }`}
+                    style={{ width: `${Math.max(0, Math.min(100, localBudgetTotals.remainingPercent))}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
+                  <span>{Math.round(localBudgetTotals.usedPercent)}% utilisé</span>
+                  <span className="text-[color:var(--tone-warning-text)] dark:text-slate-400">Après déduction des provisions</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {localBudgetAnalysis.map((b, i) => {
             const spentLabel = `${Math.round(b.usedPercent)}% utilisé`;
             const progressWidth = `${Math.max(0, Math.min(100, b.remainingPercent))}%`;
@@ -1193,7 +1398,7 @@ const Finance: React.FC = () => {
                   ? 'from-amber-400 via-yellow-300 to-orange-300 shadow-[0_0_24px_rgba(251,191,36,0.24)]'
                   : b.tone === 'healthy'
                     ? 'from-emerald-400 via-teal-300 to-cyan-300 shadow-[0_0_24px_rgba(16,185,129,0.2)]'
-                    : 'from-slate-600 via-slate-500 to-slate-400';
+                    : 'from-amber-500 via-orange-400 to-orange-300';
             const remainingTextClass =
               b.remaining < 0
                 ? 'text-rose-400'
@@ -1202,65 +1407,65 @@ const Finance: React.FC = () => {
                   : 'text-emerald-400';
 
             return (
-            <div key={`${b.category}-${i}`} className="glass rounded-[1.75rem] border border-white/5 bg-slate-950/60 p-5 shadow-xl sm:p-6">
+            <div key={`${b.category}-${i}`} className="glass rounded-[1.75rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-br from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--tone-warning-surface)] p-5 shadow-xl sm:p-6 dark:border-white/5 dark:bg-slate-950/60">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="space-y-2">
-                  <h4 className="text-lg font-black uppercase italic tracking-tight leading-none text-white sm:text-xl">{b.category}</h4>
+                  <h4 className="text-lg font-black uppercase italic tracking-tight leading-none text-[color:var(--heading)] sm:text-xl dark:text-white">{b.category}</h4>
                   <div className="flex flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.22em]">
-                    <span className={`rounded-full border px-2.5 py-1 ${b.tone === 'critical' ? 'border-rose-500/30 bg-rose-500/10 text-rose-300' : b.tone === 'warning' ? 'border-amber-500/30 bg-amber-500/10 text-amber-200' : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'}`}>
+                    <span className={`rounded-full border px-2.5 py-1 ${b.tone === 'critical' ? 'border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)] dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300' : b.tone === 'warning' ? 'border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] text-[color:var(--tone-warning-text)] dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200' : 'border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'}`}>
                       {spentLabel}
                     </span>
                     {b.future > 0 ? (
-                      <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-300">
+                      <span className="rounded-full border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-2.5 py-1 text-[color:var(--tone-info-text)] dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
                         Prévu {b.future.toLocaleString()} DH
                       </span>
                     ) : null}
                   </div>
                 </div>
-                <Edit3 size={16} className="text-slate-600" />
+                <Edit3 size={16} className="text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]" />
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
                     <span>Budget restant</span>
                     <span className={`font-black italic ${remainingTextClass}`}>{b.remaining.toLocaleString()} DH</span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-white/[0.06] ring-1 ring-inset ring-white/5">
+                  <div className="h-3 overflow-hidden rounded-full bg-[color:var(--tone-warning-surface)] ring-1 ring-inset ring-[color:var(--tone-warning-border)] dark:bg-white/[0.06] dark:ring-white/5">
                     <div
                       className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${progressToneClass}`}
                       style={{ width: progressWidth }}
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
                     <span>Utilisé {b.spent.toLocaleString()} DH</span>
-                    <span>{b.limit > 0 ? `${Math.round(Math.max(0, Math.min(100, b.remainingPercent)))}% restant` : 'Aucune limite'}</span>
+                    <span className="text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-secondary)]">{b.limit > 0 ? `${Math.round(Math.max(0, Math.min(100, b.remainingPercent)))}% restant` : 'Aucune limite'}</span>
                   </div>
                 </div>
-                <div className="flex justify-end text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  <span className="font-black italic text-white">{b.limit.toLocaleString()} DH</span>
+                <div className="flex justify-end text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
+                  <span className="font-black italic text-[color:var(--heading)] dark:text-white">{b.limit.toLocaleString()} DH</span>
                 </div>
                 <input
                   type="number"
                   value={b.limit}
                   onChange={(e) => setLocalBudgets(prev => prev.map(old => old.category === b.category ? { ...old, limit: Number(e.target.value) } : old))}
-                  className="w-full rounded-[1.25rem] border border-white/10 bg-[#0b1121] px-5 py-4 text-xl font-black italic text-emerald-500 outline-none focus:border-emerald-500/50"
+                  className="w-full rounded-[1.25rem] border border-[color:var(--border)] bg-[#EAF2FF] px-5 py-4 text-xl font-black italic text-[color:var(--tone-success-text)] outline-none focus:border-[color:var(--tone-success-border)] dark:border-white/10 dark:bg-[#0b1121] dark:text-emerald-500 dark:focus:border-emerald-500/50"
                 />
               </div>
             </div>
           )})}
 
           {showAddCat ? (
-            <div className="glass flex flex-col justify-center gap-4 rounded-[1.75rem] border border-emerald-500/40 bg-emerald-500/[0.03] p-5 sm:p-6">
+            <div className="glass flex flex-col justify-center gap-4 rounded-[1.75rem] border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] p-5 sm:p-6 dark:border-emerald-500/40 dark:bg-emerald-500/[0.03]">
               <input
                 type="text"
                 value={newCatName}
                 onChange={e => setNewCatName(e.target.value)}
                 placeholder="NOM DE LA CATÉGORIE..."
-                className="rounded-[1.25rem] border border-white/10 bg-slate-950 p-4 text-xs font-black uppercase text-white outline-none focus:border-emerald-500"
+                className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-xs font-black uppercase text-[color:var(--heading)] outline-none focus:border-[color:var(--tone-success-border)] dark:border-white/10 dark:bg-slate-950 dark:text-white dark:focus:border-emerald-500"
               />
               <div className="flex gap-2">
                 <button onClick={handleCreateCategory} className="flex-1 rounded-2xl bg-emerald-500 py-3 text-[10px] font-black uppercase text-slate-950">Confirmer</button>
-                <button onClick={() => setShowAddCat(false)} className="rounded-2xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-slate-500">Annuler</button>
+                <button onClick={() => setShowAddCat(false)} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-4 py-3 text-[10px] font-black uppercase text-[color:var(--text-secondary)] dark:border-white/10 dark:bg-slate-900 dark:text-slate-500">Annuler</button>
               </div>
             </div>
           ) : (
@@ -1279,7 +1484,7 @@ const Finance: React.FC = () => {
         <div className="animate-in slide-in-from-bottom-8">
           <TacticalFinanceCharts
             fluxData={transactions
-              .filter(t => t.date <= today)
+              .filter((t) => !isPlannedProvision(t) && normalizeDateOnly(t.date) <= today)
               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
               .slice(-10) // Show last 10 points
               .map(t => ({
@@ -1311,29 +1516,29 @@ const Finance: React.FC = () => {
         viewMode === 'forecast' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-700">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              <div className="rounded-[1.6rem] border border-white/6 bg-slate-950/40 p-4">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-slate-500">Prochaine sortie</p>
-                <p className="mt-2 text-sm font-black text-white">
+              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
+                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Prochaine sortie</p>
+                <p className="mt-2 text-sm font-black text-[color:var(--text-primary)]">
                   {forecastSummary.nextProvision ? forecastSummary.nextProvision.date : 'Aucune'}
                 </p>
-                <p className="mt-1 text-[10px] text-slate-500">
-                  {forecastSummary.nextProvision ? forecastSummary.nextProvision.title : 'Aucune provision planifiee'}
+                <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">
+                  {forecastSummary.nextProvision ? forecastSummary.nextProvision.title : 'Aucune provision planifiée'}
                 </p>
               </div>
-              <div className="rounded-[1.6rem] border border-white/6 bg-slate-950/40 p-4">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-slate-500">Pression budgets</p>
-                <p className="mt-2 text-2xl font-black italic text-amber-300">{forecastSummary.budgetPressureCount}</p>
-                <p className="mt-1 text-[10px] text-slate-500">categorie(s) sous tension</p>
+              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
+                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Pression budgets</p>
+                <p className="mt-2 text-2xl font-black italic text-amber-600 dark:text-amber-300">{forecastSummary.budgetPressureCount}</p>
+                <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">Catégorie(s) sous tension</p>
               </div>
-              <div className="rounded-[1.6rem] border border-white/6 bg-slate-950/40 p-4">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-slate-500">Sous 7 jours</p>
-                <p className="mt-2 text-2xl font-black italic text-blue-400">{forecastSummary.dueSoonCount}</p>
-                <p className="mt-1 text-[10px] text-slate-500">echeance(s) imminentes</p>
+              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
+                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Sous 7 jours</p>
+                <p className="mt-2 text-2xl font-black italic text-blue-600 dark:text-blue-400">{forecastSummary.dueSoonCount}</p>
+                <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">Échéance(s) imminente(s)</p>
               </div>
-              <div className="rounded-[1.6rem] border border-white/6 bg-slate-950/40 p-4">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-slate-500">Allocation moyenne</p>
-                <p className="mt-2 text-2xl font-black italic text-emerald-400">{forecastSummary.averageProvision.toLocaleString()} DH</p>
-                <p className="mt-1 text-[10px] text-slate-500">{forecastSummary.categoriesImpacted} categorie(s) impactee(s)</p>
+              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
+                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Allocation moyenne</p>
+                <p className="mt-2 text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{forecastSummary.averageProvision.toLocaleString()} DH</p>
+                <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">{forecastSummary.categoriesImpacted} catégorie(s) impactée(s)</p>
               </div>
             </div>
 
@@ -1380,24 +1585,24 @@ const Finance: React.FC = () => {
                           event.preventDefault();
                           openTransactionDetail(t);
                         }
-                      }} className="block w-full rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left">
+                      }} className="block w-full rounded-[1.5rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-r from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--tone-warning-surface)] p-4 text-left shadow-soft dark:border-[color:var(--border)] dark:bg-[color:var(--surface)]">
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">{t.date}</p>
-                            <h4 className="mt-2 text-sm font-black uppercase italic text-white">{t.title}</h4>
-                            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500">{t.category}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#E9F0EF] dark:text-blue-400">{t.date}</p>
+                            <h4 className="mt-2 text-sm font-black uppercase italic text-[color:var(--accent)] dark:text-white">{t.title}</h4>
+                            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[#E9F0EF] dark:text-slate-400">{t.category}</p>
                             {categoryProjection !== null ? (
-                              <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
-                                Budget apres provisions: {categoryProjection.toLocaleString()} DH
+                              <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : 'text-[#E9F0EF] dark:text-slate-500'}`}>
+                                Budget après provisions: {categoryProjection.toLocaleString()} DH
                               </p>
                             ) : null}
                           </div>
-                          <p className="text-lg font-black italic text-blue-500">-{t.amount.toLocaleString()} DH</p>
+                          <p className="text-lg font-black italic text-[color:var(--accent)] dark:text-blue-500">-{t.amount.toLocaleString()} DH</p>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={(event) => { event.stopPropagation(); handleExecuteTransaction(t.id); }} className="flex-1 rounded-2xl bg-emerald-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-emerald-400">Exécuter</button>
-                          <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-2xl bg-white/5 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-300">Modifier</button>
-                          <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-2xl bg-rose-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-400">Supprimer</button>
+                          <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-2xl border border-[color:var(--accent)] bg-[color:var(--accent)] px-4 py-3 text-[10px] font-black uppercase tracking-widest text-[#E9F0EF] dark:border-white/10 dark:bg-white/5 dark:text-slate-300">Modifier</button>
+                          <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-2xl border border-[color:var(--accent)] bg-[color:var(--accent)] px-4 py-3 text-[10px] font-black uppercase tracking-widest text-[#E9F0EF] dark:border-[color:var(--tone-danger-border)] dark:bg-[color:var(--tone-danger-surface)] dark:text-rose-400">Supprimer</button>
                         </div>
                       </div>
                     )})}
@@ -1421,7 +1626,7 @@ const Finance: React.FC = () => {
                           const categoryBudget = budgetAnalysis.find((budget) => budget.category === t.category);
                           const categoryProjection = categoryBudget ? categoryBudget.limit - categoryBudget.spent - categoryBudget.future : null;
                           return (
-                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[color:var(--surface)] transition-all rounded-3xl border-l-4 border-blue-500">
+                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer rounded-3xl border-l-4 border-blue-500 bg-[color:var(--surface)] transition-all">
                             <td className="px-4 py-6 text-center">
                               <div className="flex items-center justify-center">
                                 <input
@@ -1433,16 +1638,16 @@ const Finance: React.FC = () => {
                                 />
                               </div>
                             </td>
-                            <td className="px-8 py-6 font-black text-xs text-slate-500 italic">{t.date}</td>
-                            <td className="px-8 py-6 text-sm font-black text-white uppercase italic tracking-tight">{t.title}</td>
-                            <td className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.category}</td>
-                            <td className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection !== null && categoryProjection < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
+                            <td className="px-8 py-6 font-black text-xs italic text-[color:var(--tone-info-text)] dark:text-slate-500">{t.date}</td>
+                            <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
+                            <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-400">{t.category}</td>
+                            <td className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection !== null && categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : 'text-[color:var(--tone-warning-text)] dark:text-slate-500'}`}>
                               {categoryProjection !== null ? `${categoryProjection.toLocaleString()} DH restants` : 'Hors budget'}
                             </td>
-                            <td className="px-8 py-6 text-right font-black italic text-lg text-blue-500">-{t.amount.toLocaleString()} DH</td>
+                            <td className="px-8 py-6 text-right text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-blue-500">-{t.amount.toLocaleString()} DH</td>
                             <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
-                              <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-xl p-2 text-slate-500 transition-colors hover:text-white"><Pencil size={16} /></button>
-                              <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-xl p-2 text-slate-500 transition-colors hover:text-rose-500"><Trash2 size={16} /></button>
+                              <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-xl p-2 text-[color:var(--tone-warning-text)] transition-colors hover:text-[color:var(--heading)] dark:text-slate-500 dark:hover:text-white"><Pencil size={16} /></button>
+                              <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-xl p-2 text-[color:var(--tone-danger-text)] transition-colors hover:text-[color:var(--danger)] dark:text-slate-500 dark:hover:text-rose-500"><Trash2 size={16} /></button>
                             </td>
                           </tr>
                         )})}
@@ -1455,45 +1660,49 @@ const Finance: React.FC = () => {
 
             {/* Analytical Control Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              <div className="glass rounded-[2rem] p-5 border-white/5 bg-[#0f172a]/40 shadow-2xl sm:p-6">
-                <h3 className="mb-5 text-[10px] font-black text-white uppercase tracking-[0.32em] italic flex items-center gap-3">
+              <div className="rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:p-6 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40 dark:shadow-card">
+                <h3 className="mb-5 text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.32em] italic flex items-center gap-3">
                   <LucidePieChart size={18} className="text-blue-500" /> RÉPARTITION CERCLE (PROVISIONS)
                 </h3>
-                <PieChartComponent
-                  data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
-                  dataKey="value"
-                  nameKey="name"
-                  emptyMessage="Le graphe apparaîtra dès qu'une provision future existera."
-                  fallbackTitle="Repartition indisponible"
-                  heightClassName="h-[260px] sm:h-[300px]"
-                  minHeightClassName="min-h-[260px]"
-                  valueFormatter={(value) => formatChartCurrency(value)}
-                />
+                <div className="rounded-[1.5rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-3 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/20 dark:shadow-none">
+                  <PieChartComponent
+                    data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
+                    dataKey="value"
+                    nameKey="name"
+                    emptyMessage="Le graphe apparaîtra dès qu'une provision future existera."
+                    fallbackTitle="Repartition indisponible"
+                    heightClassName="h-[260px] sm:h-[300px]"
+                    minHeightClassName="min-h-[260px]"
+                    valueFormatter={(value) => formatChartCurrency(value)}
+                  />
+                </div>
               </div>
 
-              <div className="glass rounded-[2rem] p-5 border-white/5 bg-[#0f172a]/40 shadow-2xl sm:p-6">
-                <h3 className="mb-5 text-[10px] font-black text-white uppercase tracking-[0.32em] italic flex items-center gap-3">
+              <div className="rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:p-6 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40 dark:shadow-card">
+                <h3 className="mb-5 text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.32em] italic flex items-center gap-3">
                   <BarChart3 size={18} className="text-blue-500" /> CONTRÔLE BARRE (VOLUMES FUTURS)
                 </h3>
-                <BarChartComponent
-                  data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
-                  xKey="name"
-                  series={[
-                    {
-                      key: 'value',
-                      label: 'Provision',
-                      color: '#3b82f6',
-                      radius: [10, 10, 0, 0],
-                    },
-                  ]}
-                  emptyMessage="Aucun volume futur à afficher pour le moment."
-                  fallbackTitle="Controle barre indisponible"
-                  heightClassName="h-[260px] sm:h-[300px]"
-                  minHeightClassName="min-h-[260px]"
-                  hideYAxis
-                  barSize={40}
-                  tooltipValueFormatter={(value) => formatChartCurrency(value)}
-                />
+                <div className="rounded-[1.5rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-3 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/20 dark:shadow-none">
+                  <BarChartComponent
+                    data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
+                    xKey="name"
+                    series={[
+                      {
+                        key: 'value',
+                        label: 'Provision',
+                        color: '#3b82f6',
+                        radius: [10, 10, 0, 0],
+                      },
+                    ]}
+                    emptyMessage="Aucun volume futur à afficher pour le moment."
+                    fallbackTitle="Controle barre indisponible"
+                    heightClassName="h-[260px] sm:h-[300px]"
+                    minHeightClassName="min-h-[260px]"
+                    hideYAxis
+                    barSize={40}
+                    tooltipValueFormatter={(value) => formatChartCurrency(value)}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1503,18 +1712,18 @@ const Finance: React.FC = () => {
       {/* REGISTRE TABLE VIEW */}
       {
         viewMode === 'table' && (
-          <div className="glass rounded-[2rem] p-5 border-white/5 bg-[#0f172a]/40 overflow-hidden animate-in slide-in-from-right-8 sm:p-6 md:p-8">
+          <div className="overflow-hidden rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-card animate-in slide-in-from-right-8 sm:p-6 md:p-8 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic">REGISTRE ANALYTIQUE DES FLUX PASSÉS</h3>
+              <h3 className="text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.4em] italic">REGISTRE ANALYTIQUE DES FLUX PASSÉS</h3>
               <div className="flex gap-4">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500" /> <span className="text-[8px] font-black text-slate-500 uppercase">DEPOT</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500" /> <span className="text-[8px] font-black text-slate-500 uppercase">DEPENSE</span></div>
+                <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500" /> <span className="text-[8px] font-black uppercase text-[color:var(--text-muted)]">DEPOT</span></div>
+                <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-rose-500" /> <span className="text-[8px] font-black uppercase text-[color:var(--text-muted)]">DEPENSE</span></div>
               </div>
             </div>
             {pastTransactions.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/30 px-6 py-14 text-center">
-                <History size={42} className="mx-auto mb-4 text-slate-700" />
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">Aucun flux passé à afficher</p>
+              <div className="rounded-[1.5rem] border border-dashed border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] px-6 py-14 text-center dark:border-white/10 dark:bg-slate-950/30">
+                <History size={42} className="mx-auto mb-4 text-[color:var(--text-secondary)] dark:text-slate-700" />
+                <p className="text-[11px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Aucun flux passé à afficher</p>
               </div>
             ) : (
               <>
@@ -1592,8 +1801,8 @@ const Finance: React.FC = () => {
             {saving ? <Loader2 className="animate-spin shrink-0" size={18} /> : <ShieldCheck size={18} strokeWidth={3} className="shrink-0" />}
             <span className="truncate">
               {editingTransaction
-                ? (date > today ? 'METTRE À JOUR LA PROVISION' : "METTRE À JOUR L'OPÉRATION")
-                : (date > today ? 'PLANIFIER LA DÉPENSE' : "CONFIRMER L'OPÉRATION")}
+                ? (isProvisionForm ? 'METTRE À JOUR LA PROVISION' : "METTRE À JOUR L'OPÉRATION")
+                : (isProvisionForm ? 'PLANIFIER LA DÉPENSE' : "CONFIRMER L'OPÉRATION")}
             </span>
           </button>
         }
@@ -1601,7 +1810,7 @@ const Finance: React.FC = () => {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1.5">
             <button onClick={() => { setType('expense'); setCategoryValue('Courses'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'expense' ? 'bg-rose-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPENSE</button>
-            <button onClick={() => { setType('deposit'); setCategoryValue('AMCI'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'deposit' ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPÔT</button>
+            <button onClick={() => { setType('deposit'); setCategoryValue('AMCI'); setIsPlanningProvision(false); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'deposit' ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPÔT</button>
           </div>
 
           <div className="space-y-4">
@@ -1695,7 +1904,7 @@ const Finance: React.FC = () => {
         onEdit={handleEditTransaction}
         onDelete={handleDeleteTransaction}
         onExecute={(transaction) => handleExecuteTransaction(transaction.id)}
-        canExecute={Boolean(selectedTransaction && selectedTransaction.type === 'expense' && selectedTransaction.date > today)}
+        canExecute={Boolean(selectedTransaction && isPlannedProvision(selectedTransaction))}
       />
 
     </div>

@@ -11,6 +11,7 @@ import DailyPlanner from '../components/dashboard/DailyPlanner';
 import SecurityDetailModal from '../components/dashboard/SecurityDetailModal';
 import FocusOverlay from '../components/common/FocusOverlay';
 import ChartErrorBoundary from '../components/common/ChartErrorBoundary';
+import ThemeToggle from '../components/common/ThemeToggle';
 import { DualSparklineChart, HorizontalBarsChart, StackedBarsChart } from '../components/common/InlineCharts';
 import { AppView } from '../types';
 import { useProfile } from '../features/profile/hooks/useProfile';
@@ -20,9 +21,10 @@ import { useSubjects } from '../features/studies/hooks/useStudies';
 import { useLearnedWords } from '../features/languages/hooks/useLanguages';
 import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBudget';
 import { DEFAULT_MISSION_CATEGORIES, displayMissionCategoryLabel, resolveStudyDomainLabel } from '../utils/studyDomainLabel';
-import { isFutureDateOnly, isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
+import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { resolveProfileRankTitle } from '../utils/profileRank';
+import { isPlannedProvision } from '../utils/financeProvisions';
 
 interface DashboardProps {
   onNavigate: (view: AppView) => void;
@@ -32,24 +34,24 @@ type DetailCardTone = 'neutral' | 'positive' | 'negative' | 'warning';
 
 const DETAIL_CARD_STYLES: Record<DetailCardTone, { shell: string; eyebrow: string; value: string }> = {
   neutral: {
-    shell: 'border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.86))]',
-    eyebrow: 'text-slate-500',
-    value: 'text-white',
+    shell: 'border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.86))]',
+    eyebrow: 'text-[color:var(--text-muted)] dark:text-slate-500',
+    value: 'text-[color:var(--text-primary)] dark:text-white',
   },
   positive: {
-    shell: 'border-emerald-500/15 bg-[linear-gradient(180deg,rgba(6,78,59,0.24),rgba(2,6,23,0.92))] shadow-[0_20px_60px_rgba(16,185,129,0.08)]',
-    eyebrow: 'text-emerald-300/70',
-    value: 'text-emerald-400',
+    shell: 'border-emerald-200 bg-[color:var(--surface)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-emerald-500/15 dark:bg-[linear-gradient(180deg,rgba(6,78,59,0.24),rgba(2,6,23,0.92))] dark:shadow-[0_20px_60px_rgba(16,185,129,0.08)]',
+    eyebrow: 'text-emerald-600 dark:text-emerald-300/70',
+    value: 'text-emerald-600 dark:text-emerald-400',
   },
   negative: {
-    shell: 'border-rose-500/15 bg-[linear-gradient(180deg,rgba(76,5,25,0.26),rgba(2,6,23,0.92))] shadow-[0_20px_60px_rgba(244,63,94,0.08)]',
-    eyebrow: 'text-rose-200/70',
-    value: 'text-rose-400',
+    shell: 'border-rose-200 bg-[color:var(--surface)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-rose-500/15 dark:bg-[linear-gradient(180deg,rgba(76,5,25,0.26),rgba(2,6,23,0.92))] dark:shadow-[0_20px_60px_rgba(244,63,94,0.08)]',
+    eyebrow: 'text-rose-600 dark:text-rose-200/70',
+    value: 'text-rose-600 dark:text-rose-400',
   },
   warning: {
-    shell: 'border-amber-500/15 bg-[linear-gradient(180deg,rgba(120,53,15,0.24),rgba(2,6,23,0.92))] shadow-[0_20px_60px_rgba(245,158,11,0.08)]',
-    eyebrow: 'text-amber-200/70',
-    value: 'text-amber-300',
+    shell: 'border-amber-200 bg-[color:var(--surface)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-amber-500/15 dark:bg-[linear-gradient(180deg,rgba(120,53,15,0.24),rgba(2,6,23,0.92))] dark:shadow-[0_20px_60px_rgba(245,158,11,0.08)]',
+    eyebrow: 'text-amber-700 dark:text-amber-200/70',
+    value: 'text-amber-600 dark:text-amber-300',
   },
 };
 
@@ -79,16 +81,16 @@ const DetailSummaryRow: React.FC<{
 }> = ({ label, value, tone = 'default' }) => {
   const toneClass =
     tone === 'positive'
-      ? 'text-emerald-400'
+      ? 'text-emerald-600 dark:text-emerald-400'
       : tone === 'negative'
-        ? 'text-rose-400'
+        ? 'text-rose-600 dark:text-rose-400'
         : tone === 'warning'
-          ? 'text-amber-300'
-          : 'text-white';
+          ? 'text-amber-600 dark:text-amber-300'
+          : 'text-[color:var(--text-primary)] dark:text-white';
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[1.1rem] border border-white/5 bg-slate-950/45 px-3.5 py-3">
-      <span className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{label}</span>
+    <div className="flex items-center justify-between gap-4 rounded-[1.1rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/5 dark:bg-slate-950/45 dark:shadow-none">
+      <span className="text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-500">{label}</span>
       <span className={`text-base font-black tracking-tight ${toneClass}`}>{value}</span>
     </div>
   );
@@ -161,59 +163,124 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     [transactions]
   );
   const todayExpenseTransactions = useMemo(
-    () => expenseTransactions.filter((transaction) => isSameDateOnly(transaction.date, todayStr)),
+    () =>
+      expenseTransactions.filter(
+        (transaction) => !isPlannedProvision(transaction) && isSameDateOnly(transaction.date, todayStr),
+      ),
     [expenseTransactions, todayStr]
   );
   const futureExpenseTransactions = useMemo(
     () =>
       expenseTransactions
-        .filter((transaction) => isFutureDateOnly(transaction.date, todayStr))
+        .filter((transaction) => isPlannedProvision(transaction))
         .sort((a, b) => normalizeDateOnly(a.date).localeCompare(normalizeDateOnly(b.date))),
-    [expenseTransactions, todayStr]
+    [expenseTransactions]
   );
   const settledExpenseTransactions = useMemo(
-    () => expenseTransactions.filter((transaction) => isPastOrTodayDateOnly(transaction.date, todayStr)),
+    () =>
+      expenseTransactions.filter(
+        (transaction) => !isPlannedProvision(transaction) && isPastOrTodayDateOnly(transaction.date, todayStr),
+      ),
     [expenseTransactions, todayStr]
   );
 
-  const stats = useMemo(() => {
-    const todayExpenses = todayExpenseTransactions.reduce((acc, t) => acc + Number(t.amount), 0);
-    const totalSpent = settledExpenseTransactions.reduce((acc, t) => acc + Number(t.amount), 0);
-    const futureTotal = futureExpenseTransactions.reduce((acc, t) => acc + Number(t.amount), 0);
+  // Finance snapshot (aligns Dashboard with the Finance module logic)
+  const financeTotals = useMemo(() => {
+    const plannedTransactions = transactions.filter((t) => isPlannedProvision(t));
+    const pastTransactions = transactions.filter(
+      (t) => !isPlannedProvision(t) && isPastOrTodayDateOnly(t.date, todayStr),
+    );
 
-    const remaining = userProfile.budget - totalSpent;
+    const depositsBySource = pastTransactions
+      .filter((t) => t.type === 'deposit')
+      .reduce((acc: Record<string, number>, t) => {
+        const src = t.source || 'Autres';
+        acc[src] = (acc[src] || 0) + Number(t.amount || 0);
+        return acc;
+      }, {});
+
+    const amciPot = userProfile.budget + (depositsBySource['AMCI'] || 0);
+    const donPot = depositsBySource['DON'] || 0;
+    const autresPot = Object.entries(depositsBySource)
+      .filter(([k]) => k !== 'AMCI' && k !== 'DON')
+      .reduce((sum, [, v]) => sum + Number(v || 0), 0);
+
+    const totalAvailable = amciPot + donPot + autresPot;
+
+    const totalExpenses = pastTransactions
+      .filter((t) => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const todaySpent = pastTransactions
+      .filter((t) => t.type === 'expense' && isSameDateOnly(t.date, todayStr))
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const futureExpenses = plannedTransactions
+      .filter((t) => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const currentBalance = totalAvailable - totalExpenses;
+    const projectedBalance = currentBalance - futureExpenses;
+
+    return {
+      totalAvailable,
+      totalExpenses,
+      todaySpent,
+      futureExpenses,
+      currentBalance,
+      projectedBalance,
+    };
+  }, [transactions, todayStr, userProfile.budget]);
+
+  const stats = useMemo(() => {
+    const remaining = financeTotals.currentBalance;
+    const futureTotal = financeTotals.futureExpenses;
+    const projectedRemaining = financeTotals.projectedBalance;
     const tasksPending = missions.filter(m => m.status !== 'Terminé').length;
 
-    // Weekly comparison logic
-    const dailyTrend = expenseTransactions.slice(-7).map(t => ({ date: normalizeDateOnly(t.date).slice(5), amount: t.amount }));
+    // Weekly comparison logic (executed expenses only)
+    const dailyTrend = settledExpenseTransactions
+      .slice()
+      .sort((a, b) => normalizeDateOnly(a.date).localeCompare(normalizeDateOnly(b.date)))
+      .slice(-7)
+      .map((t) => ({ date: normalizeDateOnly(t.date).slice(5), amount: t.amount }));
 
     return {
       financeRemaining: remaining,
-      financePercentage: userProfile.budget > 0 ? Math.max(0, Math.round((remaining / userProfile.budget) * 100)) : 0,
-      todaySpent: todayExpenses,
+      financePercentage: financeTotals.totalAvailable > 0 ? Math.max(0, Math.round((remaining / financeTotals.totalAvailable) * 100)) : 0,
+      todaySpent: financeTotals.todaySpent,
       futureTotal,
       futureCount: futureExpenseTransactions.length,
-      projectedRemaining: remaining - futureTotal,
+      projectedRemaining,
       dailyTrend,
       tasksCount: tasksPending,
       subjectsCount: subjects.length,
       disciplineScore: missions.length ? Math.round((missions.filter(m => m.status === 'Terminé').length / missions.length) * 100) : 0
     };
-  }, [expenseTransactions, futureExpenseTransactions, missions, settledExpenseTransactions, subjects, todayExpenseTransactions, userProfile]);
+  }, [financeTotals, futureExpenseTransactions.length, missions, settledExpenseTransactions, subjects]);
 
 
   // --- CHARTS DATA PREPARATION ---
 
   // --- PREMIUM TACTICAL DATA ---
 
-  const focusAreaData = useMemo(() => [
-    { subject: 'Finance', A: stats.financePercentage, fullMark: 100 },
-    { subject: studyDomainLabel, A: Math.round(subjects.reduce((acc, s) => acc + (s.chaptersDone / (s.chaptersTotal || 1)), 0) / (subjects.length || 1) * 100), fullMark: 100 },
-    { subject: 'Sport', A: 75, fullMark: 100 },
-    { subject: 'Langues', A: Math.min(100, (learnedWords.length / 50) * 100), fullMark: 100 },
-    { subject: 'Bible', A: Math.round((missions.filter(m => m.category === 'Spirituel' && m.status === 'Terminé').length / (missions.filter(m => m.category === 'Spirituel').length || 1)) * 100), fullMark: 100 },
-    { subject: 'Mental', A: Math.min(100, stats.disciplineScore + 10), fullMark: 100 },
-  ], [studyDomainLabel, subjects, learnedWords, missions, stats]);
+  const focusAreaData = useMemo(() => {
+    const resolveMissionCategoryProgress = (category: string) => {
+      const categoryMissions = missions.filter((mission) => mission.category === category);
+      const completedMissions = categoryMissions.filter((mission) => mission.status === 'Terminé').length;
+
+      return Math.round((completedMissions / (categoryMissions.length || 1)) * 100);
+    };
+
+    return [
+      { subject: 'Finance', A: stats.financePercentage, fullMark: 100 },
+      { subject: studyDomainLabel, A: Math.round(subjects.reduce((acc, s) => acc + (s.chaptersDone / (s.chaptersTotal || 1)), 0) / (subjects.length || 1) * 100), fullMark: 100 },
+      { subject: 'Sport', A: 75, fullMark: 100 },
+      { subject: 'Langues', A: resolveMissionCategoryProgress('Langues'), fullMark: 100 },
+      { subject: 'Bible', A: resolveMissionCategoryProgress('Spirituel'), fullMark: 100 },
+      { subject: 'Mental', A: Math.min(100, stats.disciplineScore + 10), fullMark: 100 },
+    ];
+  }, [studyDomainLabel, subjects, missions, stats]);
 
   const energyData = useMemo(() => [
     { time: '09h', level: 85 },
@@ -244,7 +311,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     });
 
     return last7Days.map(date => {
-      const dayTxs = transactions.filter(t => t.date === date && t.type === 'expense');
+      const dayTxs = transactions.filter(
+        (t) => t.date === date && t.type === 'expense' && !isPlannedProvision(t),
+      );
       const categories = {};
       dayTxs.forEach(t => {
         categories[t.category] = (categories[t.category] || 0) + Number(t.amount);
@@ -254,7 +323,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   }, [transactions]);
 
   const categoriesList = useMemo(() => {
-    const expenses = transactions.filter(t => t.type === 'expense');
+    const expenses = transactions.filter((t) => t.type === 'expense' && !isPlannedProvision(t));
     const cats = new Set(expenses.map(t => t.category));
     const result = Array.from(cats);
     return result.length > 0 ? result : ['Général']; // Fallback category to show axis
@@ -266,13 +335,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const currentWeekSum = transactions.filter(t => {
       const d = new Date(t.date);
       const diff = (new Date().getTime() - d.getTime()) / (1000 * 3600 * 24);
-      return diff <= 7 && t.type === 'expense';
+      return diff <= 7 && t.type === 'expense' && !isPlannedProvision(t);
     }).reduce((acc, t) => acc + t.amount, 0);
 
     const prevWeekSum = transactions.filter(t => {
       const d = new Date(t.date);
       const diff = (new Date().getTime() - d.getTime()) / (1000 * 3600 * 24);
-      return diff > 7 && diff <= 14 && t.type === 'expense';
+      return diff > 7 && diff <= 14 && t.type === 'expense' && !isPlannedProvision(t);
     }).reduce((acc, t) => acc + t.amount, 0);
 
     return [
@@ -313,7 +382,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
     return last30Days.map(date => {
       const dayExpenses = transactions
-        .filter(t => t.type === 'expense' && isSameDateOnly(t.date, date))
+        .filter((t) => t.type === 'expense' && !isPlannedProvision(t) && isSameDateOnly(t.date, date))
         .reduce((acc, t) => acc + Number(t.amount), 0);
       return {
         date: new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
@@ -327,7 +396,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const categoryPieData = useMemo(() => {
     const categoryTotals: { [key: string]: number } = {};
     transactions
-      .filter(t => t.type === 'expense' && isPastOrTodayDateOnly(t.date, todayStr))
+      .filter((t) => t.type === 'expense' && !isPlannedProvision(t) && isPastOrTodayDateOnly(t.date, todayStr))
       .forEach(t => {
         categoryTotals[t.category] = (categoryTotals[t.category] || 0) + Number(t.amount);
       });
@@ -385,7 +454,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const daysRemaining = daysInMonth - dayOfMonth;
 
     const spent = transactions
-      .filter(t => t.type === 'expense' && isPastOrTodayDateOnly(t.date, todayStr))
+      .filter((t) => t.type === 'expense' && !isPlannedProvision(t) && isPastOrTodayDateOnly(t.date, todayStr))
       .reduce((acc, t) => acc + Number(t.amount), 0);
 
     const dailyAvgSpent = dayOfMonth > 0 ? spent / dayOfMonth : 0;
@@ -402,10 +471,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   }, [transactions, userProfile.budget, todayStr]);
 
   const securitySnapshot = useMemo(() => {
-    const consumedPast = Math.max(0, userProfile.budget - stats.financeRemaining);
-    const finalBalance = stats.projectedRemaining;
-    const safeThreshold = userProfile.budget * 0.35;
-    const warningThreshold = userProfile.budget * 0.12;
+    const consumedPast = Math.max(0, financeTotals.totalExpenses);
+    const finalBalance = financeTotals.projectedBalance;
+    const safeThreshold = financeTotals.totalAvailable * 0.35;
+    const warningThreshold = financeTotals.totalAvailable * 0.12;
 
     const tone: 'safe' | 'warning' | 'critical' =
       finalBalance > safeThreshold ? 'safe' : finalBalance > warningThreshold ? 'warning' : 'critical';
@@ -415,7 +484,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       finalBalance,
       tone,
     };
-  }, [stats.financeRemaining, stats.projectedRemaining, userProfile.budget]);
+  }, [financeTotals]);
 
   // --- CALENDAR LOGIC ---
   const daysInMonth = useMemo(() => {
@@ -444,7 +513,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     const dStr = date.toISOString().split('T')[0];
     return {
       date: dStr,
-      expenses: transactions.filter(t => t.date === dStr && t.type === 'expense'),
+      expenses: transactions.filter((t) => t.date === dStr && t.type === 'expense' && !isPlannedProvision(t)),
       missionsDone: missions.filter(m => m.completed_at && m.completed_at.startsWith(dStr)),
       missionsPlanned: missions.filter(m => m.planned_date === dStr && m.status !== 'Terminé'),
       wordsLearned: learnedWords.filter(w => w.learned_at && w.learned_at.startsWith(dStr))
@@ -502,21 +571,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const securityToneMeta = {
     safe: {
       badge: 'Zone saine',
-      badgeClass: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
+      badgeClass: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
       finalTone: 'positive' as const,
-      summaryClass: 'border-emerald-500/15 bg-[linear-gradient(180deg,rgba(6,78,59,0.28),rgba(2,6,23,0.96))] shadow-[0_24px_70px_rgba(16,185,129,0.12)]',
+      summaryClass: 'border-emerald-200 bg-[linear-gradient(180deg,#ffffff_0%,rgba(236,253,245,0.95)_100%)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-emerald-500/15 dark:bg-[linear-gradient(180deg,rgba(6,78,59,0.28),rgba(2,6,23,0.96))] dark:shadow-[0_24px_70px_rgba(16,185,129,0.12)]',
     },
     warning: {
       badge: 'Zone sensible',
-      badgeClass: 'border-amber-500/20 bg-amber-500/10 text-amber-200',
+      badgeClass: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-200',
       finalTone: 'warning' as const,
-      summaryClass: 'border-amber-500/15 bg-[linear-gradient(180deg,rgba(120,53,15,0.26),rgba(2,6,23,0.96))] shadow-[0_24px_70px_rgba(245,158,11,0.12)]',
+      summaryClass: 'border-amber-200 bg-[linear-gradient(180deg,#ffffff_0%,rgba(255,251,235,0.96)_100%)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-amber-500/15 dark:bg-[linear-gradient(180deg,rgba(120,53,15,0.26),rgba(2,6,23,0.96))] dark:shadow-[0_24px_70px_rgba(245,158,11,0.12)]',
     },
     critical: {
       badge: 'Zone critique',
-      badgeClass: 'border-rose-500/20 bg-rose-500/10 text-rose-200',
+      badgeClass: 'border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-200',
       finalTone: 'negative' as const,
-      summaryClass: 'border-rose-500/15 bg-[linear-gradient(180deg,rgba(76,5,25,0.3),rgba(2,6,23,0.96))] shadow-[0_24px_70px_rgba(244,63,94,0.12)]',
+      summaryClass: 'border-rose-200 bg-[linear-gradient(180deg,#ffffff_0%,rgba(255,241,242,0.96)_100%)] shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-rose-500/15 dark:bg-[linear-gradient(180deg,rgba(76,5,25,0.3),rgba(2,6,23,0.96))] dark:shadow-[0_24px_70px_rgba(244,63,94,0.12)]',
     },
   }[securitySnapshot.tone];
 
@@ -560,20 +629,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: '65%' }} />
             </div>
           </div>
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              setFocusMode(true);
-            }}
-            className="hidden sm:flex px-6 py-4 bg-white text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-500 hover:text-white transition-all items-center gap-2 shadow-xl shrink-0"
-          >
-            <Zap size={16} fill="currentColor" /> Concentration
-          </button>
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <ThemeToggle className="border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-elevated)]" />
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                setFocusMode(true);
+              }}
+              className="hidden sm:flex px-6 py-4 bg-white text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-500 hover:text-white transition-all items-center gap-2 shadow-xl shrink-0"
+            >
+              <Zap size={16} fill="currentColor" /> Concentration
+            </button>
+          </div>
         </div>
       </div>
 
       {/* QUICK GRID */}
-      <div className="space-y-2 sm:space-y-2.5 lg:space-y-3">
+      <div className="space-y-3 sm:space-y-3.5 lg:space-y-4">
         <DashboardCard
           title={primaryQuickStat.label}
           value={primaryQuickStat.val}
@@ -586,7 +658,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           featured
         />
 
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 lg:gap-3">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3 lg:gap-4">
           {secondaryQuickStats.map((stat, index) => (
             <DashboardCard
               key={stat.id}
@@ -642,7 +714,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </h3>
           </div>
           <div className="h-[280px] w-full relative">
-            {transactions.filter(t => t.type === 'expense').length === 0 && (
+            {transactions.filter((t) => t.type === 'expense' && !isPlannedProvision(t)).length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
                 <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest bg-[color:var(--surface-2)] px-4 py-2 rounded-full border border-[color:var(--border)] backdrop-blur-sm">En attente de données financières...</p>
               </div>
@@ -760,7 +832,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
             const completedMissionCount = missions.filter(m => m.completed_at && m.completed_at.startsWith(dStr)).length;
             const plannedMissionCount = missions.filter(m => m.planned_date === dStr && m.status !== 'Terminé').length;
-            const expenseCount = transactions.filter(t => t.date === dStr && t.type === 'expense').length;
+            const expenseCount = transactions.filter(
+              (t) => t.date === dStr && t.type === 'expense' && !isPlannedProvision(t),
+            ).length;
             const learningCount = learnedWords.filter(w => w.learned_at && w.learned_at.startsWith(dStr)).length;
 
             return (
@@ -892,33 +966,33 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             onNavigate('FINANCE');
             setActiveDetail(null);
           }}
-          budget={userProfile.budget}
-          consumed={securitySnapshot.consumedPast}
-          future={stats.futureTotal}
-          current={stats.financeRemaining}
-          projected={securitySnapshot.finalBalance}
+          budget={financeTotals.totalAvailable}
+          consumed={financeTotals.totalExpenses}
+          future={financeTotals.futureExpenses}
+          current={financeTotals.currentBalance}
+          projected={financeTotals.projectedBalance}
           futureCount={stats.futureCount}
           tone={securitySnapshot.tone}
         />
       )}
 
       {activeDetail && activeDetail !== 'SECURITE' && (
-        <div className={`fixed inset-0 flex items-center justify-center bg-slate-950/92 backdrop-blur-xl animate-in fade-in duration-200 ${activeDetail === 'SECURITE' ? 'z-[320] p-0 sm:p-4' : 'z-[320] p-4'}`}>
-          <div className={`relative flex w-full flex-col overflow-hidden border border-white/10 bg-[#0b1121] shadow-[0_30px_120px_rgba(2,6,23,0.78)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${activeDetail === 'SECURITE' ? 'min-h-[100dvh] rounded-none border-0 px-4 pb-5 pt-4 sm:min-h-0 sm:max-w-md sm:rounded-[1.5rem] sm:border sm:p-5' : 'max-w-2xl rounded-[3rem] p-10 max-h-[85vh]'}`}>
+        <div className={`fixed inset-0 flex items-center justify-center bg-[color:rgba(247,249,252,0.88)] backdrop-blur-xl animate-in fade-in duration-200 ${activeDetail === 'SECURITE' ? 'z-[320] p-0 sm:p-4' : 'z-[320] p-4'}`}>
+          <div className={`relative flex w-full flex-col overflow-hidden border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_24px_70px_rgba(15,23,42,0.12)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${activeDetail === 'SECURITE' ? 'min-h-[100dvh] rounded-none border-0 px-4 pb-5 pt-4 sm:min-h-0 sm:max-w-md sm:rounded-[1.5rem] sm:border sm:p-5' : 'max-w-[28rem] rounded-[2rem] px-6 pb-6 pt-7 max-h-[85vh] sm:px-7 sm:pb-7 sm:pt-8'}`}>
             {activeDetail === 'SECURITE' ? (
               <button
                 onClick={() => setActiveDetail(null)}
-                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-white/10 bg-white/5 text-slate-300 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] hover:text-[color:var(--text-primary)]"
               >
                 <ChevronLeft size={20} />
               </button>
             ) : (
-              <button onClick={() => setActiveDetail(null)} className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-500 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"><X size={20} /></button>
+              <button onClick={() => setActiveDetail(null)} className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] hover:text-[color:var(--text-primary)]"><X size={20} /></button>
             )}
 
-            <div className={activeDetail === 'SECURITE' ? 'mb-4' : 'mb-6'}>
+            <div className={activeDetail === 'SECURITE' ? 'mb-4' : 'mb-6 space-y-2'}>
               <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Détails</p>
-              <h2 className="text-2xl md:text-3xl font-black text-white italic uppercase leading-tight pr-12">
+              <h2 className="pr-12 text-[1.9rem] leading-[0.95] font-black italic uppercase tracking-[-0.04em] text-[color:var(--text-primary)] md:text-[2.2rem]">
                 {activeDetail === 'DEPENSES_JOUR' && "Dépenses du Jour"}
                 {activeDetail === 'PROVISIONS' && "Dépenses à Venir"}
                 {activeDetail === 'SECURITE' && "Solde Disponible"}
@@ -931,23 +1005,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div className="space-y-3">
                   {todayExpenseTransactions.length > 0 ? (
                     todayExpenseTransactions.map((t: any) => (
-                      <div key={t.id} className="flex justify-between items-center p-5 bg-slate-950 rounded-2xl border border-white/5 group hover:border-amber-500/20 transition-all">
+                      <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all hover:border-amber-500/30">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
                             <TrendingDown size={14} />
                           </div>
                           <div>
-                            <p className="font-bold text-white text-sm uppercase">{t.title}</p>
+                            <p className="text-sm font-black uppercase text-[color:var(--text-primary)]">{t.title}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{t.category}</span>
-                              <span className="w-1 h-1 bg-slate-800 rounded-full" />
+                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{t.category}</span>
+                              <span className="h-1 w-1 rounded-full bg-[color:var(--border-strong)]" />
                               <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">
                                 {t.created_at ? new Date(t.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Heure inconnue'}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <span className="font-black text-rose-500 italic">-{t.amount.toLocaleString()} DH</span>
+                        <span className="text-xl font-black italic text-amber-500">-{t.amount.toLocaleString()} DH</span>
                       </div>
                     ))
                   ) : (
@@ -960,17 +1034,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div className="space-y-3">
                   {futureExpenseTransactions.length > 0 ? (
                     futureExpenseTransactions.map((t: any) => (
-                      <div key={t.id} className="flex justify-between items-center p-5 bg-slate-950 rounded-2xl border border-white/5">
+                      <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
                             <Wallet size={14} />
                           </div>
                           <div>
-                            <p className="font-bold text-white text-sm uppercase">{t.title}</p>
+                            <p className="text-base font-black text-[color:var(--text-primary)]">{t.title}</p>
                             <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1">{t.category} — {new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
                           </div>
                         </div>
-                        <span className="font-black text-amber-500 italic">-{t.amount.toLocaleString()} DH</span>
+                        <span className="text-[1.55rem] font-black italic text-amber-500">-{t.amount.toLocaleString()} DH</span>
                       </div>
                     ))
                   ) : (
@@ -981,7 +1055,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
               {activeDetail === 'SECURITE' && (
                 <div className="space-y-3">
-                  <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.98))] p-4 shadow-[0_20px_70px_rgba(2,6,23,0.45)]">
+                  <div className="relative overflow-hidden rounded-[1.35rem] border border-[color:var(--border)] bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.98))] dark:shadow-[0_20px_70px_rgba(2,6,23,0.45)]">
                     <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-emerald-500/10 blur-3xl" />
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
 
@@ -989,8 +1063,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       <div className="space-y-2.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1.5">
-                            <Shield size={12} className="text-emerald-400" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.28em] text-emerald-300">Projection</span>
+                            <Shield size={12} className="text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-[9px] font-black uppercase tracking-[0.28em] text-emerald-700 dark:text-emerald-300">Projection</span>
                           </div>
                           <div className={`rounded-full border px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] ${securityToneMeta.badgeClass}`}>
                             {securityToneMeta.badge}
@@ -998,10 +1072,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         </div>
 
                         <div className="space-y-1.5">
-                          <h3 className="max-w-[10ch] text-[1.7rem] leading-[0.9] font-black uppercase italic tracking-[-0.06em] text-white font-outfit sm:max-w-none sm:text-[2.1rem]">
-                            Solde <span className="text-emerald-400">projete</span>
+                          <h3 className="max-w-[10ch] text-[1.7rem] leading-[0.9] font-black uppercase italic tracking-[-0.06em] text-[color:var(--text-primary)] font-outfit dark:text-white sm:max-w-none sm:text-[2.1rem]">
+                            Solde <span className="text-emerald-600 dark:text-emerald-400">projete</span>
                           </h3>
-                          <p className="max-w-md text-[13px] leading-relaxed text-slate-400">
+                          <p className="max-w-md text-[13px] leading-relaxed text-[color:var(--text-secondary)] dark:text-slate-400">
                             Lecture instantanee du budget actuel, des charges deja engagees et du reste reel apres provisions.
                           </p>
                         </div>
@@ -1010,7 +1084,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                         <DetailValueCard
                           eyebrow="Budget actif"
-                          value={`${userProfile.budget.toLocaleString()} DH`}
+                          value={`${financeTotals.totalAvailable.toLocaleString()} DH`}
                           helper="Montant disponible au depart"
                         />
                         <DetailValueCard
@@ -1027,17 +1101,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         />
                       </div>
 
-                      <div className="rounded-[1.2rem] border border-white/10 bg-slate-950/45 p-3">
+                      <div className="rounded-[1.2rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-3 dark:border-white/10 dark:bg-slate-950/45">
                         <div className="space-y-2.5">
                           <DetailSummaryRow
                             label="Solde actuel"
-                            value={`${stats.financeRemaining.toLocaleString()} DH`}
+                            value={`${financeTotals.currentBalance.toLocaleString()} DH`}
                           />
                           <div className={`overflow-hidden rounded-[1.2rem] border p-3.5 transition-all duration-300 active:scale-[0.99] sm:hover:-translate-y-0.5 ${securityToneMeta.summaryClass}`}>
                             <div className="flex items-end justify-between gap-4">
                               <div className="max-w-[10rem]">
-                                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-slate-500">Solde final projete</p>
-                                <p className="mt-2 text-xs leading-relaxed text-slate-300/80">
+                                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-muted)] dark:text-slate-500">Solde final projete</p>
+                                <p className="mt-2 text-xs leading-relaxed text-[color:var(--text-secondary)] dark:text-slate-300/80">
                                   Valeur restante apres deduction des depenses futures.
                                 </p>
                               </div>
@@ -1051,7 +1125,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 }`}>
                                   {securitySnapshot.finalBalance.toLocaleString()}
                                 </p>
-                                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">DH</span>
+                                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-500">DH</span>
                               </div>
                             </div>
                           </div>
@@ -1100,10 +1174,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                 <div className="space-y-3">
                   {missions.filter(m => m.status !== 'Terminé').length > 0 ? (
                     missions.filter(m => m.status !== 'Terminé').map((m: any) => (
-                      <div key={m.id} className="p-5 bg-slate-950 rounded-2xl border border-white/5 border-l-4 border-l-blue-500">
+                      <div key={m.id} className="rounded-2xl border border-[color:var(--border)] border-l-4 border-l-blue-500 bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/5 dark:bg-slate-950 dark:shadow-none">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-bold text-white text-sm uppercase">{m.title}</p>
+                            <p className="text-sm font-bold uppercase text-[color:var(--text-primary)] dark:text-white">{m.title}</p>
                             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 font-outfit">{m.category} — Priorité {m.priority === 'high' ? 'Importante' : m.priority === 'critical' ? 'Critique' : 'Standard'}</p>
                           </div>
                           <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase rounded-md">{m.status}</span>
@@ -1117,17 +1191,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               )}
             </div>
 
-            <div className={`${activeDetail === 'SECURITE' ? 'mt-3 pt-3' : 'mt-6 pt-5'} border-t border-white/5`}>
+            <div className={`${activeDetail === 'SECURITE' ? 'mt-3 pt-3' : 'mt-6 pt-5'} border-t border-[color:var(--border)]`}>
               <button
                 onClick={() => {
                   const target = activeDetail === 'MISSIONS' ? 'DISCIPLINE' : 'FINANCE';
                   onNavigate(target as AppView);
                   setActiveDetail(null);
                 }}
-                className={`w-full rounded-[1rem] py-3.5 font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-98 shadow-xl ${
+                className={`w-full rounded-[1.25rem] py-4 font-black uppercase text-[11px] tracking-[0.22em] transition-all active:scale-[0.99] shadow-[0_14px_30px_rgba(17,24,39,0.18)] ${
                   activeDetail === 'SECURITE'
                     ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-emerald-500/20'
-                    : 'bg-white text-slate-950 hover:bg-slate-200'
+                    : 'bg-[color:var(--text-primary)] text-[color:var(--text-on-accent)] hover:bg-[color:var(--text-secondary)]'
                 }`}
               >
                 Ouvrir module complet

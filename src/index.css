@@ -1,96 +1,5 @@
 @import "tailwindcss";
 
-/* Theme tokens (light by default, dark via .dark class)
-   Keep these semantic so components don't hardcode colors. */
-:root {
-  /* Core surfaces */
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --surface-2: #f1f5f9;
-  --card: rgba(255, 255, 255, 0.92);
-  --muted: rgba(15, 23, 42, 0.06);
-  --overlay: rgba(15, 23, 42, 0.55);
-
-  /* Typography */
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-on-accent: #ffffff;
-
-  /* Borders & shadows */
-  --border: rgba(15, 23, 42, 0.1);
-  --border-strong: rgba(15, 23, 42, 0.14);
-  --shadow: rgba(15, 23, 42, 0.08);
-  --shadow-strong: rgba(15, 23, 42, 0.16);
-
-  /* Accents */
-  --accent: #f59e0b;
-  --success: #10b981;
-  --danger: #f43f5e;
-
-  /* Back-compat aliases (used across the app already) */
-  --app-bg: var(--bg);
-  --app-fg: var(--text-primary);
-  --scroll-track: #e2e8f0;
-  --scroll-thumb: #94a3b8;
-  --scroll-thumb-hover: #64748b;
-  --glass-bg: var(--card);
-  --glass-border: var(--border);
-  --panel-bg: rgba(255, 255, 255, 0.96);
-  --panel-border: var(--border);
-
-  /* Charts */
-  --chart-grid: rgba(15, 23, 42, 0.08);
-  --chart-cursor: rgba(15, 23, 42, 0.14);
-  --chart-tooltip-shadow: 0 24px 80px rgba(15, 23, 42, 0.14);
-}
-
-html.dark {
-  /* Core surfaces */
-  --bg: #020617;
-  --surface: #071226;
-  --surface-2: #0b1121;
-  --card: rgba(2, 6, 23, 0.66);
-  --muted: rgba(255, 255, 255, 0.06);
-  --overlay: rgba(2, 6, 23, 0.78);
-
-  /* Typography */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-on-accent: #ffffff;
-
-  /* Borders & shadows */
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --shadow: rgba(2, 6, 23, 0.55);
-  --shadow-strong: rgba(2, 6, 23, 0.7);
-
-  /* Back-compat aliases */
-  --app-bg: var(--bg);
-  --app-fg: var(--text-primary);
-  --scroll-track: #020617;
-  --scroll-thumb: #1e293b;
-  --scroll-thumb-hover: #334155;
-  --glass-bg: var(--card);
-  --glass-border: var(--border);
-  --panel-bg: rgba(2, 6, 23, 0.72);
-  --panel-border: var(--border);
-
-  /* Charts */
-  --chart-grid: rgba(255, 255, 255, 0.06);
-  --chart-cursor: rgba(255, 255, 255, 0.12);
-  --chart-tooltip-shadow: 0 24px 80px rgba(2, 6, 23, 0.6);
-}
-
-html {
-  color-scheme: light;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-
 html, body {
   overflow-x: clip;
   width: 100%;
@@ -107,35 +16,7 @@ body {
   line-height: 1.6;
   background: var(--app-bg);
   color: var(--app-fg);
-}
-
-@layer utilities {
-  /* Semantic helpers (prefer these over hardcoded Tailwind colors) */
-  .bg-app { background-color: var(--bg); }
-  .bg-surface { background-color: var(--surface); }
-  .bg-surface-2 { background-color: var(--surface-2); }
-  .bg-card { background-color: var(--card); }
-  .bg-muted { background-color: var(--muted); }
-  .text-primary { color: var(--text-primary); }
-  .text-secondary { color: var(--text-secondary); }
-  .text-muted { color: var(--text-muted); }
-  .border-app { border-color: var(--border); }
-  .border-app-strong { border-color: var(--border-strong); }
-
-  .shadow-card {
-    box-shadow: 0 18px 60px var(--shadow);
-  }
-
-  .ui-field {
-    background-color: var(--surface);
-    border-color: var(--border);
-    color: var(--text-primary);
-  }
-
-  .ui-field::placeholder {
-    color: var(--text-muted);
-    opacity: 0.78;
-  }
+  font-family: 'Outfit', sans-serif;
 }
 
 /* Light-mode shims for legacy dark-only utilities.
@@ -212,6 +93,176 @@ html:not(.dark) .glass-panel .bg-white\/10,
 html:not(.dark) .glass .bg-white\/8,
 html:not(.dark) .glass-panel .bg-white\/8 {
   background-color: var(--muted) !important;
+}
+
+/* Global light-mode shims for legacy dark surfaces still present outside glass containers. */
+html:not(.dark) .bg-\[\#020617\],
+html:not(.dark) .bg-\[\#0b1121\],
+html:not(.dark) .bg-\[\#0f172a\],
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-slate-900 {
+  background-color: var(--surface) !important;
+}
+
+html:not(.dark) .bg-\[\#020617\]\/55,
+html:not(.dark) .bg-\[\#0f172a\]\/40,
+html:not(.dark) .bg-\[\#0f172a\]\/60,
+html:not(.dark) .bg-\[\#1e293b\]\/40,
+html:not(.dark) .bg-slate-950\/20,
+html:not(.dark) .bg-slate-950\/25,
+html:not(.dark) .bg-slate-950\/30,
+html:not(.dark) .bg-slate-950\/35,
+html:not(.dark) .bg-slate-950\/40,
+html:not(.dark) .bg-slate-950\/45,
+html:not(.dark) .bg-slate-950\/50,
+html:not(.dark) .bg-slate-950\/55,
+html:not(.dark) .bg-slate-950\/60,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-900\/20,
+html:not(.dark) .bg-slate-900\/30,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-900\/45,
+html:not(.dark) .bg-slate-900\/50,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/70,
+html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/92,
+html:not(.dark) .bg-white\/5,
+html:not(.dark) .bg-white\/8,
+html:not(.dark) .bg-white\/10 {
+  background-color: var(--surface-2) !important;
+}
+
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/90,
+html:not(.dark) .bg-slate-950\/95,
+html:not(.dark) .bg-slate-950\/98 {
+  background-color: rgba(248, 250, 252, 0.82) !important;
+}
+
+html:not(.dark) .bg-\[\#020617\] .text-white,
+html:not(.dark) .bg-\[\#0b1121\] .text-white,
+html:not(.dark) .bg-\[\#0f172a\] .text-white,
+html:not(.dark) .bg-\[\#020617\]\/55 .text-white,
+html:not(.dark) .bg-\[\#0f172a\]\/40 .text-white,
+html:not(.dark) .bg-\[\#0f172a\]\/60 .text-white,
+html:not(.dark) .bg-\[\#1e293b\]\/40 .text-white,
+html:not(.dark) .bg-slate-950 .text-white,
+html:not(.dark) .bg-slate-900 .text-white,
+html:not(.dark) .bg-slate-950\/20 .text-white,
+html:not(.dark) .bg-slate-950\/25 .text-white,
+html:not(.dark) .bg-slate-950\/30 .text-white,
+html:not(.dark) .bg-slate-950\/35 .text-white,
+html:not(.dark) .bg-slate-950\/40 .text-white,
+html:not(.dark) .bg-slate-950\/45 .text-white,
+html:not(.dark) .bg-slate-950\/50 .text-white,
+html:not(.dark) .bg-slate-950\/55 .text-white,
+html:not(.dark) .bg-slate-950\/60 .text-white,
+html:not(.dark) .bg-slate-950\/70 .text-white,
+html:not(.dark) .bg-slate-900\/20 .text-white,
+html:not(.dark) .bg-slate-900\/30 .text-white,
+html:not(.dark) .bg-slate-900\/40 .text-white,
+html:not(.dark) .bg-slate-900\/45 .text-white,
+html:not(.dark) .bg-slate-900\/50 .text-white,
+html:not(.dark) .bg-slate-900\/60 .text-white,
+html:not(.dark) .bg-slate-900\/70 .text-white,
+html:not(.dark) .bg-slate-900\/80 .text-white,
+html:not(.dark) .bg-slate-900\/92 .text-white {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .bg-\[\#020617\] .text-slate-300,
+html:not(.dark) .bg-\[\#0b1121\] .text-slate-300,
+html:not(.dark) .bg-\[\#0f172a\] .text-slate-300,
+html:not(.dark) .bg-\[\#020617\] .text-slate-400,
+html:not(.dark) .bg-\[\#0b1121\] .text-slate-400,
+html:not(.dark) .bg-\[\#0f172a\] .text-slate-400,
+html:not(.dark) .bg-\[\#020617\] .text-slate-500,
+html:not(.dark) .bg-\[\#0b1121\] .text-slate-500,
+html:not(.dark) .bg-\[\#0f172a\] .text-slate-500,
+html:not(.dark) .bg-\[\#020617\]\/55 .text-slate-300,
+html:not(.dark) .bg-\[\#020617\]\/55 .text-slate-400,
+html:not(.dark) .bg-\[\#020617\]\/55 .text-slate-500,
+html:not(.dark) .bg-\[\#0f172a\]\/40 .text-slate-300,
+html:not(.dark) .bg-\[\#0f172a\]\/40 .text-slate-400,
+html:not(.dark) .bg-\[\#0f172a\]\/40 .text-slate-500,
+html:not(.dark) .bg-\[\#0f172a\]\/60 .text-slate-300,
+html:not(.dark) .bg-\[\#0f172a\]\/60 .text-slate-400,
+html:not(.dark) .bg-\[\#0f172a\]\/60 .text-slate-500,
+html:not(.dark) .bg-\[\#1e293b\]\/40 .text-slate-300,
+html:not(.dark) .bg-\[\#1e293b\]\/40 .text-slate-400,
+html:not(.dark) .bg-\[\#1e293b\]\/40 .text-slate-500,
+html:not(.dark) .bg-slate-950 .text-slate-300,
+html:not(.dark) .bg-slate-950 .text-slate-400,
+html:not(.dark) .bg-slate-950 .text-slate-500,
+html:not(.dark) .bg-slate-900 .text-slate-300,
+html:not(.dark) .bg-slate-900 .text-slate-400,
+html:not(.dark) .bg-slate-900 .text-slate-500,
+html:not(.dark) .bg-slate-950\/20 .text-slate-300,
+html:not(.dark) .bg-slate-950\/20 .text-slate-400,
+html:not(.dark) .bg-slate-950\/20 .text-slate-500,
+html:not(.dark) .bg-slate-950\/25 .text-slate-300,
+html:not(.dark) .bg-slate-950\/25 .text-slate-400,
+html:not(.dark) .bg-slate-950\/25 .text-slate-500,
+html:not(.dark) .bg-slate-950\/30 .text-slate-300,
+html:not(.dark) .bg-slate-950\/30 .text-slate-400,
+html:not(.dark) .bg-slate-950\/30 .text-slate-500,
+html:not(.dark) .bg-slate-950\/35 .text-slate-300,
+html:not(.dark) .bg-slate-950\/35 .text-slate-400,
+html:not(.dark) .bg-slate-950\/35 .text-slate-500,
+html:not(.dark) .bg-slate-950\/40 .text-slate-300,
+html:not(.dark) .bg-slate-950\/40 .text-slate-400,
+html:not(.dark) .bg-slate-950\/40 .text-slate-500,
+html:not(.dark) .bg-slate-950\/45 .text-slate-300,
+html:not(.dark) .bg-slate-950\/45 .text-slate-400,
+html:not(.dark) .bg-slate-950\/45 .text-slate-500,
+html:not(.dark) .bg-slate-950\/50 .text-slate-300,
+html:not(.dark) .bg-slate-950\/50 .text-slate-400,
+html:not(.dark) .bg-slate-950\/50 .text-slate-500,
+html:not(.dark) .bg-slate-950\/55 .text-slate-300,
+html:not(.dark) .bg-slate-950\/55 .text-slate-400,
+html:not(.dark) .bg-slate-950\/55 .text-slate-500,
+html:not(.dark) .bg-slate-950\/60 .text-slate-300,
+html:not(.dark) .bg-slate-950\/60 .text-slate-400,
+html:not(.dark) .bg-slate-950\/60 .text-slate-500,
+html:not(.dark) .bg-slate-950\/70 .text-slate-300,
+html:not(.dark) .bg-slate-950\/70 .text-slate-400,
+html:not(.dark) .bg-slate-950\/70 .text-slate-500,
+html:not(.dark) .bg-slate-900\/20 .text-slate-300,
+html:not(.dark) .bg-slate-900\/20 .text-slate-400,
+html:not(.dark) .bg-slate-900\/20 .text-slate-500,
+html:not(.dark) .bg-slate-900\/30 .text-slate-300,
+html:not(.dark) .bg-slate-900\/30 .text-slate-400,
+html:not(.dark) .bg-slate-900\/30 .text-slate-500,
+html:not(.dark) .bg-slate-900\/40 .text-slate-300,
+html:not(.dark) .bg-slate-900\/40 .text-slate-400,
+html:not(.dark) .bg-slate-900\/40 .text-slate-500,
+html:not(.dark) .bg-slate-900\/45 .text-slate-300,
+html:not(.dark) .bg-slate-900\/45 .text-slate-400,
+html:not(.dark) .bg-slate-900\/45 .text-slate-500,
+html:not(.dark) .bg-slate-900\/50 .text-slate-300,
+html:not(.dark) .bg-slate-900\/50 .text-slate-400,
+html:not(.dark) .bg-slate-900\/50 .text-slate-500,
+html:not(.dark) .bg-slate-900\/60 .text-slate-300,
+html:not(.dark) .bg-slate-900\/60 .text-slate-400,
+html:not(.dark) .bg-slate-900\/60 .text-slate-500,
+html:not(.dark) .bg-slate-900\/70 .text-slate-300,
+html:not(.dark) .bg-slate-900\/70 .text-slate-400,
+html:not(.dark) .bg-slate-900\/70 .text-slate-500,
+html:not(.dark) .bg-slate-900\/80 .text-slate-300,
+html:not(.dark) .bg-slate-900\/80 .text-slate-400,
+html:not(.dark) .bg-slate-900\/80 .text-slate-500,
+html:not(.dark) .bg-slate-900\/92 .text-slate-300,
+html:not(.dark) .bg-slate-900\/92 .text-slate-400,
+html:not(.dark) .bg-slate-900\/92 .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+html:not(.dark) .bg-slate-950\/80 .text-white,
+html:not(.dark) .bg-slate-950\/90 .text-white,
+html:not(.dark) .bg-slate-950\/95 .text-white,
+html:not(.dark) .bg-slate-950\/98 .text-white {
+  color: var(--text-primary) !important;
 }
 
 /* Scrollbar Customization */

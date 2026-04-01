@@ -18,6 +18,8 @@ import {
    resolveFinanceResetDate,
 } from '../utils/financeReset';
 import { exportHtmlToPdf } from '../utils/pdfExport';
+import { cx, uiRecipes } from '../theme/recipes';
+import { toneClassNames } from '../theme/tokens';
 
 type DataCollectionKey =
    | 'missions'
@@ -679,20 +681,22 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
    if (loading) {
       return (
          <div className="h-screen flex items-center justify-center">
-            <Loader2 className="animate-spin text-amber-500" size={40} />
+            <Loader2 className="animate-spin text-[color:var(--primary)]" size={40} />
          </div>
       );
    }
 
    const Toggle = ({ active, onClick }: { active: boolean, onClick: () => void }) => (
       <button
+         type="button"
          onClick={onClick}
-         className={`w-12 h-6 rounded-full border p-1 transition-all ${
-            active ? 'bg-blue-500 border-blue-500/40' : 'bg-[color:var(--muted)] border-[color:var(--border)]'
+         aria-pressed={active}
+         className={`relative shrink-0 w-12 h-6 rounded-full border p-1 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)] ${
+            active ? 'border-[color:var(--tone-info-border)] bg-[color:var(--info)]' : 'bg-[color:var(--muted)] border-[color:var(--border)]'
          }`}
       >
          <div
-            className={`h-4 w-4 rounded-full bg-[color:var(--surface)] shadow-sm transition-all ${
+            className={`h-4 w-4 rounded-full bg-[color:var(--surface)] shadow-sm transition-transform duration-200 ${
                active ? 'translate-x-6' : 'translate-x-0'
             }`}
          />
@@ -702,25 +706,27 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
    return (
       <div className="space-y-12 pb-32 animate-in fade-in duration-700">
          {/* Header */}
-         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[color:var(--border)] pb-10">
-            <div>
-               <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500"><Settings2 size={16} /></div>
-                  <span className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em] font-outfit">PRÉFÉRENCES & SYSTÈME</span>
-               </div>
-               <h2 className="text-4xl md:text-5xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase italic">MES <span className="text-amber-500 font-outfit">RÉGLAGES</span></h2>
+         <div className="border-b border-[color:var(--border)] pb-10">
+            <div className="flex items-center gap-3 mb-3">
+               <div className={cx('p-2 rounded-lg', toneClassNames.warning.shell, toneClassNames.warning.icon)}><Settings2 size={16} /></div>
+               <span className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em] font-outfit">PRÉFÉRENCES & SYSTÈME</span>
             </div>
-            <div className="flex items-center justify-end gap-3">
-               <ThemeToggle />
+            <div className="flex items-center justify-between gap-4">
+               <h2 className="min-w-0 text-4xl md:text-5xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase italic">
+                  MES <span className="text-[color:var(--tone-warning-text)] font-outfit">RÉGLAGES</span>
+               </h2>
+               <div className="shrink-0">
+                  <ThemeToggle />
+               </div>
             </div>
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             {/* CENTRE DE DONNÉES */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card">
+            <div className={cx(uiRecipes.cardElevated, 'rounded-[2rem] p-6 md:rounded-[3rem] md:p-10')}>
                <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
-                  <Database size={22} className="text-rose-500" /> Gestion des Données
+                  <Database size={22} className="text-[color:var(--tone-danger-text)]" /> Gestion des Données
                </h3>
                <div className="grid grid-cols-2 gap-4 mb-8">
                   {[
@@ -729,7 +735,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                      { label: 'Concepts', count: dataStats.words, icon: Brain, color: 'text-blue-500' },
                      { label: 'Cours', count: dataStats.subjects, icon: BookOpen, color: 'text-rose-500' },
                   ].map(stat => (
-                     <div key={stat.label} className="p-4 bg-[color:var(--surface)] rounded-2xl border border-[color:var(--border)] flex flex-col justify-center items-center">
+                     <div key={stat.label} className={cx(uiRecipes.card, 'flex flex-col items-center justify-center rounded-2xl p-4')}>
                         <stat.icon size={16} className={`mb-2 ${stat.color}`} />
                         <span className="text-2xl font-black text-[color:var(--text-primary)]">{stat.count}</span>
                         <span className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest">{stat.label}</span>
@@ -744,14 +750,14 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                      </p>
                      <button
                         onClick={() => onNavigate('DATA_CENTER')}
-                        className="mt-4 w-full rounded-2xl bg-white px-4 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-slate-950 transition-all hover:scale-[1.01]"
+                        className={cx(uiRecipes.primaryButton, 'mt-4 w-full rounded-2xl px-4 py-4')}
                      >
                         Ouvrir la page data center
                      </button>
                   </div>
                   <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
+                        <div className={cx('flex h-10 w-10 items-center justify-center rounded-2xl', toneClassNames.warning.shell, toneClassNames.warning.icon)}>
                            <BarChart3 size={16} />
                         </div>
                         <div>
@@ -763,7 +769,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                      </div>
                      <button
                         onClick={() => onNavigate('REPORTS')}
-                        className="mt-4 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-amber-300 transition-all hover:bg-amber-500 hover:text-slate-950"
+                        className={cx(uiRecipes.secondaryButton, 'mt-4 w-full rounded-2xl px-4 py-4')}
                      >
                         Ouvrir analyses
                      </button>
@@ -772,13 +778,13 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
             </div>
 
             {/* NOTIFICATIONS */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card lg:col-span-1">
+            <div className={cx(uiRecipes.cardElevated, 'rounded-[2rem] p-6 md:rounded-[3rem] md:p-10 lg:col-span-1')}>
                <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
-                  <Radio size={22} className="text-rose-500" /> Notifications & Rappels
+                  <Radio size={22} className="text-[color:var(--tone-danger-text)]" /> Notifications & Rappels
                </h3>
                   <div className="space-y-4">
-                     <div className="flex justify-between items-center p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
-                        <div className="pr-4">
+                     <div className="flex items-center justify-between gap-4 p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
+                        <div className="min-w-0 flex-1">
                            <span className="text-[10px] font-black text-[color:var(--text-primary)] uppercase">Rappels quotidiens</span>
                            <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--text-muted)]">
                               Declenche une notification locale chaque jour a l&apos;heure du rituel matin.
@@ -786,8 +792,8 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                         </div>
                         <Toggle active={options.ritualReminders} onClick={handleRitualReminderToggle} />
                      </div>
-                     <div className="flex justify-between items-center p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
-                        <div className="pr-4">
+                     <div className="flex items-center justify-between gap-4 p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)]">
+                        <div className="min-w-0 flex-1">
                            <span className="text-[10px] font-black text-[color:var(--text-primary)] uppercase">Journal de bord</span>
                            <p className="mt-1 text-[11px] leading-relaxed text-[color:var(--text-muted)]">
                               Affiche le bloc journal sur le dashboard et active le rappel du soir.
@@ -809,9 +815,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   {reminderNotice ? (
                      <div className={`rounded-xl border px-4 py-3 text-[11px] leading-relaxed ${
                         reminderNotice.tone === 'success'
-                           ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                           ? `${toneClassNames.success.shell} ${toneClassNames.success.text}`
                            : reminderNotice.tone === 'error'
-                              ? 'border-rose-500/20 bg-rose-500/10 text-rose-300'
+                              ? `${toneClassNames.danger.shell} ${toneClassNames.danger.text}`
                               : 'border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--text-secondary)]'
                      }`}>
                         {reminderNotice.message}
@@ -821,9 +827,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
             </div>
 
             {/* PARAMÈTRES SYSTÈME */}
-            <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-card lg:col-span-2">
+            <div className={cx(uiRecipes.cardElevated, 'rounded-[2rem] p-6 md:rounded-[3rem] md:p-10 lg:col-span-2')}>
                <h3 className="text-xl font-black text-[color:var(--text-primary)] uppercase italic mb-8 flex items-center gap-4">
-                  <Server size={22} className="text-indigo-500" /> Paramètres Système
+                  <Server size={22} className="text-[color:var(--tone-info-text)]" /> Paramètres Système
                </h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
@@ -850,7 +856,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                   </div>
 
                   <div className="space-y-4">
-                     <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2 border-b border-[color:var(--border)] pb-2">Gestion du budget</h4>
+                     <h4 className="text-[10px] font-black text-[color:var(--tone-success-text)] uppercase tracking-widest mb-2 border-b border-[color:var(--border)] pb-2">Gestion du budget</h4>
 
                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Budget mensuel (DH)</label>
@@ -858,7 +864,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                            type="number"
                            value={amciMonthly}
                            onChange={(e) => handleBudgetChange(e.target.value)}
-                           className="ui-field w-full border rounded-xl p-4 text-emerald-600 dark:text-emerald-400 font-black outline-none focus:border-emerald-500"
+                           className="ui-field w-full border rounded-xl p-4 text-[color:var(--tone-success-text)] font-black outline-none focus:border-[color:var(--success)]"
                         />
                      </div>
 
@@ -872,7 +878,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                               <button
                                  key={mode.id}
                                  onClick={() => handleResetModeChange(mode.id as 'monthly' | 'custom')}
-                                 className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${options.amci_recurrence === mode.id ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
+                                 className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${options.amci_recurrence === mode.id ? 'bg-[color:var(--success)] text-[#18212d] shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
                                     }`}
                               >
                                  {mode.label}
@@ -890,9 +896,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                                  min="1" max="31"
                                  value={options.amci_day_of_month || 10}
                                  onChange={(e) => handleResetDayChange(e.target.value)}
-                                 className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-emerald-500"
+                                 className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-[color:var(--success)]"
                               />
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500 uppercase">Du Mois</div>
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-[color:var(--text-muted)] uppercase">Du Mois</div>
                            </div>
                         </div>
                      ) : (
@@ -903,7 +909,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                               value={nextAmciDate}
                               min={normalizeCustomResetDate(new Date().toISOString().split('T')[0])}
                               onChange={(e) => handleCustomResetDateChange(e.target.value)}
-                              className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-emerald-500"
+                               className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-[color:var(--success)]"
                            />
                         </div>
                      )}
@@ -913,13 +919,13 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
 
          </div>
 
-         <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-20 pt-4">
-            <div className="glass-panel mx-auto max-w-xl rounded-[2rem] p-3 shadow-[0_24px_60px_var(--shadow-strong)] backdrop-blur-xl">
-               <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={`flex w-full items-center justify-center gap-4 rounded-[1.5rem] px-10 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all ${saved ? 'bg-emerald-500 text-slate-950 shadow-[0_20px_50px_rgba(16,185,129,0.28)]' : 'bg-white text-slate-950 hover:scale-[1.01] active:scale-[0.99]'}`}
-               >
+            <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-20 pt-4">
+               <div className="glass-panel mx-auto max-w-xl rounded-[2rem] p-3 shadow-[0_24px_60px_var(--shadow-strong)] backdrop-blur-xl">
+                  <button
+                     onClick={handleSave}
+                     disabled={saving}
+                     className={`flex w-full items-center justify-center gap-4 rounded-[1.5rem] px-10 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all ${saved ? 'bg-[color:var(--success)] text-[#18212d] shadow-[0_20px_50px_rgba(31,157,105,0.28)]' : 'bg-[color:var(--accent)] text-[#18212d] hover:scale-[1.01] active:scale-[0.99]'}`}
+                  >
                   {saving ? <Loader2 className="animate-spin" size={18} /> : saved ? <CheckCircle2 size={18} /> : <Save size={18} />}
                   {saved ? 'ENREGISTRÉ' : 'ENREGISTRER'}
                </button>

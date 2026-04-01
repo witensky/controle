@@ -10,7 +10,7 @@ import { AppDialogProvider } from './components/common/AppDialogProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 import DailyRoutineScheduler from './components/settings/DailyRoutineScheduler';
 import StudyReminderScheduler from './components/studies/StudyReminderScheduler';
-import { dispatchQuickAction, quickActionTargetView, QuickActionType } from './lib/quickActions';
+import { dispatchQuickAction, queueQuickAction, quickActionTargetView, QuickActionType } from './lib/quickActions';
 import { offlineRepository } from './data/offlineRepository';
 import AppRouter from './router/AppRouter';
 import { AppView } from './types';
@@ -173,11 +173,12 @@ const App: React.FC = () => {
   const handleQuickAction = (action: QuickActionType) => {
     const targetView = quickActionTargetView[action];
 
+    queueQuickAction(action);
     handleNavigate(targetView);
 
     window.setTimeout(() => {
       dispatchQuickAction(action);
-    }, view === targetView ? 0 : 160);
+    }, 0);
   };
 
   return (
@@ -188,13 +189,13 @@ const App: React.FC = () => {
           <StudyReminderScheduler />
           <AppReminderCenter />
           {!isAppReady ? (
-            <div className="flex h-screen items-center justify-center bg-[color:var(--app-bg)]">
-              <Loader2 className="animate-spin text-amber-500" size={40} />
+            <div className="flex h-screen items-center justify-center bg-[color:var(--background)]">
+              <Loader2 className="animate-spin text-[color:var(--primary)]" size={40} />
             </div>
           ) : needsOnboarding ? (
             <OnboardingFlow onComplete={() => setNeedsOnboarding(false)} />
           ) : (
-            <div className="app-shell relative flex min-h-[100dvh] flex-col bg-[color:var(--app-bg)] font-outfit text-[color:var(--app-fg)] md:flex-row">
+            <div className="app-shell relative flex min-h-[100dvh] flex-col bg-[color:var(--background)] font-outfit text-[color:var(--text)] md:flex-row">
               <AppNavigation
                 view={view}
                 onNavigate={handleNavigate}
@@ -206,12 +207,12 @@ const App: React.FC = () => {
                 ref={mainRef}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
-                className={`app-main relative flex-1 min-h-0 overflow-y-auto bg-[color:var(--app-bg)] md:h-screen ${
+                className={`app-main relative min-h-0 flex-1 overflow-y-auto bg-[color:var(--background)] md:h-screen ${
                   showMobileNav || showFab ? 'pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-0' : 'pb-0'
                 }`}
               >
                 <div
-                  className={`mx-auto w-full max-w-7xl px-4 pb-4 pt-3 md:px-10 md:py-8 ${
+                  className={`mx-auto w-full max-w-7xl px-4 pb-4 pt-3 md:px-8 md:py-8 lg:px-10 ${
                     showMobileNav || showFab
                       ? 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-10'
                       : 'pb-6 md:pb-10'

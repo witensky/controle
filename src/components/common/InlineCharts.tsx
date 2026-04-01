@@ -1,4 +1,5 @@
 import React from 'react';
+import { chartPalette, chartToneByIntent } from '../../theme/tokens';
 
 type ValuePoint = {
   label: string;
@@ -57,7 +58,7 @@ export const SparklineChart: React.FC<{
       {showDots
         ? points.split(' ').map((point) => {
             const [cx, cy] = point.split(',');
-            return <circle key={point} cx={cx} cy={cy} r="4" fill={stroke} stroke="rgba(15,23,42,0.22)" strokeWidth="2" />;
+            return <circle key={point} cx={cx} cy={cy} r="4" fill={stroke} stroke="var(--surface-elevated)" strokeWidth="2" />;
           })
         : null}
     </svg>
@@ -115,7 +116,7 @@ export const DualSparklineChart: React.FC<{
             x2={width - padding}
             y1={y}
             y2={y}
-            stroke="rgba(148, 163, 184, 0.16)"
+            stroke="var(--chart-grid)"
             strokeDasharray="4 6"
           />
         );
@@ -144,7 +145,7 @@ export const DualSparklineChart: React.FC<{
                 r={radius}
                 fill={line.color}
                 fillOpacity={isLast ? 1 : 0.65}
-                stroke="rgba(15,23,42,0.24)"
+                stroke="var(--surface-elevated)"
                 strokeWidth={isLast ? 2.5 : 1.5}
               />
             );
@@ -158,7 +159,7 @@ export const DualSparklineChart: React.FC<{
 export const VerticalBarsChart: React.FC<{
   data: ValuePoint[];
   colors?: string[];
-}> = ({ data, colors = ['#3b82f6'] }) => {
+}> = ({ data, colors = [chartToneByIntent.info] }) => {
   const maxValue = Math.max(...data.map((item) => Number(item.value || 0)), 1);
 
   return (
@@ -184,7 +185,7 @@ export const VerticalBarsChart: React.FC<{
 export const HorizontalBarsChart: React.FC<{
   data: ValuePoint[];
   getColor?: (item: ValuePoint, index: number) => string;
-}> = ({ data, getColor = (_, index) => (index % 2 === 0 ? '#10b981' : '#f43f5e') }) => {
+}> = ({ data, getColor = (_, index) => chartPalette[index % chartPalette.length] }) => {
   const maxValue = Math.max(...data.map((item) => Number(item.value || 0)), 1);
 
   return (

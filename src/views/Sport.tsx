@@ -9,7 +9,7 @@ import {
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import { useSportData, useSaveRoutine, useSaveLog, useAddMetric, useDeleteRoutine } from '../features/sport/hooks/useSport';
 import { WorkoutRoutine, Exercise, WorkoutLog, BodyMetric, FitnessGoal } from '../features/sport/types';
-import { QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
+import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { AreaChartComponent, LineChartComponent } from '../components/charts';
 import { getChartDomain } from '../utils/chartHelpers';
 
@@ -75,11 +75,7 @@ const Sport: React.FC = () => {
    }, [isResting, restTime]);
 
    useEffect(() => {
-      const handleQuickAction = (event: Event) => {
-         const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
-
-         if (action !== 'start-sport-session') return;
-
+      const openQuickSportSession = () => {
          if (routines.length === 0) {
             resetRoutineForm();
             setActiveTab('routines');
@@ -100,6 +96,19 @@ const Sport: React.FC = () => {
 
          setActiveTab('session');
       };
+
+      const handleQuickAction = (event: Event) => {
+         const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
+
+         if (action !== 'start-sport-session') return;
+
+         consumeQueuedQuickAction('start-sport-session');
+         openQuickSportSession();
+      };
+
+      if (consumeQueuedQuickAction('start-sport-session')) {
+         openQuickSportSession();
+      }
 
       window.addEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);
       return () => window.removeEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);

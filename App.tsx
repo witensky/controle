@@ -111,7 +111,7 @@ const App: React.FC = () => {
         <div className={`relative ${dim} bg-amber-500 rounded-xl flex items-center justify-center font-black text-slate-950 shadow-xl shadow-amber-500/20 rotate-3`}>
           JB
         </div>
-        <span className="text-[7px] font-black text-white tracking-[0.3em] uppercase mt-1">LIFEFLOW</span>
+        <span className="mt-1 text-[7px] font-black tracking-[0.3em] uppercase text-[color:var(--text-muted)]">LIFEFLOW</span>
       </div>
     );
   };
@@ -120,10 +120,10 @@ const App: React.FC = () => {
   if (!session || view === 'AUTH') return <Auth />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-50 flex flex-col md:flex-row font-outfit relative">
+    <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--text-primary)] flex flex-col md:flex-row font-outfit relative">
       
       {/* SIDEBAR DESKTOP */}
-      <aside className="hidden md:flex md:w-64 flex-col bg-slate-900 border-r border-white/5 p-8">
+      <aside className="hidden md:flex md:w-64 flex-col bg-[color:var(--surface)] border-r border-[color:var(--border)] p-8">
         <div className="mb-12"><Logo size="md" /></div>
         <nav className="flex-1 space-y-2">
           {[
@@ -136,7 +136,15 @@ const App: React.FC = () => {
             { id: 'BIBLE', icon: Cross, label: 'Mental' },
             { id: 'SETTINGS', icon: SettingsIcon, label: 'Settings' },
           ].map((item) => (
-            <button key={item.id} onClick={() => setView(item.id as AppView)} className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${view === item.id ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:bg-white/5'}`}>
+            <button
+              key={item.id}
+              onClick={() => setView(item.id as AppView)}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${
+                view === item.id
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'text-[color:var(--text-secondary)] hover:bg-[color:var(--muted)]'
+              }`}
+            >
               <item.icon size={18} />
               <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
             </button>
@@ -146,12 +154,12 @@ const App: React.FC = () => {
       </aside>
 
       {/* CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto h-screen relative bg-[#020617]">
+      <main className="flex-1 overflow-y-auto h-screen relative bg-[color:var(--bg)]">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-6 py-4 sticky top-0 z-[150] glass border-b border-white/5">
            <Logo size="sm" />
            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] font-black">W</div>
+              <div className="w-8 h-8 rounded-full bg-[color:var(--surface-2)] border border-[color:var(--border)] flex items-center justify-center text-[10px] font-black text-[color:var(--text-primary)]">W</div>
            </div>
         </header>
 
@@ -184,11 +192,11 @@ const App: React.FC = () => {
 
       {/* BOTTOM NAVIGATION MOBILE */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] glass border-t border-white/5 h-20 flex items-center justify-around px-2 pb-safe">
-        <button onClick={() => setView('FINANCE')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'FINANCE' ? 'text-amber-500' : 'text-slate-500'}`}>
+        <button onClick={() => setView('FINANCE')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'FINANCE' ? 'text-amber-500' : 'text-[color:var(--text-muted)]'}`}>
           <Wallet size={20} />
           <span className="text-[8px] font-black uppercase tracking-wider">Finances</span>
         </button>
-        <button onClick={() => setView('DISCIPLINE')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'DISCIPLINE' ? 'text-amber-500' : 'text-slate-500'}`}>
+        <button onClick={() => setView('DISCIPLINE')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'DISCIPLINE' ? 'text-amber-500' : 'text-[color:var(--text-muted)]'}`}>
           <Clock size={20} />
           <span className="text-[8px] font-black uppercase tracking-wider">Missions</span>
         </button>
@@ -198,11 +206,11 @@ const App: React.FC = () => {
             <LayoutGrid size={24} strokeWidth={3} />
           </button>
         </div>
-        <button onClick={() => setView('STUDIES')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'STUDIES' ? 'text-amber-500' : 'text-slate-500'}`}>
+        <button onClick={() => setView('STUDIES')} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${view === 'STUDIES' ? 'text-amber-500' : 'text-[color:var(--text-muted)]'}`}>
           <BookOpen size={20} />
           <span className="text-[8px] font-black uppercase tracking-wider">Droit</span>
         </button>
-        <button onClick={() => setIsMobileMenuOpen(true)} className="flex-1 flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-white transition-colors">
+        <button onClick={() => setIsMobileMenuOpen(true)} className="flex-1 flex flex-col items-center justify-center gap-1 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-colors">
           <LayoutGrid size={20} />
           <span className="text-[8px] font-black uppercase tracking-wider">Plus</span>
         </button>

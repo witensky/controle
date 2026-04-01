@@ -33,6 +33,9 @@ function PieChartComponent<T extends ChartRecord>({
   valueFormatter,
 }: PieChartComponentProps<T>) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const isDark =
+    typeof document !== 'undefined' &&
+    (document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme === 'dark');
 
   const total = useMemo(
     () =>
@@ -80,10 +83,24 @@ function PieChartComponent<T extends ChartRecord>({
               />
             ))}
           </Pie>
-          <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle" fill="#e2e8f0" className="text-[10px] font-black uppercase tracking-[0.24em]">
+          <text
+            x="50%"
+            y="48%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill={isDark ? 'var(--text-secondary)' : 'var(--text-muted)'}
+            className="text-[10px] font-black uppercase tracking-[0.24em]"
+          >
             Total
           </text>
-          <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle" fill="#ffffff" className="text-2xl font-black italic">
+          <text
+            x="50%"
+            y="56%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill={isDark ? 'var(--heading)' : 'var(--heading)'}
+            className="text-2xl font-black italic"
+          >
             {formatChartNumber(total)}
           </text>
         </PieChart>

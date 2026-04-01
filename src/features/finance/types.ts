@@ -2,6 +2,10 @@ export interface Transaction {
     id: string;
     user_id: string;
     date: string;
+    /** When true, this transaction is a planned provision (manual execution required). */
+    planned?: boolean;
+    /** Original scheduled date for a planned provision (kept after execution). */
+    planned_date?: string;
     title: string;
     category: string;
     amount: number;

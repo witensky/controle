@@ -178,21 +178,21 @@ export const DailyExpensesDetail: React.FC<DailyExpensesDetailProps> = ({
                       onSelectTransaction?.(transaction);
                     }
                   }}
-                  className="block w-full rounded-[1.25rem] border border-white/5 bg-slate-900/45 p-4 text-left transition-all hover:border-rose-500/25 hover:bg-slate-900/70"
+                  className="block w-full rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-4 text-left shadow-soft transition-all hover:border-[color:var(--tone-danger-border)] hover:bg-[color:var(--surface)] dark:border-white/5 dark:bg-slate-900/45 dark:hover:border-rose-500/25 dark:hover:bg-slate-900/70"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start gap-3">
-                        <div className="rounded-xl bg-slate-950 p-3 text-slate-400">
+                        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-[color:var(--text-secondary)] dark:border-white/5 dark:bg-slate-950 dark:text-slate-400">
                           <Tag size={15} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="truncate text-sm font-bold text-white">{transaction.title}</h4>
+                          <h4 className="truncate text-sm font-bold text-[color:var(--heading)] dark:text-white">{transaction.title}</h4>
                           <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className="rounded-md bg-slate-800 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white">
+                            <span className="rounded-md border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-2 py-1 text-[9px] font-black uppercase tracking-wide text-[color:var(--text-secondary)] dark:border-white/5 dark:bg-slate-800 dark:text-white">
                               {transaction.category}
                             </span>
-                            <span className="flex items-center gap-1 text-[9px] font-semibold text-slate-500">
+                            <span className="flex items-center gap-1 text-[9px] font-semibold text-[color:var(--text-muted)]">
                               <Clock size={10} />
                               Jour planifie
                             </span>
@@ -202,15 +202,15 @@ export const DailyExpensesDetail: React.FC<DailyExpensesDetailProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
-                      <span className="text-lg font-black text-white font-mono">-{transaction.amount}</span>
+                      <span className="font-mono text-lg font-black text-[color:var(--heading)] dark:text-white">-{transaction.amount}</span>
                       <div className="flex gap-2">
                         {onEdit ? (
-                          <button onClick={(event) => { event.stopPropagation(); onEdit(transaction); }} className="rounded-lg bg-slate-800 p-3 text-slate-400 transition-colors hover:text-blue-400">
+                          <button onClick={(event) => { event.stopPropagation(); onEdit(transaction); }} className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-[color:var(--text-muted)] transition-colors hover:border-[color:var(--tone-info-border)] hover:bg-[color:var(--tone-info-surface)] hover:text-[color:var(--tone-info-text)] dark:border-white/5 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-blue-400">
                             <Edit3 size={15} />
                           </button>
                         ) : null}
                         {onDelete ? (
-                          <button onClick={(event) => { event.stopPropagation(); onDelete(transaction.id); }} className="rounded-lg bg-slate-800 p-3 text-slate-400 transition-colors hover:text-rose-500">
+                          <button onClick={(event) => { event.stopPropagation(); onDelete(transaction.id); }} className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-[color:var(--text-muted)] transition-colors hover:border-[color:var(--tone-danger-border)] hover:bg-[color:var(--tone-danger-surface)] hover:text-[color:var(--tone-danger-text)] dark:border-white/5 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-rose-500">
                             <Trash2 size={15} />
                           </button>
                         ) : null}

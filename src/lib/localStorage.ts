@@ -38,6 +38,7 @@ export const LOCAL_KEYS = {
     BUDGETS: 'budgets',
     SAVINGS: 'savings',
     FINANCE_DISMISSED_ALERTS: 'finance_dismissed_alerts',
+    FINANCE_IMPACT_TIP_DISMISSED_AT: 'finance_impact_tip_dismissed_at',
     DASHBOARD_DISMISSED_TIP: 'dashboard_dismissed_tip',
     DAILY_ROUTINE_REMINDER_LOG: 'daily_routine_reminder_log',
     MISSIONS: 'missions',

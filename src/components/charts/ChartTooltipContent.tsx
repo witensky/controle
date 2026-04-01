@@ -41,7 +41,7 @@ const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
               <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">
                 <span
                   className="h-2.5 w-2.5 rounded-full shadow-[0_0_18px_currentColor]"
-                  style={{ backgroundColor: entry.color ?? '#38bdf8', color: entry.color ?? '#38bdf8' }}
+                  style={{ backgroundColor: entry.color ?? 'var(--chart-1)', color: entry.color ?? 'var(--chart-1)' }}
                 />
                 {labelText}
               </span>

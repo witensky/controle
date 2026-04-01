@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import { offlineRepository } from '../data/offlineRepository';
-import { QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
+import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { Mission, MissionStatus, MissionPriority, MissionCategory, CreateMissionDTO } from '../features/discipline/types';
 import { useMissions, useCreateMission, useUpdateMission, useDeleteMission } from '../features/discipline/hooks/useMissions';
 import { useProfile } from '../features/profile/hooks/useProfile';
@@ -220,11 +220,7 @@ const Discipline: React.FC = () => {
   }, [missions]);
 
   useEffect(() => {
-    const handleQuickAction = (event: Event) => {
-      const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
-
-      if (action !== 'add-mission') return;
-
+    const openQuickMissionForm = () => {
       setActiveTab('planner');
       setShowAdvancedCreate(true);
 
@@ -233,6 +229,19 @@ const Discipline: React.FC = () => {
         titleInput?.focus();
       }, 120);
     };
+
+    const handleQuickAction = (event: Event) => {
+      const action = (event as CustomEvent<{ action: QuickActionType }>).detail?.action;
+
+      if (action !== 'add-mission') return;
+
+      consumeQueuedQuickAction('add-mission');
+      openQuickMissionForm();
+    };
+
+    if (consumeQueuedQuickAction('add-mission')) {
+      openQuickMissionForm();
+    }
 
     window.addEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);
     return () => window.removeEventListener(QUICK_ACTION_EVENT, handleQuickAction as EventListener);
@@ -715,19 +724,19 @@ const Discipline: React.FC = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {pendingMissions.map(mission => (
                     // QUEUE CARD
-                    <div key={mission.id} className="group flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] dark:border-white/5 dark:bg-[#0b1121] dark:hover:border-white/10 dark:hover:bg-white/[0.02]">
+                    <div key={mission.id} className="group flex flex-col justify-between gap-4 rounded-xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] to-[color:var(--surface)] p-4 shadow-soft transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] hover:shadow-card md:flex-row md:items-center md:gap-0 dark:border-white/5 dark:bg-[#0b1121] dark:hover:border-white/10 dark:hover:bg-white/[0.02]">
                       <div className="flex items-center gap-4">
                         <div className={`w-1 h-12 rounded-full ${mission.priority === 'critical' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : mission.priority === 'high' ? 'bg-orange-500' : 'bg-slate-700'}`} />
                         <div>
-                          <h4 className="text-sm font-bold text-[color:var(--text-primary)] uppercase tracking-tight transition-colors dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
+                          <h4 className="text-sm font-bold uppercase tracking-tight text-[color:var(--tone-warning-text)] transition-colors group-hover:text-[color:var(--accent)] dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[color:var(--surface-2)] text-[color:var(--text-muted)] dark:bg-slate-900 dark:text-slate-600">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                            <span className="rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-colors group-hover:text-[color:var(--tone-warning-text)] dark:bg-slate-900 dark:text-slate-600">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
                             {mission.priority === 'critical' && <span className="text-[8px] font-black text-rose-500 uppercase tracking-wider flex items-center gap-1"><AlertCircle size={8} /> CRITIQUE</span>}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 w-full md:w-auto justify-end md:opacity-0 md:group-hover:opacity-100 md:translate-x-4 md:group-hover:translate-x-0 transition-all duration-300">
-                        <button onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }} className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all border border-white/5">
+                        <button onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }} className="w-10 h-10 md:w-8 md:h-8 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] flex items-center justify-center transition-all dark:bg-white/5 dark:text-slate-400 dark:hover:text-white dark:border-white/5">
                           <MoreVertical size={16} />
                         </button>
                         <button
@@ -742,7 +751,7 @@ const Discipline: React.FC = () => {
                         <button onClick={() => updateMissionStatus(mission.id, 'Terminé')} className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-all border border-emerald-500/20">
                           <CheckCircle2 size={16} />
                         </button>
-                        <button onClick={() => deleteMissionHandler(mission.id)} className="w-10 h-10 md:w-8 md:h-8 rounded-lg text-slate-600 hover:text-rose-500 flex items-center justify-center transition-all">
+                        <button onClick={() => deleteMissionHandler(mission.id)} className="w-10 h-10 md:w-8 md:h-8 rounded-lg text-[color:var(--text-muted)] hover:text-rose-500 flex items-center justify-center transition-all">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -850,11 +859,11 @@ const Discipline: React.FC = () => {
                       </button>
                       {ritualActionsTarget?.period === 'evening' && ritualActionsTarget.ritualId === item.id && (
                         <div className="flex justify-end gap-2 animate-in fade-in zoom-in-95 duration-200">
-                          <button onClick={() => editRitual('evening', item.id, item.label)} className="h-10 px-4 rounded-xl border border-white/5 bg-slate-950/70 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-colors flex items-center justify-center gap-2">
+                          <button onClick={() => editRitual('evening', item.id, item.label)} className="h-10 px-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] hover:text-blue-600 hover:border-blue-500/30 transition-colors flex items-center justify-center gap-2">
                             <Pencil size={14} />
                             <span className="text-[9px] font-black uppercase tracking-widest">Modifier</span>
                           </button>
-                          <button onClick={() => deleteRitual('evening', item.id)} className="h-10 px-4 rounded-xl border border-white/5 bg-slate-950/70 text-slate-500 hover:text-rose-500 hover:border-rose-500/30 transition-colors flex items-center justify-center gap-2">
+                          <button onClick={() => deleteRitual('evening', item.id)} className="h-10 px-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] hover:text-rose-500 hover:border-rose-500/30 transition-colors flex items-center justify-center gap-2">
                             <Trash2 size={14} />
                             <span className="text-[9px] font-black uppercase tracking-widest">Supprimer</span>
                           </button>
@@ -868,7 +877,7 @@ const Discipline: React.FC = () => {
                       onChange={e => setNewEveningRitual(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && addRitual('evening')}
                       placeholder="+ Ajouter ritual..."
-                      className="flex-1 bg-slate-950 border border-dashed border-white/10 rounded-xl px-4 py-3 text-[10px] font-bold text-white uppercase outline-none focus:border-blue-500/40 placeholder:text-slate-700"
+                      className="ui-field flex-1 rounded-xl border border-dashed px-4 py-3 text-[10px] font-bold uppercase outline-none focus:border-blue-500/40"
                     />
                     <button onClick={() => addRitual('evening')} className="px-4 py-3 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl hover:bg-blue-500 hover:text-white transition-all">
                       <Plus size={16} />
@@ -879,16 +888,16 @@ const Discipline: React.FC = () => {
             </div>
 
             {/* PROTOCOL HISTORY */}
-            <div className="bg-[#0b1121] border border-white/5 rounded-[2rem] p-8">
+            <div className="glass rounded-[2rem] p-8">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2"><History size={14} className="text-slate-500" /> Historique Protocole</h3>
-                <button onClick={fetchProtocolHistory} className="text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2">
+                <h3 className="text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.3em] flex items-center gap-2"><History size={14} className="text-[color:var(--text-muted)]" /> Historique protocole</h3>
+                <button onClick={fetchProtocolHistory} className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-widest hover:text-[color:var(--text-primary)] transition-colors flex items-center gap-2">
                   {protocolLoading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />} Actualiser
                 </button>
               </div>
               {protocolHistory.length === 0 ? (
-                <div className="py-8 text-center text-slate-700">
-                  <p className="text-[10px] font-black uppercase tracking-widest">Cliquer sur Actualiser pour charger l'historique</p>
+                <div className="py-8 text-center text-[color:var(--text-muted)]">
+                  <p className="text-[10px] font-black uppercase tracking-widest">Cliquez sur Actualiser pour charger l'historique</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
@@ -899,15 +908,15 @@ const Discipline: React.FC = () => {
                     const done = [...morningKeys, ...eveningKeys].filter(Boolean).length;
                     const score = total ? Math.round((done / total) * 100) : 0;
                     return (
-                      <div key={log.id} className="flex items-center justify-between p-4 bg-slate-950/50 rounded-xl border border-white/5 hover:border-white/10 transition-all">
+                      <div key={log.id} className="flex items-center justify-between p-4 bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)] hover:border-[color:var(--border-strong)] transition-all">
                         <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center">
-                            <CalendarIcon size={14} className="text-slate-600" />
+                          <div className="w-8 h-8 rounded-lg bg-[color:var(--surface-2)] border border-[color:var(--border)] flex items-center justify-center">
+                            <CalendarIcon size={14} className="text-[color:var(--text-muted)]" />
                           </div>
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{log.date}</span>
+                          <span className="text-[10px] font-black text-[color:var(--text-secondary)] uppercase tracking-widest">{log.date}</span>
                         </div>
                         <div className="flex items-center gap-4">
-                          <div className="h-1.5 w-24 bg-slate-900 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-24 bg-[color:var(--muted)] rounded-full overflow-hidden">
                             <div className={`h-full rounded-full transition-all ${score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${score}%` }} />
                           </div>
                           <span className={`text-[9px] font-black uppercase ${score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>{score}%</span>
@@ -924,13 +933,13 @@ const Discipline: React.FC = () => {
         {/* === HISTORY VIEW === */}
         {activeTab === 'history' && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-500">
-            <div className="flex justify-between items-center bg-gradient-to-r from-slate-900 to-[#0b1121] p-8 rounded-3xl border border-white/5 shadow-2xl">
+            <div className="flex items-center justify-between rounded-3xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--surface-muted)] p-8 shadow-premium dark:border-white/5 dark:bg-gradient-to-r dark:from-slate-900 dark:to-[#0b1121]">
               <div>
-                <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">{stats.score}%</h3>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Taux de Complétion Global</p>
+                <h3 className="text-4xl font-black uppercase italic tracking-tighter text-[color:var(--heading)] dark:text-white">{stats.score}%</h3>
+                <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-[color:var(--text-muted)]">Taux de Complétion Global</p>
               </div>
               <div className="text-right">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-2">
+                <div className="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)]">
                   <Award size={32} />
                 </div>
               </div>
@@ -939,17 +948,17 @@ const Discipline: React.FC = () => {
             <div className="grid grid-cols-1 gap-2">
               <h3 className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 pl-2">JOURNAL DES OBJECTIFS</h3>
               {completedMissions.map(mission => (
-                <div key={mission.id} className="flex items-center justify-between p-5 bg-[#0b1121] border border-white/5 rounded-2xl hover:bg-white/[0.02] transition-colors group">
+                <div key={mission.id} className="group flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-5 shadow-soft transition-colors hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)] dark:border-white/5 dark:bg-[#0b1121] dark:hover:bg-white/[0.02]">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-emerald-500 group-hover:border-emerald-500/30 transition-all">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] transition-all group-hover:border-[color:var(--tone-success-border)] group-hover:text-[color:var(--tone-success-text)] dark:border-white/5 dark:bg-slate-900">
                       <CheckCircle2 size={18} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-400 uppercase line-through decoration-slate-700 group-hover:text-slate-200 transition-colors">{mission.title}</h4>
-                      <p className="text-[8px] text-slate-600 uppercase tracking-widest">{new Date(mission.completed_at || '').toLocaleDateString()}</p>
+                      <h4 className="text-sm font-bold uppercase text-[color:var(--text-secondary)] line-through decoration-[color:var(--border-strong)] transition-colors group-hover:text-[color:var(--text-primary)] dark:text-slate-400 dark:group-hover:text-slate-200">{mission.title}</h4>
+                      <p className="text-[8px] uppercase tracking-widest text-[color:var(--text-muted)]">{new Date(mission.completed_at || '').toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <span className="text-[8px] font-black bg-slate-900 px-3 py-1 rounded-full text-slate-500 uppercase border border-white/5">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                  <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-[8px] font-black uppercase text-[color:var(--text-muted)] dark:border-white/5 dark:bg-slate-900 dark:text-slate-500">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
                 </div>
               ))}
               {completedMissions.length === 0 && <p className="text-center text-slate-600 py-10 text-xs uppercase tracking-widest">Historique vide</p>}
@@ -961,25 +970,25 @@ const Discipline: React.FC = () => {
       {/* MODALS & OVERLAYS */}
 
       {startMissionModal && (
-        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-slate-950/92 p-4 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/10 bg-[#111a30] shadow-[0_30px_120px_rgba(2,6,23,0.75)]">
-            <div className="border-b border-white/5 px-5 pb-5 pt-6">
+        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-[color:var(--overlay)]/70 p-4 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="w-full max-w-sm overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_30px_90px_var(--shadow-strong)] dark:border-white/10 dark:bg-[#111a30]">
+            <div className="border-b border-[color:var(--border)] px-5 pb-5 pt-6 dark:border-white/5">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/15 bg-blue-500/10 px-3 py-1.5">
                 <Timer size={12} className="text-blue-400" />
                 <span className="text-[9px] font-black uppercase tracking-[0.28em] text-blue-300">Duree focus</span>
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-[1.8rem] font-black uppercase italic leading-none tracking-[-0.04em] text-white font-outfit">
+                  <h3 className="text-[1.8rem] font-black uppercase italic leading-none tracking-[-0.04em] text-[color:var(--text-primary)] font-outfit">
                     Demarrer
                   </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                    Definis la duree de travail pour <span className="font-black text-white">{startMissionModal.title}</span>.
+                  <p className="mt-2 text-xs leading-relaxed text-[color:var(--text-secondary)]">
+                    Definis la duree de travail pour <span className="font-black text-[color:var(--text-primary)]">{startMissionModal.title}</span>.
                   </p>
                 </div>
                 <button
                   onClick={() => setStartMissionModal(null)}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-500 transition-all hover:border-white/20 hover:text-white"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
                 >
                   <X size={18} />
                 </button>
@@ -996,7 +1005,7 @@ const Discipline: React.FC = () => {
                     className={`rounded-xl border px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
                       startDurationMinutes === minutes
                         ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                        : 'border-white/10 bg-slate-950 text-slate-400 hover:border-white/20 hover:text-white'
+                        : 'border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-white/20 dark:hover:text-white'
                     }`}
                   >
                     {minutes}m
@@ -1004,8 +1013,8 @@ const Discipline: React.FC = () => {
                 ))}
               </div>
 
-              <div className="rounded-[1.4rem] border border-white/5 bg-slate-950/50 p-4">
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+              <div className="rounded-[1.4rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 dark:border-white/5 dark:bg-slate-950/50">
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                   Duree personnalisee
                 </label>
                 <div className="flex items-center gap-3">
@@ -1018,7 +1027,7 @@ const Discipline: React.FC = () => {
                     onChange={(event) => setStartDurationMinutes(Math.max(5, Number(event.target.value) || 5))}
                     className="ui-field w-full rounded-2xl border px-4 py-3 text-base font-black outline-none transition-all focus:border-blue-500/40"
                   />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">min</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">min</span>
                 </div>
               </div>
 
@@ -1034,7 +1043,7 @@ const Discipline: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setStartMissionModal(null)}
-                  className="rounded-[1.1rem] border border-white/10 bg-white/5 px-5 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 transition-all hover:border-white/20 hover:text-white"
+                  className="rounded-[1.1rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] px-5 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/20 dark:hover:text-white"
                 >
                   Annuler
                 </button>
@@ -1047,17 +1056,17 @@ const Discipline: React.FC = () => {
       {/* 1. TIMER OVERLAY (If active) */}
       {showTimer && focusMission && (
         <div className="fixed bottom-[8.2rem] left-1/2 z-40 w-[calc(100%-2.5rem)] max-w-[248px] -translate-x-1/2 animate-in slide-in-from-bottom-20 fade-in duration-500">
-          <div className="overflow-hidden rounded-[1.1rem] border border-amber-500/25 bg-slate-900/92 backdrop-blur-2xl shadow-[0_18px_40px_rgba(2,6,23,0.4)]">
-            <div className="flex items-start justify-between gap-2 border-b border-white/5 px-3 pb-2 pt-2.5">
+          <div className="overflow-hidden rounded-[1.1rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface-overlay)] backdrop-blur-2xl shadow-[0_18px_40px_var(--shadow-strong)] dark:border-amber-500/25 dark:bg-slate-900/92">
+            <div className="flex items-start justify-between gap-2 border-b border-[color:var(--border)] px-3 pb-2 pt-2.5 dark:border-white/5">
               <div className="min-w-0">
-                <span className="text-[7px] font-black uppercase tracking-[0.18em] text-amber-500">Session active</span>
-                <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.08em] text-slate-300">
+                <span className="text-[7px] font-black uppercase tracking-[0.18em] text-[color:var(--tone-warning-text)]">Session active</span>
+                <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[color:var(--text-secondary)] dark:text-slate-300">
                   {focusMission.title}
                 </p>
               </div>
               <button
                 onClick={() => setShowTimer(false)}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-500 transition-all hover:border-white/20 hover:text-white"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
                 aria-label="Masquer le timer"
               >
                 <X size={13} />
@@ -1068,17 +1077,17 @@ const Discipline: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowTimerFullscreen(true)}
-                className="relative flex-1 overflow-hidden rounded-[0.95rem] border border-white/8 bg-[#0b1121] px-3 py-2 text-left transition-all hover:border-amber-500/30"
+                className="relative flex-1 overflow-hidden rounded-[0.95rem] border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface)] to-[color:var(--surface-muted)] px-3 py-2 text-left transition-all hover:border-[color:var(--tone-warning-border)] dark:border-white/8 dark:bg-[#0b1121] dark:hover:border-amber-500/30"
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(245,158,11,0.2),transparent_42%)]" />
                 <div className="relative flex items-end justify-between gap-2">
                   <div>
-                    <p className="text-[7px] font-black uppercase tracking-[0.16em] text-slate-500">Temps restant</p>
-                    <div className="mt-0.5 text-[1.55rem] font-black leading-none text-white font-mono">
+                    <p className="text-[7px] font-black uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Temps restant</p>
+                    <div className="mt-0.5 font-mono text-[1.55rem] font-black leading-none text-[color:var(--heading)] dark:text-white">
                       {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                     </div>
                   </div>
-                  <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-amber-300">
+                  <span className="rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.12em] text-[color:var(--tone-warning-text)] dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
                     {isTimerRunning ? 'En cours' : 'Pause'}
                   </span>
                 </div>
@@ -1097,14 +1106,14 @@ const Discipline: React.FC = () => {
       )}
 
       {showTimerFullscreen && focusMission && (
-        <div className="fixed inset-0 z-[530] flex items-center justify-center bg-slate-950/94 p-4 backdrop-blur-2xl animate-in fade-in duration-300">
-          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-amber-500/20 bg-[#0b1121] shadow-[0_30px_120px_rgba(2,6,23,0.7)]">
+        <div className="fixed inset-0 z-[530] flex items-center justify-center bg-[color:var(--overlay)]/82 p-4 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-b from-[color:var(--surface-elevated)] to-[color:var(--surface)] shadow-[0_30px_120px_var(--shadow-strong)] dark:border-amber-500/20 dark:bg-[#0b1121] dark:shadow-[0_30px_120px_rgba(2,6,23,0.7)]">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/70 to-transparent" />
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
 
             <button
               onClick={() => setShowTimerFullscreen(false)}
-              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-500 transition-all hover:border-white/20 hover:text-white"
+              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
               aria-label="Fermer le mode plein ecran"
             >
               <X size={18} />
@@ -1112,17 +1121,17 @@ const Discipline: React.FC = () => {
 
             <div className="px-6 pb-6 pt-7 text-center">
               <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-500">Session active</p>
-              <h3 className="mt-3 truncate text-xl font-black uppercase tracking-tight text-white">
+              <h3 className="mt-3 truncate text-xl font-black uppercase tracking-tight text-[color:var(--heading)] dark:text-white">
                 {focusMission.title}
               </h3>
-              <p className="mt-2 text-xs text-slate-500">Mode focus plein ecran</p>
+              <p className="mt-2 text-xs text-[color:var(--text-muted)]">Mode focus plein ecran</p>
 
-              <div className="mt-8 rounded-[1.75rem] border border-white/8 bg-slate-950/65 px-6 py-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Temps restant</p>
-                <div className="mt-3 text-[4rem] font-black leading-none tracking-[-0.06em] text-white font-mono sm:text-[4.5rem]">
+              <div className="mt-8 rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-8 dark:border-white/8 dark:bg-slate-950/65">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Temps restant</p>
+                <div className="mt-3 font-mono text-[4rem] font-black leading-none tracking-[-0.06em] text-[color:var(--heading)] dark:text-white sm:text-[4.5rem]">
                   {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                 </div>
-                <div className="mt-4 inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-amber-300">
+                <div className="mt-4 inline-flex rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-[color:var(--tone-warning-text)] dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
                   {isTimerRunning ? 'En cours' : 'En pause'}
                 </div>
               </div>
@@ -1137,7 +1146,7 @@ const Discipline: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowTimerFullscreen(false)}
-                  className="flex h-14 min-w-[110px] items-center justify-center rounded-[1.2rem] border border-white/10 bg-white/5 px-5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-300 transition-all hover:border-white/20 hover:text-white"
+                  className="flex h-14 min-w-[110px] items-center justify-center rounded-[1.2rem] border border-[color:var(--border)] bg-[color:var(--surface-elevated)] px-5 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-secondary)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-white/20 dark:hover:text-white"
                 >
                   Reduire
                 </button>

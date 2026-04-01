@@ -109,8 +109,8 @@ function LineChartComponent<T extends ChartRecord>({
               name={entry.label ?? entry.key}
               stroke={entry.color}
               strokeWidth={entry.strokeWidth ?? 3}
-              dot={entry.showDots ? { r: 3, fill: entry.color, stroke: '#020617', strokeWidth: 2 } : false}
-              activeDot={{ r: 5, stroke: '#e2e8f0', strokeWidth: 2, fill: entry.color }}
+              dot={entry.showDots ? { r: 3, fill: entry.color, stroke: 'var(--surface-elevated)', strokeWidth: 2 } : false}
+              activeDot={{ r: 5, stroke: 'var(--surface-elevated)', strokeWidth: 2, fill: entry.color }}
               strokeDasharray={entry.dashed ? '5 5' : undefined}
               animationDuration={config.animation.duration}
               animationBegin={config.animation.begin}
