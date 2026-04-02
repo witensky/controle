@@ -83,7 +83,7 @@ export const DailyExpensesDetail: React.FC<DailyExpensesDetailProps> = ({
         <div className="hidden text-right sm:block">
           <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">Total jour</p>
           <p className="text-2xl font-black italic text-white">
-            {totalAmount.toLocaleString()} <span className="text-sm text-slate-500 not-italic">DH</span>
+            {formatChartCurrency(totalAmount)}
           </p>
         </div>
       )}
@@ -92,7 +92,7 @@ export const DailyExpensesDetail: React.FC<DailyExpensesDetailProps> = ({
       <div className="sm:hidden rounded-[1.5rem] border border-white/5 bg-slate-900/40 p-4 text-center">
         <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">Total jour</p>
         <p className="mt-1 text-2xl font-black italic text-white">
-          {totalAmount.toLocaleString()} <span className="text-sm text-slate-500 not-italic">DH</span>
+          {formatChartCurrency(totalAmount)}
         </p>
       </div>
 
@@ -202,7 +202,7 @@ export const DailyExpensesDetail: React.FC<DailyExpensesDetailProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
-                      <span className="font-mono text-lg font-black text-[color:var(--heading)] dark:text-white">-{transaction.amount}</span>
+                      <span className="font-mono text-lg font-black text-[color:var(--heading)] dark:text-white">-{formatChartCurrency(transaction.amount)}</span>
                       <div className="flex gap-2">
                         {onEdit ? (
                           <button onClick={(event) => { event.stopPropagation(); onEdit(transaction); }} className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-[color:var(--text-muted)] transition-colors hover:border-[color:var(--tone-info-border)] hover:bg-[color:var(--tone-info-surface)] hover:text-[color:var(--tone-info-text)] dark:border-white/5 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-blue-400">

@@ -25,6 +25,7 @@ import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../uti
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { resolveProfileRankTitle } from '../utils/profileRank';
 import { isPlannedProvision } from '../utils/financeProvisions';
+import { formatChartCurrency } from '../utils/chartHelpers';
 
 interface DashboardProps {
   onNavigate: (view: AppView) => void;
@@ -530,7 +531,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const primaryQuickStat = {
     id: 'SECURITE',
     label: 'Solde actuel',
-    val: `${stats.financeRemaining.toLocaleString()} DH`,
+    val: formatChartCurrency(stats.financeRemaining),
     sub: '',
     icon: Shield,
     tone: 'emerald' as const,
@@ -540,7 +541,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     {
       id: 'DEPENSES_JOUR',
       label: 'Depenses du jour',
-      val: `${stats.todaySpent.toLocaleString()} DH`,
+      val: formatChartCurrency(stats.todaySpent),
       sub: '',
       icon: TrendingDown,
       tone: 'rose' as const,
@@ -552,7 +553,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     {
       id: 'PROVISIONS',
       label: 'Depenses a venir',
-      val: `${stats.futureTotal.toLocaleString()} DH`,
+      val: formatChartCurrency(stats.futureTotal),
       sub: '',
       icon: Wallet,
       tone: 'amber' as const,

@@ -27,6 +27,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
 import { isPlannedProvision } from '../utils/financeProvisions';
+import { getCurrencyLabel, getStoredCurrency } from '../utils/currency';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
 import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
@@ -350,7 +351,7 @@ const Finance: React.FC = () => {
 
     // Critical projected balance
     if (financialState.projectedBalance < 0) {
-      const message = `Solde projeté négatif (${financialState.projectedBalance} DH)`;
+      const message = `Solde projeté négatif (${formatChartCurrency(financialState.projectedBalance)})`;
       arr.push({
         id: 'negative-projected-balance',
         fingerprint: `${today}-${financialState.projectedBalance}-${financialState.futureExpenses}-${expenseAlertRevision}`,
@@ -693,7 +694,7 @@ const Finance: React.FC = () => {
         if (availableProjectedBalance - requestedAmount < 0) {
           await showAlert({
             title: 'Operation rejetee',
-            message: `Cette depense (${requestedAmount} DH) depasse votre reste a vivre actualise (${availableProjectedBalance} DH).`,
+            message: `Cette depense (${formatChartCurrency(requestedAmount)}) depasse votre reste a vivre actualise (${formatChartCurrency(availableProjectedBalance)}).`,
             tone: 'warning',
           });
           setSaving(false);
@@ -976,7 +977,7 @@ const Finance: React.FC = () => {
                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm sm:p-5">
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">Reste disponible</p>
-                    <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">{amciStats.remaining.toLocaleString()} DH</p>
+                    <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">{formatChartCurrency(amciStats.remaining)}</p>
                   </div>
                   <div
                     className="group cursor-pointer rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm transition-all hover:border-amber-500/30 hover:bg-[color:var(--surface)] sm:p-5"
@@ -986,7 +987,7 @@ const Finance: React.FC = () => {
                       Quota / Jour <ArrowRight size={10} className="text-amber-500 transition-transform group-hover:translate-x-0.5" />
                     </p>
                     <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">
-                      {amciStats.dailyBudget} <span className="text-xs font-black text-emerald-600 dark:text-emerald-500">DH</span>
+                      {formatChartCurrency(amciStats.dailyBudget)}
                     </p>
                   </div>
                 </div>
@@ -1035,10 +1036,10 @@ const Finance: React.FC = () => {
                 </p>
               </div>
               <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
-                {financialState.totalExpenses.toLocaleString()} DH
+                {formatChartCurrency(financialState.totalExpenses)}
               </h2>
               <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
-                AUJOURD'HUI {financialState.todaySpent.toLocaleString()} DH <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                AUJOURD'HUI {formatChartCurrency(financialState.todaySpent)} <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
               </p>
             </div>
 
@@ -1055,7 +1056,7 @@ const Finance: React.FC = () => {
                 </p>
               </div>
               <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
-                {financialState.futureExpenses.toLocaleString()} DH
+                {formatChartCurrency(financialState.futureExpenses)}
               </h2>
               <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
                 {financialState.futureTransactions.length} OPÉRATIONS <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
@@ -1818,7 +1819,7 @@ const Finance: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00 DH" className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`0.00 ${getCurrencyLabel(getStoredCurrency())}`} className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
             <input id="finance-transaction-title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TITRE DE L'OPÉRATION" className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-sm font-bold uppercase tracking-widest outline-none transition-all focus:border-amber-500/30" />
           </div>
 

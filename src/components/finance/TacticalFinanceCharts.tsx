@@ -6,6 +6,7 @@ import { HorizontalBarsChart, SparklineChart } from '../common/InlineCharts';
 import { Transaction } from '../../features/finance/types';
 import { chartPalette, chartToneByIntent, toneClassNames } from '../../theme/tokens';
 import { cx, uiRecipes } from '../../theme/recipes';
+import { formatChartCurrency } from '../../utils/chartHelpers';
 
 interface TacticalFinanceChartsProps {
   fluxData: Array<{
@@ -54,7 +55,7 @@ const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData,
             source: item.source,
           } satisfies Transaction,
           label: `Date: ${String(item.date || '').split('-').pop() || item.date}`,
-          value: `${amount.toLocaleString()} DH`,
+          value: formatChartCurrency(amount),
           progress: Math.min(100, (amount / Math.max(...safeFluxData.map((entry) => Number(entry.amount || 0)), 1)) * 100),
           flowType: type,
           flowLabel: type === 'deposit' ? 'Revenu' : 'Depense',
@@ -70,7 +71,7 @@ const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData,
       description: "Segmentation des depenses par vecteurs d'operation.",
       stats: safeCategoryData.map((item) => ({
         label: item.name,
-        value: `${item.value} DH`,
+        value: formatChartCurrency(item.value),
         progress:
           safeCategoryData.length > 0
             ? (Number(item.value || 0) / Math.max(...safeCategoryData.map((entry) => Number(entry.value || 0)), 1)) * 100

@@ -89,12 +89,12 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
         <div className="flex items-center justify-center gap-6">
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Dépensé</p>
-            <p className="text-xl font-black text-[color:var(--text-primary)]">{safeTodaySpent.toLocaleString()} DH</p>
+            <p className="text-xl font-black text-[color:var(--text-primary)]">{formatChartCurrency(safeTodaySpent)}</p>
           </div>
           <div className="h-10 w-px bg-[color:var(--border)]" />
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">Quota</p>
-            <p className="text-xl font-black text-emerald-500">{safeDailyQuota.toLocaleString()} DH</p>
+            <p className="text-xl font-black text-emerald-500">{formatChartCurrency(safeDailyQuota)}</p>
           </div>
         </div>
       </div>
@@ -125,7 +125,7 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
               onChange={(event) => setQuotaInput(event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-right text-lg font-black text-[color:var(--text-primary)] outline-none"
             />
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">DH</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">{formatChartCurrency(0).replace(/^0\s*/, '')}</span>
           </label>
 
           <button
@@ -156,7 +156,7 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
           <div>
             <h4 className="mb-1 text-[10px] font-black uppercase tracking-widest text-rose-500">Dépassement détecté</h4>
             <p className="text-[11px] text-[color:var(--text-secondary)]">
-              Vous avez dépassé votre quota de <span className="font-bold text-[color:var(--text-primary)]">{Math.abs(remainingToday).toLocaleString()} DH</span>. Cela sera déduit du budget des {safeDaysUntilReset} prochains jours.
+              Vous avez dépassé votre quota de <span className="font-bold text-[color:var(--text-primary)]">{formatChartCurrency(Math.abs(remainingToday))}</span>. Cela sera déduit du budget des {safeDaysUntilReset} prochains jours.
             </p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
             <Calendar size={12} /> Historique 7 jours
           </p>
           <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-emerald-400">
-            Quota {safeDailyQuota.toLocaleString()} DH
+            Quota {formatChartCurrency(safeDailyQuota)}
           </div>
         </div>
         <BarChartComponent

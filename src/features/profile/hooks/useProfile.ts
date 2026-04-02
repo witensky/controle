@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProfileService } from '../services/profile.service';
 import { UpdateProfileDTO } from '../types';
 import { localStore, LOCAL_KEYS } from '@/lib/localStorage';
+import { persistCurrency } from '@/utils/currency';
 
 export const useProfile = () => {
     return useQuery({
@@ -9,6 +10,7 @@ export const useProfile = () => {
         queryFn: async () => {
             const data = await ProfileService.getProfile();
             localStore.set(LOCAL_KEYS.PROFILE, data);
+            persistCurrency(data?.settings_config?.finance?.currency);
             return data;
         },
         staleTime: 1000 * 60 * 5, // 5 minutes stale time as profile doesn't change often

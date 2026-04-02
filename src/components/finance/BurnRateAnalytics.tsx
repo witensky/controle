@@ -52,7 +52,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
     if (projectedBalance < 0) {
       return {
         title: 'Projection negative',
-        description: `Les engagements futurs font basculer la trajectoire sous zero. Le solde projete descend a ${projectedBalance.toLocaleString()} DH.`,
+        description: `Les engagements futurs font basculer la trajectoire sous zero. Le solde projete descend a ${formatChartCurrency(projectedBalance)}.`,
         tone: 'danger',
         icon: TrendingUp,
       };
@@ -63,7 +63,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
         title: 'Rythme a corriger',
         description:
           safeQuota > 0
-            ? `Les depenses du jour (${safeTodaySpent.toLocaleString()} DH) depassent le quota cible de ${safeQuota.toLocaleString()} DH.`
+            ? `Les depenses du jour (${formatChartCurrency(safeTodaySpent)}) depassent le quota cible de ${formatChartCurrency(safeQuota)}.`
             : 'La consommation accelere plus vite que le rythme ideal du cycle en cours.',
         tone: 'danger',
         icon: TrendingUp,
@@ -75,7 +75,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
         title: 'Vigilance moderee',
         description:
           projectedPressure > 0.45
-            ? `Les provisions a venir (${futureExpenses.toLocaleString()} DH) commencent a peser sur la marge restante.`
+            ? `Les provisions a venir (${formatChartCurrency(futureExpenses)}) commencent a peser sur la marge restante.`
             : 'Le rythme reste acceptable, mais la consommation depasse legerement la cible ideale.',
         tone: 'warning',
         icon: TrendingUp,
@@ -93,7 +93,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
 
     return {
       title: 'Rythme sous controle',
-      description: `La trajectoire reste coherente avec le cycle en cours, avec un solde projete de ${projectedBalance.toLocaleString()} DH.`,
+      description: `La trajectoire reste coherente avec le cycle en cours, avec un solde projete de ${formatChartCurrency(projectedBalance)}.`,
       tone: 'success',
       icon: TrendingDown,
     };
@@ -171,7 +171,7 @@ export const BurnRateAnalytics: React.FC<BurnRateAnalyticsProps> = ({
                       <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: chartPalette[index % chartPalette.length] }} />
                       <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">{entry.name}</span>
                     </div>
-                    <span className="text-sm font-black text-[color:var(--heading)]">{entry.value.toLocaleString()} DH</span>
+                    <span className="text-sm font-black text-[color:var(--heading)]">{formatChartCurrency(entry.value)}</span>
                   </div>
                 ))}
               </div>

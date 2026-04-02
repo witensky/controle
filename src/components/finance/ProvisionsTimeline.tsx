@@ -4,6 +4,7 @@ import ModalShell from '../common/ModalShell';
 import { Transaction } from '../../features/finance/types';
 import { normalizeDateOnly } from '../../utils/transactionDates';
 import { LOCAL_KEYS, localStore } from '../../lib/localStorage';
+import { formatChartCurrency } from '../../utils/chartHelpers';
 
 interface ProvisionsTimelineProps {
   isOpen: boolean;
@@ -66,7 +67,7 @@ export const ProvisionsTimeline: React.FC<ProvisionsTimelineProps> = ({
         <div className="hidden text-right sm:block">
           <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Projection sortante</p>
           <p className="text-2xl font-black italic text-[color:var(--text-primary)]">
-            {totalProvisions.toLocaleString()} <span className="text-sm text-[color:var(--text-muted)] not-italic">DH</span>
+            {formatChartCurrency(totalProvisions)}
           </p>
         </div>
       }
@@ -75,7 +76,7 @@ export const ProvisionsTimeline: React.FC<ProvisionsTimelineProps> = ({
       <div className="sm:hidden rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 text-center shadow-sm">
         <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Projection sortante</p>
         <p className="mt-1 text-2xl font-black italic text-[color:var(--text-primary)]">
-          {totalProvisions.toLocaleString()} <span className="text-sm text-[color:var(--text-muted)] not-italic">DH</span>
+          {formatChartCurrency(totalProvisions)}
         </p>
       </div>
 
@@ -139,7 +140,7 @@ export const ProvisionsTimeline: React.FC<ProvisionsTimelineProps> = ({
                       </div>
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <p className="text-lg font-black italic text-[color:var(--text-primary)]">{transaction.amount.toLocaleString()} DH</p>
+                        <p className="text-lg font-black italic text-[color:var(--text-primary)]">{formatChartCurrency(transaction.amount)}</p>
                         <button
                           onClick={(event) => { event.stopPropagation(); onExecute(transaction); }}
                           className="flex items-center justify-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-amber-400 transition-all hover:bg-amber-500 hover:text-slate-950"

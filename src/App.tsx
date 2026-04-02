@@ -16,6 +16,7 @@ import AppRouter from './router/AppRouter';
 import { AppView } from './types';
 import { getViewFromLocation, syncLocationWithView } from './router/viewRouter';
 import { isOnboardingRequired } from './features/profile/utils/onboarding';
+import { persistCurrency } from './utils/currency';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,6 +117,7 @@ const App: React.FC = () => {
       .then(async () => {
         const profile = await offlineRepository.profile.getProfile();
         if (isMounted) {
+          persistCurrency(profile.settings_config?.finance?.currency);
           setNeedsOnboarding(isOnboardingRequired(profile));
         }
       })

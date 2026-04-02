@@ -3,6 +3,7 @@ import { Heart, Layers, ShieldCheck, TrendingUp, Wallet } from 'lucide-react';
 import ModalShell from '../common/ModalShell';
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import { SparklineChart } from '../common/InlineCharts';
+import { formatChartCurrency } from '../../utils/chartHelpers';
 
 interface SecurityDashboardProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Alimentation AMCI</p>
-              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.amci.toLocaleString()} DH</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{formatChartCurrency(sources.amci)}</p>
             </div>
           </div>
 
@@ -93,7 +94,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Flux externes</p>
-              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.don.toLocaleString()} DH</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{formatChartCurrency(sources.don)}</p>
             </div>
           </div>
 
@@ -103,14 +104,14 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Autres sources</p>
-              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{sources.autres.toLocaleString()} DH</p>
+              <p className="truncate text-2xl font-black italic text-[color:var(--text-primary)]">{formatChartCurrency(sources.autres)}</p>
             </div>
           </div>
 
           <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-5 shadow-card">
             <div className="mb-4 flex items-center justify-between gap-3">
               <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Capacité totale</span>
-              <span className="text-xl font-black italic text-[color:var(--text-primary)]">{sources.total.toLocaleString()} DH</span>
+              <span className="text-xl font-black italic text-[color:var(--text-primary)]">{formatChartCurrency(sources.total)}</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--muted)]">
               <div className="h-full w-full bg-blue-500" />
@@ -135,15 +136,15 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-4">
                   <span className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Solde brut actuel</span>
-                  <span className="text-base font-black text-[color:var(--text-primary)]">{currentBalance.toLocaleString()} DH</span>
+                  <span className="text-base font-black text-[color:var(--text-primary)]">{formatChartCurrency(currentBalance)}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-4">
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500">Engagements futurs</span>
-                  <span className="text-base font-black text-amber-600 dark:text-amber-500">-{provisionsAmount.toLocaleString()} DH</span>
+                  <span className="text-base font-black text-amber-600 dark:text-amber-500">-{formatChartCurrency(provisionsAmount)}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Solde projeté</span>
-                  <span className="text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{projectedBalance.toLocaleString()} DH</span>
+                  <span className="text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{formatChartCurrency(projectedBalance)}</span>
                 </div>
               </div>
             </div>
@@ -178,4 +179,3 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({
     </ModalShell>
   );
 };
-
