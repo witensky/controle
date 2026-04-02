@@ -34,7 +34,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] bg-[color:var(--overlay)] backdrop-blur-2xl">
+    <div className="fixed inset-0 z-[300] bg-[color:var(--overlay)]/92 backdrop-blur-2xl">
       <div className={`flex min-h-[100dvh] justify-center p-2 sm:p-4 md:p-6 ${centered ? 'items-center' : 'items-start'}`}>
         <div
           className={[
@@ -45,7 +45,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
             panelClassName,
           ].join(' ')}
         >
-          <div className="shrink-0 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
+          <div className="ui-modal-header shrink-0 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
                       {title}
                     </h2>
                     {subtitle ? (
-                      <p className="mt-2 text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--text-muted)] sm:text-[11px]">
+                      <p className="mt-2 max-w-2xl text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] sm:text-[11px]">
                         {subtitle}
                       </p>
                     ) : null}
@@ -86,7 +86,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
           </div>
 
           {footer ? (
-            <div className="shrink-0 border-t border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-4 sm:px-6 md:px-8">
+            <div className="ui-modal-footer shrink-0 px-4 py-4 sm:px-6 md:px-8">
               {footer}
             </div>
           ) : null}

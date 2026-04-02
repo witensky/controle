@@ -20,7 +20,7 @@ const CourseList: React.FC<CourseListProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
       {subjects.map((subject, index) => {
         const isExpanded = expandedId === subject.id;
 

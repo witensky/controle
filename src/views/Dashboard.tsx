@@ -603,9 +603,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             onNavigate('PROFILE');
           }
         }}
-        className="glass w-full rounded-3xl p-6 text-left md:p-10 border-amber-500/10 bg-amber-500/[0.02] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] active:scale-[0.99]"
+        className="dashboard-hero-shell w-full rounded-3xl p-6 text-left transition-all active:scale-[0.99] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-amber-500"><Shield size={180} /></div>
+        <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-amber-500 dark:opacity-[0.05]"><Shield size={180} /></div>
         <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full">
           <div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl bg-amber-500 flex items-center justify-center text-slate-950 shadow-xl shrink-0 overflow-hidden">
             {profile?.avatar_url ? (
@@ -625,18 +625,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               {profile?.username || 'Utilisateur'}
             </p>
             <h2 className="text-xl md:text-3xl font-black text-[color:var(--text-primary)] truncate font-outfit">NIVEAU {userProfile.rank}</h2>
-            <div className="mt-2 h-1.5 w-full max-w-[200px] bg-[color:var(--surface-2)] rounded-full border border-[color:var(--border)] overflow-hidden">
-              <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: '65%' }} />
+            <div className="mt-2 h-1.5 w-full max-w-[200px] overflow-hidden rounded-full border border-[color:var(--border)] bg-[color:var(--surface-2)] dark:border-white/6 dark:bg-white/5">
+              <div className="h-full bg-amber-500 shadow-[0_0_18px_rgba(255,171,17,0.45)] transition-all duration-1000" style={{ width: '65%' }} />
             </div>
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-3">
-            <ThemeToggle className="border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-elevated)]" />
+            <ThemeToggle className="border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-elevated)] dark:border-white/8 dark:bg-white/5 dark:hover:border-white/16 dark:hover:bg-white/8" />
             <button
               onClick={(event) => {
                 event.stopPropagation();
                 setFocusMode(true);
               }}
-              className="hidden sm:flex px-6 py-4 bg-white text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-500 hover:text-white transition-all items-center gap-2 shadow-xl shrink-0"
+              className="hidden shrink-0 items-center gap-2 rounded-2xl bg-white px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950 shadow-xl transition-all hover:bg-amber-500 hover:text-white dark:bg-amber-500 dark:text-slate-950 dark:shadow-[0_20px_44px_rgba(255,171,17,0.25)] dark:hover:bg-[#ffbc3b] sm:flex"
             >
               <Zap size={16} fill="currentColor" /> Concentration
             </button>
@@ -732,13 +732,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
         {/* COMPARATIF HEBDO & ACTIVITES */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="glass rounded-[2.5rem] p-8 border-white/5 bg-[#020617]/55 flex-1 relative">
-            <h3 className="text-[9px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+          <div className="dashboard-shell rounded-[2.5rem] p-8 flex-1 relative">
+            <h3 className="text-[9px] font-black text-[color:var(--text-primary)] dark:text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <ArrowUpRight size={14} className="text-emerald-500" /> Différentiel Hebdo
             </h3>
             {safeWeeklyDiffData.every(d => d.amount === 0) && (
               <div className="absolute inset-x-0 bottom-8 flex items-center justify-center z-10">
-                <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">Flux stable...</p>
+                <p className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest">Flux stable...</p>
               </div>
             )}
             <div className="h-[120px] w-full">
@@ -756,17 +756,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          <div className="glass rounded-[2.5rem] p-8 border-white/5 bg-[#020617]/55 flex-1 relative">
-            <h3 className="text-[9px] font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+          <div className="dashboard-shell rounded-[2.5rem] p-8 flex-1 relative">
+            <h3 className="text-[9px] font-black text-[color:var(--text-primary)] dark:text-white uppercase tracking-widest mb-6 flex items-center gap-2">
               <Activity size={14} className="text-blue-500" /> Activité (Missions / Leçons)
             </h3>
             <div className="mb-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">
+                <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">
                   <span className="h-2 w-2 rounded-full bg-blue-500" />
                   Missions
                 </span>
-                <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">
+                <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">
                   <span className="h-2 w-2 rounded-full bg-violet-500" />
                   Lecons
                 </span>
@@ -798,7 +798,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
 
       {/* MODERN INTERACTIVE CALENDAR */}
-      <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border-white/5 bg-[#020617]/60 shadow-2xl relative overflow-hidden">
+      <div className="dashboard-shell rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 opacity-5 text-amber-500 pointer-events-none"><CalendarIcon size={300} /></div>
 
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6 relative z-10">
@@ -810,18 +810,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest md:pl-9">PLANIFICATION & RÉTROSPECTIVE JOURNALIÈRE</p>
           </div>
 
-          <div className="flex items-center gap-4 bg-slate-900/50 p-2 rounded-2xl border border-white/5">
-            <button onClick={() => changeMonth(-1)} className="p-2 text-slate-500 hover:text-white transition-colors"><ChevronLeft size={20} /></button>
-            <span className="text-[10px] font-black text-white uppercase tracking-widest min-w-[120px] text-center">
+          <div className="dashboard-control-shell flex items-center gap-4 p-2 rounded-2xl">
+            <button onClick={() => changeMonth(-1)} className="p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] dark:hover:text-white transition-colors"><ChevronLeft size={20} /></button>
+            <span className="text-[10px] font-black text-[color:var(--text-primary)] dark:text-white uppercase tracking-widest min-w-[120px] text-center">
               {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </span>
-            <button onClick={() => changeMonth(1)} className="p-2 text-slate-500 hover:text-white transition-colors"><ChevronRight size={20} /></button>
+            <button onClick={() => changeMonth(1)} className="p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] dark:hover:text-white transition-colors"><ChevronRight size={20} /></button>
           </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1 md:gap-3 relative z-10 h-full">
           {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
-            <div key={d} className="text-center text-[7px] font-black text-slate-600 uppercase tracking-widest pb-3">{d}</div>
+            <div key={d} className="text-center text-[7px] font-black text-[color:var(--text-muted)] uppercase tracking-widest pb-3">{d}</div>
           ))}
           {daysInMonth.map((day, idx) => {
             if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
@@ -841,10 +841,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <div
                 key={idx}
                 onClick={() => setSelectedDate(day)}
-                className={`aspect-square rounded-2xl border transition-all flex flex-col items-center justify-between p-2 cursor-pointer group hover:scale-105 hover:bg-[color:var(--muted)] hover:border-[color:var(--border-strong)] relative overflow-hidden ${isToday ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_15px_rgba(251,191,36,0.1)]' : 'border-[color:var(--border)] bg-[color:var(--surface)] shadow-card'
+                className={`aspect-square rounded-2xl border transition-all flex flex-col items-center justify-between p-2 cursor-pointer group hover:scale-105 relative overflow-hidden ${isToday ? 'border-amber-500 bg-amber-500/10 shadow-[0_0_15px_rgba(251,191,36,0.1)]' : 'dashboard-day-shell'
                   }`}
               >
-                <span className={`text-xs md:text-sm font-black ${isToday ? 'text-amber-500' : 'text-slate-500 group-hover:text-white'}`}>
+                <span className={`text-xs md:text-sm font-black ${isToday ? 'text-amber-500' : 'text-[color:var(--text-muted)] group-hover:text-[color:var(--text-primary)] dark:group-hover:text-white'}`}>
                   {day.getDate()}
                 </span>
 

@@ -21,34 +21,34 @@ const Timer: React.FC<TimerProps> = ({
   isRunning,
 }) => {
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-cyan-400/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.18),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(15,23,42,0.92))] p-6">
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.04),transparent)] opacity-40" />
-      <div className="relative z-10 space-y-5">
+    <div className="study-timer-shell relative overflow-hidden rounded-[1.7rem] p-4 sm:p-5">
+      <div className="study-timer-shine absolute inset-0 opacity-30" />
+      <div className="relative z-10 space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-cyan-300/70">Mode revision</p>
-            <p className="mt-2 text-5xl font-black italic tracking-[-0.08em] text-white font-outfit">
+            <p className="text-[10px] font-black uppercase tracking-[0.32em] text-[color:var(--tone-info-text)]">Mode revision</p>
+            <p className="mt-1.5 font-outfit text-[3rem] font-black italic leading-none tracking-[-0.08em] text-[color:var(--heading)] dark:text-white sm:text-[3.4rem]">
               {formatStudyTime(elapsedSeconds)}
             </p>
           </div>
           <motion.div
-            animate={isRunning ? { scale: [1, 1.05, 1], opacity: [0.85, 1, 0.85] } : { scale: 1, opacity: 0.8 }}
+            animate={isRunning ? { scale: [1, 1.05, 1], opacity: [0.85, 1, 0.85] } : { scale: 1, opacity: 0.88 }}
             transition={{ repeat: isRunning ? Infinity : 0, duration: 2.2, ease: 'easeInOut' }}
-            className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-info-text)]"
           >
             <Sparkles size={12} />
             Niveau {level}
           </motion.div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 text-[10px] font-black uppercase tracking-[0.26em] text-slate-400">
+        <div className="flex items-center justify-between gap-4 text-[9px] font-black uppercase tracking-[0.24em] text-[color:var(--text-secondary)]">
           <span>{label}</span>
           <span>{nextLabel}</span>
         </div>
 
-        <div className="h-3 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="study-progress-track h-2.5 overflow-hidden rounded-full">
           <motion.div
-            className="h-full rounded-full bg-[linear-gradient(90deg,#22d3ee,#3b82f6,#8b5cf6)] shadow-[0_0_24px_rgba(34,211,238,0.35)]"
+            className="study-progress-fill h-full rounded-full"
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
           />

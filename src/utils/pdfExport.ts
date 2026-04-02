@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 
 type ExportElementToPdfOptions = {
   element: HTMLElement;
@@ -21,6 +20,22 @@ type ExportHtmlToPdfOptions = {
 type ExportToPdfOptions =
   | ({ element: HTMLElement; html?: never } & Omit<ExportElementToPdfOptions, 'element'>)
   | ({ html: string; element?: never; marginMm?: number } & Omit<ExportHtmlToPdfOptions, 'html' | 'widthPx'>);
+
+let pdfDepsPromise: Promise<{
+  html2canvas: typeof import('html2canvas').default;
+  jsPDFCtor: typeof import('jspdf').jsPDF;
+}> | null = null;
+
+const loadPdfDeps = async () => {
+  if (!pdfDepsPromise) {
+    pdfDepsPromise = Promise.all([import('html2canvas'), import('jspdf')]).then(([html2canvasModule, jspdfModule]) => ({
+      html2canvas: html2canvasModule.default,
+      jsPDFCtor: jspdfModule.jsPDF,
+    }));
+  }
+
+  return pdfDepsPromise;
+};
 
 const waitForPaint = () =>
   new Promise<void>((resolve) => {
@@ -598,13 +613,15 @@ const exportStructuredPdf = async ({
   fileName,
   title,
   marginMm,
+  jsPDFCtor,
 }: {
   root: HTMLElement;
   fileName: string;
   title?: string;
   marginMm: number;
+  jsPDFCtor: typeof import('jspdf').jsPDF;
 }) => {
-  const pdf = new jsPDF({
+  const pdf = new jsPDFCtor({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
@@ -656,6 +673,8 @@ export const exportToPdf = async ({
   }
 
   try {
+    const { html2canvas, jsPDFCtor } = await loadPdfDeps();
+
     const renderViaCanvas = async () => {
       const target = isAndroidWebView()
         ? createPdfRenderTargetInDocument(sourceElement, backgroundColor)
@@ -675,7 +694,7 @@ export const exportToPdf = async ({
           windowHeight: Math.max(clone.scrollHeight, clone.clientHeight, 1123),
         });
 
-        const pdf = new jsPDF({
+        const pdf = new jsPDFCtor({
           orientation: 'portrait',
           unit: 'mm',
           format: 'a4',
@@ -720,6 +739,7 @@ export const exportToPdf = async ({
           fileName,
           title,
           marginMm,
+          jsPDFCtor,
         });
         return;
       }

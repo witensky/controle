@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   BookOpen,
   Clock,
@@ -44,7 +44,7 @@ const navItemBase =
 const AppNavigation: React.FC<AppNavigationProps> = ({ view, onNavigate, isNavVisible, showMobileUi = true }) => {
   return (
     <>
-      <aside className="app-navigation hidden border-r border-[color:var(--border)] bg-[color:var(--panel-bg)] px-5 py-6 text-[color:var(--text)] backdrop-blur-2xl md:flex md:w-60 md:flex-col">
+      <aside className="app-navigation hidden border-r border-[color:var(--border)] bg-[color:var(--panel-bg)] px-5 py-6 text-[color:var(--text)] backdrop-blur-xl md:flex md:w-60 md:flex-col">
         <div className="mb-6 px-2">
           <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--tone-primary-text)]">Myflow</p>
           <h2 className="mt-2 text-2xl font-black uppercase italic tracking-[-0.05em] text-[color:var(--heading)]">Command Center</h2>
@@ -84,7 +84,7 @@ const AppNavigation: React.FC<AppNavigationProps> = ({ view, onNavigate, isNavVi
       {showMobileUi ? (
         <nav
           className={cx(
-            'app-bottom-nav fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[200] flex h-16 w-[92%] max-w-[420px] -translate-x-1/2 items-center justify-between rounded-full border border-[color:var(--border)] bg-[color:var(--panel-bg)] px-2 shadow-premium backdrop-blur-2xl transition-all duration-500 md:hidden',
+            'app-bottom-nav fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[200] flex h-16 w-[92%] max-w-[420px] -translate-x-1/2 items-center justify-between rounded-full border border-[color:var(--border)] bg-[color:var(--panel-bg)] px-2 shadow-premium backdrop-blur-lg transition-all duration-500 md:hidden',
             isNavVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-10 opacity-0',
           )}
         >
@@ -147,4 +147,4 @@ const AppNavigation: React.FC<AppNavigationProps> = ({ view, onNavigate, isNavVi
   );
 };
 
-export default AppNavigation;
+export default memo(AppNavigation);

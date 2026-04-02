@@ -65,7 +65,7 @@ const ProgressOverview: React.FC = () => {
 
     return (
         <>
-            <div className={cx(uiRecipes.cardElevated, 'flex h-full flex-col rounded-[2rem] p-6 md:p-7')}>
+            <div className={cx(uiRecipes.cardElevated, 'dashboard-shell flex h-full flex-col rounded-[2rem] p-6 md:p-7')}>
                 <div className="flex justify-between items-start gap-4 mb-5">
                     <div>
                         <h3 className="text-lg font-black text-[color:var(--heading)] uppercase italic flex items-center gap-3 font-outfit">
@@ -106,9 +106,9 @@ const ProgressOverview: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    <div className="h-2 overflow-hidden rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]">
+                                <div className="study-progress-track h-2 overflow-hidden rounded-full border border-[color:var(--border)]">
                                         <div
-                                            className={`h-full rounded-full transition-all duration-1000 ${isCompleted ? 'bg-[color:var(--success)] shadow-[0_0_10px_rgba(31,157,105,0.22)]' : 'bg-[color:var(--warning)] shadow-[0_0_10px_rgba(220,156,45,0.22)]'}`}
+                                            className={`h-full rounded-full transition-all duration-1000 ${isCompleted ? 'bg-[color:var(--success)]' : 'bg-[color:var(--warning)]'}`}
                                             style={{ width: `${Math.min(100, progress)}%` }}
                                         />
                                     </div>
@@ -141,12 +141,12 @@ const ProgressOverview: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setIsCreateOpen(true)}
-                            className={cx(uiRecipes.emptyState, 'flex h-full min-h-[220px] flex-col items-center justify-center px-6 hover:border-[color:var(--tone-warning-border)]')}
+                            className={cx(uiRecipes.emptyState, 'flex h-full min-h-[220px] flex-col items-center justify-center bg-[color:var(--surface-elevated)] px-6 hover:border-[color:var(--tone-warning-border)] hover:bg-[color:var(--surface)]')}
                         >
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] shadow-soft">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--tone-info-text)] shadow-soft">
                                 <Target size={28} />
                             </div>
-                            <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest leading-relaxed">
+                            <p className="text-[10px] font-black text-[color:var(--text-secondary)] uppercase tracking-widest leading-relaxed">
                                 Aucun objectif defini pour cette semaine.
                             </p>
                             <span className="mt-4 text-[9px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)]">

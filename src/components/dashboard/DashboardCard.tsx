@@ -133,7 +133,7 @@ const DashboardCard = ({
       whileTap={{ scale: 0.985 }}
       dir={isRtlContent ? 'rtl' : 'ltr'}
       className={cx(
-        'group relative cursor-pointer overflow-hidden rounded-[1.65rem] border transition-all duration-300 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow-md)]',
+        'group relative cursor-pointer overflow-hidden rounded-[1.65rem] border transition-all duration-300 hover:border-[color:var(--border-strong)] hover:shadow-[var(--shadow-md)] dark:hover:border-white/12 dark:hover:shadow-[0_26px_80px_rgba(2,8,20,0.62)]',
         textAlignClass,
         compact
           ? 'min-h-[92px] p-3 min-[430px]:min-h-[98px] min-[430px]:p-3.5 md:min-h-[104px] md:p-4'
@@ -144,11 +144,11 @@ const DashboardCard = ({
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--border-strong)] to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_32%)] opacity-70" />
+      <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--border-strong)] to-transparent dark:via-white/18" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_32%)] opacity-70 dark:bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_30%)]" />
 
       {featured ? (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.06),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_40%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.06),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_bottom_center,rgba(23,211,154,0.2),transparent_44%),radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_52%)]" />
       ) : null}
 
       {trendData && trendData.length > 0 ? (

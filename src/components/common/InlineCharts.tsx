@@ -163,21 +163,25 @@ export const VerticalBarsChart: React.FC<{
   const maxValue = Math.max(...data.map((item) => Number(item.value || 0)), 1);
 
   return (
-    <div className="flex h-full items-end justify-between gap-3">
-      {data.map((item, index) => {
-        const height = `${clamp((Number(item.value || 0) / maxValue) * 100, 6, 100)}%`;
-        return (
-          <div key={`${item.label}-${index}`} className="flex h-full flex-1 flex-col justify-end gap-2">
-            <div className="flex-1 rounded-t-2xl bg-[color:var(--surface-2)] relative overflow-hidden border border-[color:var(--border)]">
-              <div
-                className="absolute inset-x-0 bottom-0 rounded-t-2xl"
-                style={{ height, background: colors[index % colors.length] }}
-              />
+    <div className="h-full overflow-x-auto pb-1">
+      <div className="flex h-full min-w-full items-end justify-start gap-3">
+        {data.map((item, index) => {
+          const height = `${clamp((Number(item.value || 0) / maxValue) * 100, 6, 100)}%`;
+          return (
+            <div key={`${item.label}-${index}`} className="flex h-full min-w-[72px] flex-1 flex-col justify-end gap-2 sm:min-w-0">
+              <div className="relative flex-1 overflow-hidden rounded-t-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)]">
+                <div
+                  className="absolute inset-x-0 bottom-0 rounded-t-2xl"
+                  style={{ height, background: colors[index % colors.length] }}
+                />
+              </div>
+              <span className="px-1 text-center text-[7px] font-black uppercase leading-tight tracking-[0.16em] text-[color:var(--text-muted)] whitespace-normal break-words sm:text-[8px] sm:tracking-widest">
+                {item.label}
+              </span>
             </div>
-            <span className="truncate text-center text-[8px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{item.label}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };

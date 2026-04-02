@@ -14,6 +14,7 @@ const VIEW_ROUTE_MAP: Record<AppView, string> = {
   DATA_CENTER: '/data-center',
   REPORTS: '/reports',
   PROFILE: '/profile',
+  ABOUT_APP: '/about-app',
 };
 
 const ROUTE_VIEW_MAP = Object.entries(VIEW_ROUTE_MAP).reduce<Record<string, AppView>>((acc, [view, route]) => {

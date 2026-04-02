@@ -1,4 +1,4 @@
-export type AppView = 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE' | 'SPORT' | 'SETTINGS' | 'DATA_CENTER' | 'REPORTS' | 'PROFILE';
+export type AppView = 'DASHBOARD' | 'FINANCE' | 'DISCIPLINE' | 'STUDIES' | 'LANGUAGES' | 'BIBLE' | 'SPORT' | 'SETTINGS' | 'DATA_CENTER' | 'REPORTS' | 'PROFILE' | 'ABOUT_APP';
 
 // Mission Types migrated to src/features/discipline/types.ts
 

@@ -67,29 +67,29 @@ export const toneClassNames: Record<
 
 export const dashboardToneTokens = {
   rose: {
-    card: 'border-[color:var(--tone-danger-border)] bg-[color:var(--surface-elevated)]',
-    iconShell: 'bg-[color:var(--tone-danger-surface)] border-[color:var(--tone-danger-border)]',
+    card: 'dashboard-card-shell dashboard-card-rose',
+    iconShell: 'bg-[color:var(--tone-danger-surface)] border-[color:var(--tone-danger-border)] dark:bg-rose-500/12 dark:border-rose-400/20',
     icon: 'text-[color:var(--tone-danger-text)]',
     accent: 'bg-[color:var(--danger)]',
     spark: 'var(--chart-4)',
   },
   amber: {
-    card: 'border-[color:var(--tone-warning-border)] bg-[color:var(--surface-elevated)]',
-    iconShell: 'bg-[color:var(--tone-warning-surface)] border-[color:var(--tone-warning-border)]',
+    card: 'dashboard-card-shell dashboard-card-amber',
+    iconShell: 'bg-[color:var(--tone-warning-surface)] border-[color:var(--tone-warning-border)] dark:bg-amber-500/12 dark:border-amber-400/20',
     icon: 'text-[color:var(--tone-warning-text)]',
     accent: 'bg-[color:var(--warning)]',
     spark: 'var(--chart-3)',
   },
   emerald: {
-    card: 'border-[color:var(--tone-success-border)] bg-[color:var(--surface-elevated)]',
-    iconShell: 'bg-[color:var(--tone-success-surface)] border-[color:var(--tone-success-border)]',
+    card: 'dashboard-card-shell dashboard-card-emerald',
+    iconShell: 'bg-[color:var(--tone-success-surface)] border-[color:var(--tone-success-border)] dark:bg-emerald-500/12 dark:border-emerald-400/20',
     icon: 'text-[color:var(--tone-success-text)]',
     accent: 'bg-[color:var(--success)]',
     spark: 'var(--chart-1)',
   },
   blue: {
-    card: 'border-[color:var(--tone-info-border)] bg-[color:var(--surface-elevated)]',
-    iconShell: 'bg-[color:var(--tone-info-surface)] border-[color:var(--tone-info-border)]',
+    card: 'dashboard-card-shell dashboard-card-blue',
+    iconShell: 'bg-[color:var(--tone-info-surface)] border-[color:var(--tone-info-border)] dark:bg-blue-500/12 dark:border-blue-400/20',
     icon: 'text-[color:var(--tone-info-text)]',
     accent: 'bg-[color:var(--info)]',
     spark: 'var(--chart-2)',

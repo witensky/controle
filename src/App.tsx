@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,6 +28,7 @@ const queryClient = new QueryClient({
 });
 
 const SWIPEABLE_VIEWS: AppView[] = ['FINANCE', 'DISCIPLINE', 'DASHBOARD', 'STUDIES', 'SETTINGS'];
+const FAB_HIDDEN_VIEWS = new Set<AppView>(['DATA_CENTER', 'STUDIES', 'SETTINGS', 'ABOUT_APP']);
 const SCREEN_SLIDE_VARIANTS: Variants = {
   enter: (direction: number) => ({
     opacity: 0,
@@ -52,10 +53,11 @@ const App: React.FC = () => {
   const [navDirection, setNavDirection] = useState(0);
   const mainRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const scrollRafRef = useRef<number | null>(null);
+  const navVisibilityRef = useRef(true);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const fabHiddenViews = new Set<AppView>(['DATA_CENTER', 'STUDIES', 'SETTINGS']);
   const showMobileNav = view !== 'DATA_CENTER' && !mobileUiOverride.hideNav;
-  const showFab = !fabHiddenViews.has(view) && !mobileUiOverride.hideFab;
+  const showFab = !FAB_HIDDEN_VIEWS.has(view) && !mobileUiOverride.hideFab;
   const swipeViewIndex = useMemo(() => SWIPEABLE_VIEWS.indexOf(view), [view]);
 
   useEffect(() => {
@@ -75,19 +77,30 @@ const App: React.FC = () => {
     if (!mainDetails) return;
 
     const handleScroll = () => {
-      const currentScrollY = mainDetails.scrollTop;
+      if (scrollRafRef.current !== null) return;
 
-      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-        setIsNavVisible(false);
-      } else {
-        setIsNavVisible(true);
-      }
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        const currentScrollY = mainDetails.scrollTop;
+        const nextVisible = !(currentScrollY > lastScrollY.current && currentScrollY > 50);
 
-      lastScrollY.current = currentScrollY;
+        if (navVisibilityRef.current !== nextVisible) {
+          navVisibilityRef.current = nextVisible;
+          setIsNavVisible(nextVisible);
+        }
+
+        lastScrollY.current = currentScrollY;
+        scrollRafRef.current = null;
+      });
     };
 
     mainDetails.addEventListener('scroll', handleScroll, { passive: true });
-    return () => mainDetails.removeEventListener('scroll', handleScroll);
+    return () => {
+      mainDetails.removeEventListener('scroll', handleScroll);
+      if (scrollRafRef.current !== null) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -130,32 +143,33 @@ const App: React.FC = () => {
     return () => window.removeEventListener('app:mobile-ui-override', handleUiOverride as EventListener);
   }, []);
 
-  const handleNavigate = (nextView: AppView, options?: { replace?: boolean }) => {
+  const handleNavigate = useCallback((nextView: AppView, options?: { replace?: boolean }) => {
     const currentIndex = SWIPEABLE_VIEWS.indexOf(view);
     const nextIndex = SWIPEABLE_VIEWS.indexOf(nextView);
     setNavDirection(currentIndex !== -1 && nextIndex !== -1 ? (nextIndex > currentIndex ? 1 : -1) : 0);
     setView(nextView);
     setIsNavVisible(true);
+    navVisibilityRef.current = true;
     syncLocationWithView(nextView, options?.replace);
-  };
+  }, [view]);
 
-  const navigateBySwipe = (offset: -1 | 1) => {
+  const navigateBySwipe = useCallback((offset: -1 | 1) => {
     if (swipeViewIndex === -1) return;
     const nextView = SWIPEABLE_VIEWS[swipeViewIndex + offset];
     if (!nextView) return;
     handleNavigate(nextView);
-  };
+  }, [handleNavigate, swipeViewIndex]);
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (swipeViewIndex === -1) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest('[data-disable-view-swipe="true"]')) return;
 
     const touch = event.changedTouches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
+  }, [swipeViewIndex]);
 
-  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchEnd = useCallback((event: React.TouchEvent<HTMLElement>) => {
     if (swipeViewIndex === -1 || !touchStartRef.current) return;
 
     const touch = event.changedTouches[0];
@@ -168,9 +182,9 @@ const App: React.FC = () => {
     }
 
     navigateBySwipe(deltaX < 0 ? 1 : -1);
-  };
+  }, [navigateBySwipe, swipeViewIndex]);
 
-  const handleQuickAction = (action: QuickActionType) => {
+  const handleQuickAction = useCallback((action: QuickActionType) => {
     const targetView = quickActionTargetView[action];
 
     queueQuickAction(action);
@@ -179,7 +193,7 @@ const App: React.FC = () => {
     window.setTimeout(() => {
       dispatchQuickAction(action);
     }, 0);
-  };
+  }, [handleNavigate]);
 
   return (
     <QueryClientProvider client={queryClient}>

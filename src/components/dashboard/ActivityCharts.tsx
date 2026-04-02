@@ -183,8 +183,8 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
     );
   };
 
-  const tileClass = 'flex cursor-pointer flex-col rounded-[1.5rem] p-4 sm:rounded-[2rem] sm:p-6';
-  const chartShellClass = 'h-[140px] flex-1 rounded-[1.2rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] p-4 sm:h-[200px]';
+  const tileClass = 'group flex cursor-pointer flex-col rounded-[1.5rem] p-4 sm:rounded-[2rem] sm:p-6 dashboard-shell';
+  const chartShellClass = 'dashboard-chart-shell h-[140px] flex-1 rounded-[1.2rem] p-4 sm:h-[200px]';
 
   return (
     <div className="space-y-6">
@@ -215,7 +215,7 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
           </div>
         </div>
 
-        <div onClick={() => setActiveMenu('energy')} className={cx(uiRecipes.cardElevated, tileClass)}>
+        <div onClick={() => setActiveMenu('energy')} className={cx(uiRecipes.cardElevated, tileClass, 'dark:[box-shadow:0_24px_70px_rgba(23,211,154,0.08)]')}>
           <div className="mb-4 flex items-center justify-between sm:mb-6">
             <div className="flex items-center gap-2">
               <Zap className={tones.energy.icon} size={16} />
@@ -237,7 +237,7 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
           </div>
         </div>
 
-        <div onClick={() => setActiveMenu('work')} className={cx(uiRecipes.cardElevated, tileClass)}>
+        <div onClick={() => setActiveMenu('work')} className={cx(uiRecipes.cardElevated, tileClass, 'dark:[box-shadow:0_24px_70px_rgba(255,73,119,0.08)]')}>
           <div className="mb-4 flex items-center justify-between sm:mb-6">
             <div className="flex items-center gap-2">
               <Activity className={tones.work.icon} size={16} />
@@ -265,7 +265,7 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div onClick={() => setActiveMenu('mastery')} className={cx(uiRecipes.cardElevated, 'group flex cursor-pointer flex-col p-6 lg:col-span-7')}>
+        <div onClick={() => setActiveMenu('mastery')} className={cx(uiRecipes.cardElevated, 'dashboard-shell group flex cursor-pointer flex-col p-6 lg:col-span-7')}>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <TrendingUp className={tones.mastery.icon} size={16} />
@@ -275,7 +275,7 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
             </div>
             <ArrowUpRight className="text-[color:var(--text-muted)] transition-colors group-hover:text-[color:var(--text)]" size={14} />
           </div>
-          <div className="h-40 w-full flex-1 rounded-[1.2rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] p-4 sm:h-[220px]">
+          <div className="dashboard-chart-shell h-40 w-full flex-1 rounded-[1.2rem] p-4 sm:h-[220px]">
             <ChartErrorBoundary fallbackTitle="Progression indisponible" minHeightClassName="min-h-[200px]">
               <SparklineChart
                 data={safeMasteryTrendData.map((item) => ({ label: item.date, value: Number(item.xp || 0) }))}
@@ -288,7 +288,7 @@ const ActivityCharts: React.FC<ActivityChartsProps> = ({
           </div>
         </div>
 
-        <div className={cx(uiRecipes.cardElevated, 'flex h-[300px] flex-col p-4 lg:col-span-5')}>
+        <div className={cx(uiRecipes.cardElevated, 'dashboard-shell flex h-[300px] flex-col p-4 lg:col-span-5')}>
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <LayoutGrid className={tones.mastery.icon} size={16} />

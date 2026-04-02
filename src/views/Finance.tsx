@@ -24,6 +24,8 @@ import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurr
 import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { useTheme } from '../theme/ThemeProvider';
+import { cx, uiRecipes } from '../theme/recipes';
+import { toneClassNames } from '../theme/tokens';
 import { isPlannedProvision } from '../utils/financeProvisions';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
@@ -1712,18 +1714,20 @@ const Finance: React.FC = () => {
       {/* REGISTRE TABLE VIEW */}
       {
         viewMode === 'table' && (
-          <div className="overflow-hidden rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-card animate-in slide-in-from-right-8 sm:p-6 md:p-8 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40">
+          <div className="ui-section-card overflow-hidden rounded-[2rem] p-5 shadow-card animate-in slide-in-from-right-8 sm:p-6 md:p-8 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <h3 className="text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.4em] italic">REGISTRE ANALYTIQUE DES FLUX PASSÉS</h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500" /> <span className="text-[8px] font-black uppercase text-[color:var(--text-muted)]">DEPOT</span></div>
-                <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-rose-500" /> <span className="text-[8px] font-black uppercase text-[color:var(--text-muted)]">DEPENSE</span></div>
+              <h3 className="text-[10px] font-black text-[color:var(--heading)] uppercase tracking-[0.34em] italic">REGISTRE ANALYTIQUE DES FLUX PASSÉS</h3>
+              <div className="flex flex-wrap gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] px-3 py-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[color:var(--success)]" /> <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[color:var(--tone-success-text)]">DEPOT</span></div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] px-3 py-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[color:var(--danger)]" /> <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[color:var(--tone-danger-text)]">DEPENSE</span></div>
               </div>
             </div>
             {pastTransactions.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] px-6 py-14 text-center dark:border-white/10 dark:bg-slate-950/30">
-                <History size={42} className="mx-auto mb-4 text-[color:var(--text-secondary)] dark:text-slate-700" />
-                <p className="text-[11px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Aucun flux passé à afficher</p>
+              <div className={cx(uiRecipes.emptyPanel, 'px-6 py-14')}>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] shadow-soft">
+                  <History size={30} />
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)]">Aucun flux passé à afficher</p>
               </div>
             ) : (
               <>
@@ -1734,18 +1738,18 @@ const Finance: React.FC = () => {
                         event.preventDefault();
                         openTransactionDetail(t);
                       }
-                    }} className="block w-full rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left">
+                    }} className="ui-item-card block w-full rounded-[1.5rem] p-4 text-left">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.date}</p>
-                          <h4 className="mt-2 text-sm font-black uppercase italic text-white">{t.title}</h4>
-                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500">{t.category}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{t.date}</p>
+                          <h4 className="mt-2 text-sm font-black uppercase italic text-[color:var(--heading)] dark:text-white">{t.title}</h4>
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</p>
                         </div>
-                        <p className={`text-lg font-black italic ${t.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        <p className={`text-lg font-black italic ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
                           {t.type === 'deposit' ? '+' : '-'}{t.amount.toLocaleString()} DH
                         </p>
                       </div>
-                      <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className="w-full rounded-2xl bg-rose-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-400">Supprimer</button>
+                      <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.ghostButton, 'w-full rounded-2xl border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)]')}>Supprimer</button>
                     </div>
                   ))}
                 </div>
@@ -1753,7 +1757,7 @@ const Finance: React.FC = () => {
                 <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-left border-separate border-spacing-y-4">
                     <thead>
-                      <tr className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] italic">
+                      <tr className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.3em] italic">
                         <th className="px-8 pb-4">Date</th>
                         <th className="px-8 pb-4">Flux / DÉPENSE PLANIFIÉE</th>
                         <th className="px-8 pb-4">Catégorie</th>
@@ -1763,15 +1767,15 @@ const Finance: React.FC = () => {
                     </thead>
                     <tbody>
                       {pastTransactions.map(t => (
-                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer bg-[color:var(--surface)] transition-all rounded-3xl">
-                          <td className="px-8 py-6 rounded-l-[1.5rem] font-black text-xs text-slate-500 italic">{t.date}</td>
-                          <td className="px-8 py-6 text-sm font-black text-white uppercase italic tracking-tight">{t.title}</td>
-                          <td className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.category}</td>
-                          <td className={`px-8 py-6 text-right font-black italic text-lg ${t.type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="ui-item-card cursor-pointer rounded-3xl transition-all">
+                          <td className="rounded-l-[1.5rem] px-8 py-6 font-black text-xs italic text-[color:var(--text-muted)]">{t.date}</td>
+                          <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
+                          <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</td>
+                          <td className={`px-8 py-6 text-right font-black italic text-lg ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
                             {t.type === 'deposit' ? '+' : '-'}{t.amount.toLocaleString()} DH
                           </td>
                           <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
-                            <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className="rounded-xl p-2 text-slate-500 transition-colors hover:text-rose-500"><Trash2 size={16} /></button>
+                            <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.actionIcon, toneClassNames.danger.text)}><Trash2 size={16} /></button>
                           </td>
                         </tr>
                       ))}
@@ -1820,8 +1824,8 @@ const Finance: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Catégorie</label>
-              <select value={categoryValue} onChange={e => setCategoryValue(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none focus:border-amber-500/30">
+              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Catégorie</label>
+              <select value={categoryValue} onChange={e => setCategoryValue(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none">
                 {type === 'expense' ? (
                   <>
                     {budgets.map(b => <option key={b.category} value={b.category}>{b.category.toUpperCase()}</option>)}
@@ -1839,8 +1843,8 @@ const Finance: React.FC = () => {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-600">Date d'exécution</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none focus:border-amber-500/30" />
+              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Date d'exécution</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none" />
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
@@ -16,6 +16,7 @@ import StudyMode from '../components/studies/StudyMode';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import { localStore } from '../lib/localStorage';
 import { requestBrowserNotificationPermission } from '../lib/browserNotifications';
+import { cx, uiRecipes } from '../theme/recipes';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -65,6 +66,7 @@ const Studies: React.FC = () => {
   const [editingSubject, setEditingSubject] = useState<LawSubject | null>(null);
   const [activeStudySubject, setActiveStudySubject] = useState<LawSubject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const { showConfirm } = useAppDialog();
@@ -216,8 +218,8 @@ const Studies: React.FC = () => {
   };
 
   const filteredSubjects = useMemo(
-    () => subjects.filter((subject) => subject.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    [searchQuery, subjects],
+    () => subjects.filter((subject) => subject.name.toLowerCase().includes(deferredSearchQuery.toLowerCase())),
+    [deferredSearchQuery, subjects],
   );
 
   if (isLoading) {
@@ -231,9 +233,9 @@ const Studies: React.FC = () => {
   return (
     <>
       <div className="space-y-8">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-black uppercase italic tracking-tight text-[color:var(--text-primary)] md:text-4xl">
+        <div className={cx(uiRecipes.sectionCard, 'flex flex-col gap-5 overflow-hidden p-4 sm:p-5 md:flex-row md:items-end md:justify-between md:p-6')}>
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-black uppercase italic tracking-tight text-[color:var(--heading)] md:text-4xl">
               Mes <span className="font-outfit text-amber-500">Études</span>
             </h2>
             <p className="mt-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Modules, rappels et révision concentrée</p>
@@ -246,12 +248,12 @@ const Studies: React.FC = () => {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Rechercher un module"
-                className="ui-field w-full rounded-2xl border py-4 pl-11 pr-4 text-sm font-bold outline-none focus:border-[color:var(--border-strong)]"
+                className={cx(uiRecipes.searchBar, 'pl-11 pr-4')}
               />
             </div>
             <button
               onClick={() => { resetForm(); setIsModalOpen(true); }}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_18px_44px_rgba(251,191,36,0.28)] transition-transform hover:scale-[1.02]"
+              className={cx(uiRecipes.primaryCta, 'gap-2')}
             >
               <Plus size={16} strokeWidth={3} />
               Ajouter un module
@@ -273,7 +275,7 @@ const Studies: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[2rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center shadow-card"
+            className={cx(uiRecipes.emptyPanel, 'px-6 py-10')}
           >
             <p className="text-sm font-bold text-[color:var(--text-primary)]">Aucun module ne correspond à cette recherche.</p>
             <p className="mt-2 text-[11px] text-[color:var(--text-muted)]">Essaie un autre mot-clé ou ajoute un nouveau module.</p>
@@ -294,7 +296,7 @@ const Studies: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.98 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="glass-panel w-full max-w-3xl rounded-[2.5rem] p-6 shadow-2xl md:p-8"
+              className="ui-modal-panel w-full max-w-3xl rounded-[2.5rem] p-6 shadow-2xl md:p-8"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
@@ -305,59 +307,59 @@ const Studies: React.FC = () => {
                 </div>
                 <button
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
-                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)] p-3 text-[color:var(--text-muted)] transition-colors hover:text-[color:var(--text-primary)]"
+                  className={cx(uiRecipes.ghostButton, 'rounded-2xl p-3')}
                 >
                   <X size={22} />
                 </button>
               </div>
 
               <div className="space-y-5">
-                <div className="space-y-1.5">
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Nom du module</label>
+                <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
+                  <label className={uiRecipes.fieldLabel}>Nom du module</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(event) => setFormName(event.target.value)}
                     placeholder="Ex: module principal"
-                    className="ui-field w-full rounded-2xl border px-6 py-5 text-sm font-bold outline-none focus:border-amber-500/40"
+                    className={cx(uiRecipes.field, 'rounded-2xl px-6 py-5 text-sm font-bold')}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Semestre</label>
+                  <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
+                    <label className={uiRecipes.fieldLabel}>Semestre</label>
                     <select
                       value={formSemester}
                       onChange={(event) => setFormSemester(event.target.value)}
-                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[10px] font-black uppercase outline-none focus:border-amber-500/40"
+                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[10px] font-black uppercase')}
                     >
                       {['S1', 'S2', 'S3', 'S4', 'S5', 'S6'].map((semester) => <option key={semester} value={semester}>{semester}</option>)}
                     </select>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                     <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Crédits ECTS</label>
                     <input
                       type="number"
                       value={formEcts}
                       onChange={(event) => setFormEcts(Number(event.target.value))}
-                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
+                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[11px] font-black')}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                   <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Professeur référent</label>
                   <input
                     type="text"
                     value={formProf}
                     onChange={(event) => setFormProf(event.target.value)}
                     placeholder="Pr. Dupont"
-                    className="ui-field w-full rounded-2xl border px-6 py-4 text-sm font-bold outline-none focus:border-amber-500/40"
+                    className={cx(uiRecipes.field, 'rounded-2xl px-6 py-4 text-sm font-bold')}
                   />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                   <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Statut</label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {STATUS_OPTIONS.map((status) => (
@@ -378,23 +380,23 @@ const Studies: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
+                  <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                     <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Chapitres faits</label>
                     <input
                       type="number"
                       value={formChaptersDone}
                       onChange={(event) => setFormChaptersDone(Number(event.target.value))}
-                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
+                       className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[11px] font-black')}
                     />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                     <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Total chapitres</label>
                     <input
                       type="number"
                       value={formChaptersTotal}
                       onChange={(event) => setFormChaptersTotal(Number(event.target.value))}
-                      className="ui-field w-full rounded-2xl border px-4 py-4 text-[11px] font-black outline-none focus:border-amber-500/40"
+                       className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[11px] font-black')}
                     />
                   </div>
                 </div>
@@ -413,17 +415,17 @@ const Studies: React.FC = () => {
                 />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
+                  <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                     <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Date d'examen</label>
                     <input
                       type="date"
                       value={formExamDate}
                       onChange={(event) => setFormExamDate(event.target.value)}
-                      className="ui-field w-full rounded-2xl border px-6 py-4 text-sm font-bold outline-none focus:border-amber-500/40"
+                      className={cx(uiRecipes.field, 'rounded-2xl px-6 py-4 text-sm font-bold')}
                     />
                   </div>
 
-                  <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4">
+                  <div className={cx(uiRecipes.formSection, 'rounded-[1.6rem]')}>
                     <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-secondary)]">
                       <GraduationCap size={14} className="text-cyan-300" />
                       Révision gamifiée
@@ -434,21 +436,21 @@ const Studies: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
                   <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Notes de cours</label>
                   <textarea
                     value={formNotes}
                     onChange={(event) => setFormNotes(event.target.value)}
                     placeholder="Points clés, ressources, axes de révision..."
                     rows={4}
-                    className="ui-field w-full resize-none rounded-2xl border px-6 py-4 text-sm outline-none focus:border-amber-500/40"
+                    className={cx(uiRecipes.field, 'w-full resize-none rounded-2xl px-6 py-4 text-sm')}
                   />
                 </div>
 
                 <button
                   onClick={handleSave}
                   disabled={isSaving || !formName.trim()}
-                  className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-amber-500 px-6 py-5 text-[11px] font-black uppercase tracking-[0.28em] text-slate-950 shadow-[0_18px_44px_rgba(251,191,36,0.25)] transition-transform hover:scale-[1.01] disabled:opacity-50"
+                  className={cx(uiRecipes.primaryButton, 'inline-flex w-full gap-3 rounded-2xl px-6 py-5 text-[11px] tracking-[0.28em]')}
                 >
                   {isSaving ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} strokeWidth={3} />}
                   Confirmer le module

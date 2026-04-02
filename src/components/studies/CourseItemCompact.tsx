@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { BellRing, BookOpenCheck, ChevronDown, Edit3, Sparkles, Trash2 } from 'lucide-react';
+import { BellRing, BookOpenCheck, ChevronDown, Sparkles } from 'lucide-react';
 import type { LawSubject } from '../../features/studies/types';
+import { cx, uiRecipes } from '../../theme/recipes';
+import { toneClassNames } from '../../theme/tokens';
 import { getStudyLevelMeta, sumStudySeconds } from '../../utils/studyMode';
 import { getWeekdayMeta } from '../../utils/studyReminders';
 import ProgressBar from './ProgressBar';
@@ -17,11 +19,11 @@ interface CourseItemCompactProps {
 }
 
 const STATUS_TONE: Record<LawSubject['status'], string> = {
-  'En cours': 'text-amber-300 border-amber-400/20 bg-amber-400/10',
-  'Termine': 'text-emerald-300 border-emerald-400/20 bg-emerald-400/10',
-  'En attente': 'text-sky-300 border-sky-400/20 bg-sky-400/10',
-  Echec: 'text-rose-300 border-rose-400/20 bg-rose-400/10',
-  Rattrapage: 'text-violet-300 border-violet-400/20 bg-violet-400/10',
+  'En cours': toneClassNames.warning.chip,
+  Termine: toneClassNames.success.chip,
+  'En attente': toneClassNames.info.chip,
+  Echec: toneClassNames.danger.chip,
+  Rattrapage: toneClassNames.info.chip,
 };
 
 const CourseItemCompact: React.FC<CourseItemCompactProps> = ({
@@ -36,6 +38,9 @@ const CourseItemCompact: React.FC<CourseItemCompactProps> = ({
   const totalStudySeconds = sumStudySeconds(subject.studySessions || []);
   const studyLevel = getStudyLevelMeta(totalStudySeconds);
   const totalMinutes = Math.round(totalStudySeconds / 60);
+  const hasProfessor = Boolean(subject.professor && subject.professor.trim());
+  const hasSchedule = subject.courseSchedule.length > 0;
+  const reminderCount = subject.reminders.length;
 
   const shortSchedule = useMemo(() => {
     if (!subject.courseSchedule.length) return 'Non planifie';
@@ -58,7 +63,7 @@ const CourseItemCompact: React.FC<CourseItemCompactProps> = ({
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: index * 0.04 }}
-      whileHover={{ y: -2, scale: 1.01 }}
+      whileHover={{ y: -2, scale: 1.005 }}
       role="button"
       tabIndex={0}
       onClick={onToggle}
@@ -68,92 +73,95 @@ const CourseItemCompact: React.FC<CourseItemCompactProps> = ({
           onToggle();
         }
       }}
-      className="group relative overflow-hidden rounded-[1.9rem] border border-white/8 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.08),transparent_24%),linear-gradient(180deg,rgba(15,23,42,0.68),rgba(2,6,23,0.88))] p-4 shadow-[0_20px_50px_rgba(2,6,23,0.28)] transition-all"
+      className={cx(uiRecipes.compactItemCard, 'group relative overflow-hidden p-3.5')}
     >
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.05),transparent_45%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="relative z-10 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="ui-item-badge inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--heading)]">
+                {subject.semester}
+              </span>
+              <span className={cx(uiRecipes.statusBadge, STATUS_TONE[subject.status])}>
+                {subject.status}
+              </span>
+            </div>
 
-      <div className="relative z-10 flex flex-col gap-4 md:grid md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_auto] md:items-center">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex rounded-full border border-white/10 bg-slate-950/80 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-amber-400">
-              {subject.semester}
-            </span>
-            <span className={`inline-flex rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] ${STATUS_TONE[subject.status]}`}>
-              {subject.status}
-            </span>
+            <h3 className="mt-2 truncate text-[1.25rem] font-black uppercase italic leading-none tracking-tight text-[color:var(--heading)]">
+              {subject.name}
+            </h3>
+            {hasProfessor ? (
+              <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">
+                {subject.professor}
+              </p>
+            ) : null}
           </div>
 
-          <h3 className="mt-3 truncate text-lg font-black uppercase italic tracking-tight text-white md:text-xl">
-            {subject.name}
-          </h3>
-          <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-            {subject.professor || 'Professeur a definir'}
-          </p>
+          <motion.span animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <span className={cx(uiRecipes.compactActionIcon)}>
+              <ChevronDown size={18} className="text-[color:var(--text-muted)]" />
+            </span>
+          </motion.span>
         </div>
 
-        <div className="min-w-0 space-y-2">
+        <div className="space-y-2">
           <div className="flex items-end justify-between gap-3">
-            <span className="text-2xl font-black italic tracking-[-0.05em] text-white">{subject.progress}%</span>
-            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-              {subject.chaptersDone}/{subject.chaptersTotal}
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
+                Progression
+              </p>
+              <span className="mt-1 block text-[1.75rem] font-black italic leading-none tracking-[-0.06em] text-[color:var(--heading)]">
+                {subject.progress}%
+              </span>
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">
+              {subject.chaptersDone}/{subject.chaptersTotal} chapitres
             </span>
           </div>
-          <ProgressBar value={subject.progress} />
-          <div className="flex items-center justify-between gap-3 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
-            <span>{totalMinutes} min revisees</span>
-            <span className="inline-flex items-center gap-1 text-amber-300">
-              <Sparkles size={11} />
-              Niveau {studyLevel.level}
-            </span>
-          </div>
+          <ProgressBar value={subject.progress} heightClassName="h-1.5" />
         </div>
 
-        <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:justify-center">
-          <div className="space-y-1 text-left md:text-right">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{shortSchedule}</div>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500 md:justify-end">
-              <BellRing size={11} className={subject.reminders.length > 0 ? 'text-cyan-300' : 'text-slate-600'} />
-              {subject.reminders.length > 0 ? `${subject.reminders.length} rappel${subject.reminders.length > 1 ? 's' : ''}` : 'Sans rappel'}
-            </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className={cx(uiRecipes.chip, 'px-2 py-1 text-[8px] tracking-[0.16em]')}>
+            {totalMinutes} min
+          </span>
+          <span className={cx(uiRecipes.chip, toneClassNames.warning.chip, 'gap-1 px-2 py-1 text-[8px] tracking-[0.16em]')}>
+            <Sparkles size={9} />
+            Niveau {studyLevel.level}
+          </span>
+          {hasSchedule ? (
+            <span className={cx(uiRecipes.chip, 'max-w-full truncate px-2 py-1 text-[8px] tracking-[0.16em]')}>
+              {shortSchedule}
+            </span>
+          ) : null}
+          {reminderCount > 0 ? (
+            <span className={cx(uiRecipes.chip, toneClassNames.info.chip, 'gap-1 px-2 py-1 text-[8px] tracking-[0.16em]')}>
+              <BellRing size={9} />
+              {reminderCount} rappel{reminderCount > 1 ? 's' : ''}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            {!hasSchedule && reminderCount === 0 ? (
+              <span className="text-[9px] font-black uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
+                Aucune planification
+              </span>
+            ) : null}
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 opacity-0 transition-all duration-200 md:flex md:translate-x-2 md:group-hover:translate-x-0 md:group-hover:opacity-100">
-              <button
-                type="button"
-                onClick={(event) => {
-                  stopPropagation(event);
-                  onStudy();
-                }}
-                className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-2 text-cyan-100 transition-colors hover:bg-cyan-400 hover:text-slate-950"
-              >
-                <BookOpenCheck size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={(event) => {
-                  stopPropagation(event);
-                  onEdit();
-                }}
-                className="rounded-xl border border-white/8 bg-white/[0.04] p-2 text-slate-400 transition-colors hover:text-white"
-              >
-                <Edit3 size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={(event) => {
-                  stopPropagation(event);
-                  onDelete();
-                }}
-                className="rounded-xl border border-white/8 bg-white/[0.04] p-2 text-slate-400 transition-colors hover:text-rose-400"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-
-            <motion.span animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown size={18} className="text-slate-400" />
-            </motion.span>
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={(event) => {
+                stopPropagation(event);
+                onStudy();
+              }}
+              className={cx(uiRecipes.compactActionIcon, toneClassNames.info.shell, toneClassNames.info.text)}
+            >
+              <BookOpenCheck size={13} />
+            </button>
           </div>
         </div>
       </div>
@@ -161,4 +169,10 @@ const CourseItemCompact: React.FC<CourseItemCompactProps> = ({
   );
 };
 
-export default CourseItemCompact;
+export default memo(
+  CourseItemCompact,
+  (previous, next) =>
+    previous.subject === next.subject &&
+    previous.index === next.index &&
+    previous.isExpanded === next.isExpanded,
+);

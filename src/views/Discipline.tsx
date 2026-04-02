@@ -4,11 +4,13 @@ import {
   Zap, ShieldAlert, Dumbbell, Brain, CheckCircle2, Plus, Trash2, ListTodo, History, Target, Clock, ArrowUpRight, Loader2, Moon, Sun, SlidersHorizontal, Star, AlertCircle, PlayCircle, PauseCircle, Timer, RotateCcw, MessageSquare, ShieldCheck, ChevronRight, BarChart3, TrendingUp, MoreVertical, X, Power, Layers, Activity, Calendar as CalendarIcon, FilterX, Database, Award, ClipboardCheck, BookOpen, Heart, Wallet, FileDown, Eye, Sparkles, CheckSquare, Sunrise, Sunset, Play, Square, FastForward, RefreshCcw, Pencil
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
+import ModalShell from '../components/common/ModalShell';
 import { offlineRepository } from '../data/offlineRepository';
 import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { Mission, MissionStatus, MissionPriority, MissionCategory, CreateMissionDTO } from '../features/discipline/types';
 import { useMissions, useCreateMission, useUpdateMission, useDeleteMission } from '../features/discipline/hooks/useMissions';
 import { useProfile } from '../features/profile/hooks/useProfile';
+import { cx, uiRecipes } from '../theme/recipes';
 import { DEFAULT_MISSION_CATEGORIES, displayMissionCategoryLabel, resolveStudyDomainLabel } from '../utils/studyDomainLabel';
 
 type RitualDefinition = {
@@ -724,19 +726,19 @@ const Discipline: React.FC = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {pendingMissions.map(mission => (
                     // QUEUE CARD
-                    <div key={mission.id} className="group flex flex-col justify-between gap-4 rounded-xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] to-[color:var(--surface)] p-4 shadow-soft transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] hover:shadow-card md:flex-row md:items-center md:gap-0 dark:border-white/5 dark:bg-[#0b1121] dark:hover:border-white/10 dark:hover:bg-white/[0.02]">
+                    <div key={mission.id} className="group flex flex-col justify-between gap-4 rounded-xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] to-[color:var(--surface)] p-4 shadow-soft transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] hover:shadow-card md:flex-row md:items-center md:gap-0">
                       <div className="flex items-center gap-4">
-                        <div className={`w-1 h-12 rounded-full ${mission.priority === 'critical' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : mission.priority === 'high' ? 'bg-orange-500' : 'bg-slate-700'}`} />
+                        <div className={`h-12 w-1 rounded-full ${mission.priority === 'critical' ? 'bg-[color:var(--danger)]' : mission.priority === 'high' ? 'bg-[color:var(--warning)]' : 'bg-[color:var(--border-strong)]'}`} />
                         <div>
-                          <h4 className="text-sm font-bold uppercase tracking-tight text-[color:var(--tone-warning-text)] transition-colors group-hover:text-[color:var(--accent)] dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
+                          <h4 className="text-sm font-bold uppercase tracking-tight text-[color:var(--heading)] transition-colors group-hover:text-[color:var(--tone-warning-text)] dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-colors group-hover:text-[color:var(--tone-warning-text)] dark:bg-slate-900 dark:text-slate-600">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
-                            {mission.priority === 'critical' && <span className="text-[8px] font-black text-rose-500 uppercase tracking-wider flex items-center gap-1"><AlertCircle size={8} /> CRITIQUE</span>}
+                            <span className="rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-colors group-hover:text-[color:var(--tone-warning-text)]">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                            {mission.priority === 'critical' && <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-[color:var(--tone-danger-text)]"><AlertCircle size={8} /> CRITIQUE</span>}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 w-full md:w-auto justify-end md:opacity-0 md:group-hover:opacity-100 md:translate-x-4 md:group-hover:translate-x-0 transition-all duration-300">
-                        <button onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }} className="w-10 h-10 md:w-8 md:h-8 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] flex items-center justify-center transition-all dark:bg-white/5 dark:text-slate-400 dark:hover:text-white dark:border-white/5">
+                        <button onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }} className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text-primary)] md:h-8 md:w-8">
                           <MoreVertical size={16} />
                         </button>
                         <button
@@ -744,11 +746,11 @@ const Discipline: React.FC = () => {
                             setStartMissionModal(mission);
                             setStartDurationMinutes(Math.max(5, Number(profile?.settings_config?.defaultMissionDuration) || 25));
                           }}
-                          className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-500/20"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] transition-all hover:border-[color:var(--tone-info-text)] md:h-8 md:w-8"
                         >
                           <Play size={16} fill="currentColor" />
                         </button>
-                        <button onClick={() => updateMissionStatus(mission.id, 'Terminé')} className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 flex items-center justify-center transition-all border border-emerald-500/20">
+                        <button onClick={() => updateMissionStatus(mission.id, 'Terminé')} className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] transition-all hover:border-[color:var(--tone-success-text)] md:h-8 md:w-8">
                           <CheckCircle2 size={16} />
                         </button>
                         <button onClick={() => deleteMissionHandler(mission.id)} className="w-10 h-10 md:w-8 md:h-8 rounded-lg text-[color:var(--text-muted)] hover:text-rose-500 flex items-center justify-center transition-all">
@@ -933,7 +935,7 @@ const Discipline: React.FC = () => {
         {/* === HISTORY VIEW === */}
         {activeTab === 'history' && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-500">
-            <div className="flex items-center justify-between rounded-3xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--surface-muted)] p-8 shadow-premium dark:border-white/5 dark:bg-gradient-to-r dark:from-slate-900 dark:to-[#0b1121]">
+            <div className="dashboard-shell flex items-center justify-between rounded-3xl p-8 shadow-premium">
               <div>
                 <h3 className="text-4xl font-black uppercase italic tracking-tighter text-[color:var(--heading)] dark:text-white">{stats.score}%</h3>
                 <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-[color:var(--text-muted)]">Taux de Complétion Global</p>
@@ -946,22 +948,22 @@ const Discipline: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-2">
-              <h3 className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2 pl-2">JOURNAL DES OBJECTIFS</h3>
+              <h3 className="mb-2 pl-2 text-[9px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">JOURNAL DES OBJECTIFS</h3>
               {completedMissions.map(mission => (
-                <div key={mission.id} className="group flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-5 shadow-soft transition-colors hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)] dark:border-white/5 dark:bg-[#0b1121] dark:hover:bg-white/[0.02]">
+                <div key={mission.id} className="group flex items-center justify-between rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-elevated)] p-5 shadow-soft transition-colors hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] transition-all group-hover:border-[color:var(--tone-success-border)] group-hover:text-[color:var(--tone-success-text)] dark:border-white/5 dark:bg-slate-900">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] transition-all group-hover:border-[color:var(--tone-success-border)] group-hover:text-[color:var(--tone-success-text)]">
                       <CheckCircle2 size={18} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold uppercase text-[color:var(--text-secondary)] line-through decoration-[color:var(--border-strong)] transition-colors group-hover:text-[color:var(--text-primary)] dark:text-slate-400 dark:group-hover:text-slate-200">{mission.title}</h4>
+                      <h4 className="text-sm font-bold uppercase text-[color:var(--text-secondary)] line-through decoration-[color:var(--border-strong)] transition-colors group-hover:text-[color:var(--text-primary)]">{mission.title}</h4>
                       <p className="text-[8px] uppercase tracking-widest text-[color:var(--text-muted)]">{new Date(mission.completed_at || '').toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-[8px] font-black uppercase text-[color:var(--text-muted)] dark:border-white/5 dark:bg-slate-900 dark:text-slate-500">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                  <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-[8px] font-black uppercase text-[color:var(--text-muted)]">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
                 </div>
               ))}
-              {completedMissions.length === 0 && <p className="text-center text-slate-600 py-10 text-xs uppercase tracking-widest">Historique vide</p>}
+              {completedMissions.length === 0 && <p className="py-10 text-center text-xs uppercase tracking-widest text-[color:var(--text-muted)]">Historique vide</p>}
             </div>
           </div>
         )}
@@ -1196,150 +1198,127 @@ const Discipline: React.FC = () => {
 
       {/* 3. EDIT MISSION MODAL */}
       {editingMission && (
-        <div className="fixed inset-0 z-[600] overflow-y-auto bg-slate-950/92 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#111a30] shadow-[0_30px_120px_rgba(2,6,23,0.75)]">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/70 to-transparent" />
-              <div className="absolute right-[-40px] top-[-40px] h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
-
+        <ModalShell
+          isOpen={Boolean(editingMission)}
+          onClose={() => setEditingMission(null)}
+          title={<><span>Modifier </span><span className="text-[color:var(--accent)]">l'objectif</span></>}
+          subtitle="Edition mission"
+          icon={<Target size={20} className="text-[color:var(--tone-warning-text)]" />}
+          maxWidthClassName="max-w-xl"
+          centered
+          footer={
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
               <button
                 onClick={() => setEditingMission(null)}
-                className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-500 transition-all hover:border-white/20 hover:text-white"
+                className={cx(uiRecipes.ghostButton, 'rounded-[1.3rem] px-5 py-4')}
               >
-                <X size={20} />
+                Annuler
               </button>
+              <button
+                onClick={handleUpdateMission}
+                disabled={isSaving || !editTitle.trim()}
+                className={cx(uiRecipes.primaryButton, 'w-full rounded-[1.4rem] px-5 py-4 tracking-[0.28em]')}
+              >
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                Confirmer les modifications
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-5">
+            <div className={cx(uiRecipes.modalBadge)}>
+              <Target size={12} />
+              Edition mission
+            </div>
 
-              <div className="border-b border-white/5 px-5 pb-5 pt-6 sm:px-8 sm:pb-6 sm:pt-7">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/15 bg-amber-500/10 px-3 py-1.5">
-                  <Target size={12} className="text-amber-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-300">Edition mission</span>
-                </div>
-                <h3 className="pr-14 text-[2rem] leading-none font-black uppercase italic tracking-[-0.04em] text-white font-outfit sm:text-[2.4rem]">
-                  Modifier <span className="text-amber-500">l'objectif</span>
-                </h3>
+            <div className={cx(uiRecipes.formSection, 'space-y-2')}>
+              <label className={uiRecipes.fieldLabel}>Titre de la tache</label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Nom de l'objectif"
+                className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-base font-black')}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className={cx(uiRecipes.formSection, 'space-y-2')}>
+                <label className={uiRecipes.fieldLabel}>Categorie</label>
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value as any)}
+                  className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[15px] font-black uppercase')}
+                >
+                  {missionCategories.map(c => <option key={c} value={c}>{displayMissionCategoryLabel(c, studyDomainLabel)}</option>)}
+                </select>
               </div>
 
-              <div className="space-y-5 px-5 py-5 sm:px-8 sm:py-7">
-                <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                  <div className="space-y-2">
-                    <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Titre de la tache</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      placeholder="Nom de l'objectif"
-                      className="ui-field w-full rounded-2xl border px-4 py-4 text-base font-black outline-none transition-all focus:border-amber-500/40"
-                    />
-                  </div>
+              <div className={cx(uiRecipes.formSection, 'space-y-2')}>
+                <label className={uiRecipes.fieldLabel}>Priorite</label>
+                <select
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value as any)}
+                  className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[15px] font-black uppercase')}
+                >
+                  <option value="low">LOW</option>
+                  <option value="medium">MEDIUM</option>
+                  <option value="high">HIGH</option>
+                  <option value="critical">CRITICAL</option>
+                </select>
+              </div>
+            </div>
+
+            <div className={cx(uiRecipes.formSection, 'space-y-2')}>
+              <label className={uiRecipes.fieldLabel}>Informations complementaires</label>
+              <textarea
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Ajoute un contexte utile, le resultat attendu ou quelques details d'execution..."
+                className={cx(uiRecipes.field, 'min-h-[132px] rounded-2xl px-4 py-4 text-sm font-medium leading-relaxed')}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className={cx(uiRecipes.formSection, 'space-y-2')}>
+                <label className={uiRecipes.fieldLabel}>Deadline</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={editDeadline}
+                    onChange={e => setEditDeadline(e.target.value)}
+                    className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 pr-11 text-sm font-black uppercase')}
+                  />
+                  <CalendarIcon size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                    <div className="space-y-2">
-                      <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Categorie</label>
-                      <select
-                        value={editCategory}
-                        onChange={(e) => setEditCategory(e.target.value as any)}
-                        className="ui-field w-full rounded-2xl border px-4 py-4 text-[15px] font-black uppercase outline-none transition-all focus:border-amber-500/40"
-                      >
-                        {missionCategories.map(c => <option key={c} value={c}>{displayMissionCategoryLabel(c, studyDomainLabel)}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                    <div className="space-y-2">
-                      <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Priorite</label>
-                      <select
-                        value={editPriority}
-                        onChange={(e) => setEditPriority(e.target.value as any)}
-                        className="ui-field w-full rounded-2xl border px-4 py-4 text-[15px] font-black uppercase outline-none transition-all focus:border-amber-500/40"
-                      >
-                        <option value="low">LOW</option>
-                        <option value="medium">MEDIUM</option>
-                        <option value="high">HIGH</option>
-                        <option value="critical">CRITICAL</option>
-                      </select>
-                    </div>
-                  </div>
+              <div className={cx(uiRecipes.formSection, 'space-y-3')}>
+                <div className="flex items-center justify-between gap-3">
+                  <label className={uiRecipes.fieldLabel}>Charge energetique</label>
+                  <span className={cx(uiRecipes.chip, 'ui-chip-warning')}>
+                    Niveau {editEnergy}
+                  </span>
                 </div>
-
-                <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                  <div className="space-y-2">
-                    <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Informations complementaires</label>
-                    <textarea
-                      value={editDescription}
-                      onChange={e => setEditDescription(e.target.value)}
-                      placeholder="Ajoute un contexte utile, le resultat attendu ou quelques details d'execution..."
-                      className="ui-field min-h-[118px] w-full rounded-2xl border px-4 py-4 text-sm font-medium leading-relaxed outline-none transition-all focus:border-amber-500/40"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                    <div className="space-y-2">
-                      <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Deadline</label>
-                      <div className="relative">
-                        <input
-                          type="date"
-                          value={editDeadline}
-                          onChange={e => setEditDeadline(e.target.value)}
-                          className="ui-field w-full rounded-2xl border px-4 py-4 pr-11 text-sm font-black uppercase outline-none transition-all focus:border-amber-500/40"
-                        />
-                        <CalendarIcon size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-600" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-white/5 bg-slate-950/45 p-4 sm:p-5">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <label className="pl-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Charge energetique</label>
-                        <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-amber-300">
-                          Niveau {editEnergy}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1.5">
-                        {[1, 2, 3].map(e => (
-                          <button
-                            key={e}
-                            onClick={() => setEditEnergy(e as 1 | 2 | 3)}
-                            className={`rounded-xl py-3 text-[11px] font-black transition-all ${
-                              editEnergy === e
-                                ? 'bg-amber-500 text-slate-950 shadow-[0_12px_30px_rgba(245,158,11,0.22)]'
-                                : 'text-slate-500 hover:text-white'
-                            }`}
-                          >
-                            {e}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <button
-                    onClick={handleUpdateMission}
-                    disabled={isSaving || !editTitle.trim()}
-                    className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-white px-5 py-4 text-[10px] font-black uppercase tracking-[0.32em] text-slate-950 transition-all hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                    Confirmer les modifications
-                  </button>
-
-                  <button
-                    onClick={() => setEditingMission(null)}
-                    className="rounded-[1.25rem] border border-white/10 bg-white/5 px-5 py-4 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 transition-all hover:border-white/20 hover:text-white"
-                  >
-                    Annuler
-                  </button>
+                <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-1.5">
+                  {[1, 2, 3].map(e => (
+                    <button
+                      key={e}
+                      onClick={() => setEditEnergy(e as 1 | 2 | 3)}
+                      className={`rounded-xl py-3 text-[11px] font-black transition-all ${
+                        editEnergy === e
+                          ? 'bg-[color:var(--accent)] text-[color:var(--heading)] shadow-soft'
+                          : 'text-[color:var(--text-muted)] hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--text-primary)]'
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* 4. TOAST NOTIFICATION */}

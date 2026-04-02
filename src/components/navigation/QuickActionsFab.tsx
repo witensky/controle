@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { Dumbbell, Plus, Target, Wallet, X } from 'lucide-react';
 import { QuickActionType } from '../../lib/quickActions';
 import { cx, uiRecipes } from '../../theme/recipes';
@@ -58,7 +58,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
         {isOpen ? (
           <button
             aria-label="Fermer le menu d'actions rapides"
-            className="pointer-events-auto fixed inset-0 bg-[color:var(--overlay)] backdrop-blur-[10px] saturate-75 md:backdrop-blur-[12px]"
+            className="pointer-events-auto fixed inset-0 bg-[color:var(--overlay)] backdrop-blur-[6px] saturate-75 md:backdrop-blur-[8px]"
             onClick={() => setIsOpen(false)}
             type="button"
           />
@@ -82,7 +82,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
                   setIsOpen(false);
                 }}
                 type="button"
-                className="group glass-panel flex w-[min(88vw,20rem)] items-center gap-4 rounded-[1.6rem] px-4 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
+                className="group glass-panel flex w-[min(88vw,20rem)] items-center gap-4 rounded-[1.6rem] px-4 py-3.5 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
                 style={{ transitionDelay: isOpen ? `${index * 35}ms` : '0ms' }}
               >
                 <div
@@ -123,4 +123,4 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
   );
 };
 
-export default QuickActionsFab;
+export default memo(QuickActionsFab);

@@ -774,6 +774,25 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                         Ouvrir analyses
                      </button>
                   </div>
+                  <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+                     <div className="flex items-center gap-3">
+                        <div className={cx('flex h-10 w-10 items-center justify-center rounded-2xl', toneClassNames.info.shell, toneClassNames.info.icon)}>
+                           <Smartphone size={16} />
+                        </div>
+                        <div>
+                           <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-secondary)]">A propos</p>
+                           <p className="mt-1 text-sm leading-relaxed text-[color:var(--text-muted)]">
+                              Ouvre une page de presentation de l&apos;application et de ses principes.
+                           </p>
+                        </div>
+                     </div>
+                     <button
+                        onClick={() => onNavigate('ABOUT_APP')}
+                        className={cx(uiRecipes.secondaryButton, 'mt-4 w-full rounded-2xl px-4 py-4')}
+                     >
+                        Voir la page a propos
+                     </button>
+                  </div>
                </div>
             </div>
 

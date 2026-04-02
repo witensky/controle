@@ -35,8 +35,8 @@ function RadarChartComponent<T extends ChartRecord>({
     >
       {(safeData) => (
         <RadarChart data={safeData} cx="50%" cy="50%" outerRadius="76%">
-          <PolarGrid stroke="rgba(148, 163, 184, 0.16)" />
-          <PolarAngleAxis dataKey={angleKey} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+          <PolarGrid stroke="var(--chart-grid)" />
+          <PolarAngleAxis dataKey={angleKey} tick={{ fill: 'var(--chart-axis)', fontSize: 10, fontWeight: 700 }} />
           <Tooltip content={<ChartTooltipContent />} />
           <Radar dataKey={valueKey} stroke={color} fill={color} fillOpacity={0.28} strokeWidth={3} />
         </RadarChart>
