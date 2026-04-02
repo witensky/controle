@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { toneClassNames } from '../../theme/tokens';
 import { cx, uiRecipes } from '../../theme/recipes';
+import { getCurrencyLabel, getStoredCurrency } from '../../utils/currency';
 
 interface ResteAVivreWidgetProps {
   amount: number;
@@ -12,6 +13,7 @@ interface ResteAVivreWidgetProps {
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const ResteAVivreWidget: React.FC<ResteAVivreWidgetProps> = ({ amount, totalBudget, onClick }) => {
+  const currencyLabel = getCurrencyLabel(getStoredCurrency());
   const percentage = totalBudget > 0 ? clamp((amount / totalBudget) * 100, 0, 100) : 0;
 
   const tone =
@@ -83,7 +85,7 @@ const ResteAVivreWidget: React.FC<ResteAVivreWidgetProps> = ({ amount, totalBudg
         </div>
         <div className="mb-2 flex items-baseline justify-center gap-1.5 lg:justify-start">
           <h2 className="text-4xl font-black italic tracking-[-0.05em] text-[color:var(--heading)] sm:text-5xl">{amount.toLocaleString()}</h2>
-          <span className={cx('text-sm font-black italic uppercase', tone.text)}>DH</span>
+          <span className={cx('text-sm font-black italic uppercase', tone.text)}>{currencyLabel}</span>
         </div>
 
         <div className="mx-auto mt-5 h-3 w-full max-w-[220px] overflow-hidden rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] lg:mx-0 dark:border-[color:var(--border)] dark:bg-[color:var(--surface-muted)]">

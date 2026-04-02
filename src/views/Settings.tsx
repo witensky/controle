@@ -17,6 +17,7 @@ import {
    normalizeResetDay,
    resolveFinanceResetDate,
 } from '../utils/financeReset';
+import { formatCurrencyAmount, getCurrencyLabel, persistCurrency, resolveCurrency, SUPPORTED_CURRENCIES } from '../utils/currency';
 import { exportHtmlToPdf } from '../utils/pdfExport';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
@@ -184,6 +185,9 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       autoLockDelay: 5, // minutes
       devMode: false,
       offlineCache: true,
+      finance: {
+         currency: resolveCurrency('DH'),
+      },
 
       // Finance (NEW)
       amci_recurrence: 'monthly' as 'monthly' | 'custom',
@@ -210,6 +214,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
          settings_config: profile.settings_config
       });
       localStore.set(LOCAL_KEYS.PROFILE, profile);
+      persistCurrency(profile?.settings_config?.finance?.currency);
    };
 
    const showSavedIndicator = () => {
@@ -370,6 +375,16 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
       setOptions(prev => ({ ...prev, [key]: value }));
    };
 
+   const updateFinanceCurrency = (value: string) => {
+      setOptions((prev) => ({
+         ...prev,
+         finance: {
+            ...(prev.finance || {}),
+            currency: resolveCurrency(value),
+         },
+      }));
+   };
+
    const handleRitualReminderToggle = async () => {
       const nextActive = !options.ritualReminders;
 
@@ -459,7 +474,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                title: transaction.title,
                category: transaction.category || transaction.type,
                date: transaction.date || '',
-               summary: `${transaction.type} • ${transaction.amount} DH`,
+               summary: `${transaction.type} • ${formatCurrencyAmount(transaction.amount, options.finance?.currency)}`,
                raw: transaction as unknown as Record<string, unknown>,
             })),
             ...snapshot.savings.map((saving) => ({
@@ -468,7 +483,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                title: saving.reason,
                category: saving.executed ? 'Executee' : 'Disponible',
                date: saving.date || saving.execution_date || '',
-               summary: `${saving.amount} DH`,
+               summary: formatCurrencyAmount(saving.amount, options.finance?.currency),
                raw: saving as unknown as Record<string, unknown>,
             })),
             ...snapshot.subjects.map((subject) => ({
@@ -878,13 +893,33 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                      <h4 className="text-[10px] font-black text-[color:var(--tone-success-text)] uppercase tracking-widest mb-2 border-b border-[color:var(--border)] pb-2">Gestion du budget</h4>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Budget mensuel (DH)</label>
+                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">
+                           Budget mensuel ({getCurrencyLabel(options.finance?.currency)})
+                        </label>
                         <input
                            type="number"
                            value={amciMonthly}
                            onChange={(e) => handleBudgetChange(e.target.value)}
                            className="ui-field w-full border rounded-xl p-4 text-[color:var(--tone-success-text)] font-black outline-none focus:border-[color:var(--success)]"
                         />
+                     </div>
+
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest italic ml-1">Devise globale</label>
+                        <select
+                           value={options.finance?.currency || 'DH'}
+                           onChange={(e) => updateFinanceCurrency(e.target.value)}
+                           className="ui-field w-full border rounded-xl p-4 font-bold outline-none focus:border-[color:var(--success)]"
+                        >
+                           {SUPPORTED_CURRENCIES.map((currency) => (
+                              <option key={currency.code} value={currency.code}>
+                                 {currency.label} - {currency.description}
+                              </option>
+                           ))}
+                        </select>
+                        <p className="text-[11px] leading-relaxed text-[color:var(--text-muted)]">
+                           Cette devise sera utilisée partout dans l’application, y compris les analyses et les exports.
+                        </p>
                      </div>
 
                      <div className="space-y-2">

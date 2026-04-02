@@ -16,6 +16,7 @@ import { generatePdfTemplate } from '../utils/reportPdfTemplate';
 import { formatWeeklySchedule } from '../utils/studyReminders';
 import { normalizeDateOnly } from '../utils/transactionDates';
 import { isPlannedProvision } from '../utils/financeProvisions';
+import { formatCurrencyAmount } from '../utils/currency';
 
 const isCompletedMission = (status: string) => {
   const normalized = String(status || '')
@@ -506,7 +507,7 @@ const Reports: React.FC = () => {
           <div className="glass flex flex-col gap-4 rounded-[2rem] border border-amber-500/15 bg-amber-500/[0.03] p-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.32em] text-amber-400">Dépenses futures synchronisées</p>
-            <h3 className="mt-2 text-2xl font-black italic text-[color:var(--text-primary)]">{futureExpenseStats.total.toLocaleString()} DH</h3>
+            <h3 className="mt-2 text-2xl font-black italic text-[color:var(--text-primary)]">{formatCurrencyAmount(futureExpenseStats.total)}</h3>
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--text-secondary)]">
               {futureExpenseStats.count > 0
                 ? `${futureExpenseStats.count} dépense${futureExpenseStats.count > 1 ? 's' : ''} planifiée${futureExpenseStats.count > 1 ? 's' : ''} encore à exécuter.`
@@ -576,7 +577,7 @@ const Reports: React.FC = () => {
             <h3 className="mb-5 flex items-center gap-3 text-xl font-black uppercase italic text-white sm:text-2xl"><Activity size={24} className="text-amber-500" /> Synthèse de la période</h3>
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-400">Lecture dynamique</p>
             <h4 className="mt-3 text-[1.85rem] font-black italic leading-[1.05] text-white sm:text-4xl">
-              {quickStats[0].val !== '0%' || quickStats[3].val !== '0 DH' ? 'Analyse alignée sur les données récentes' : 'Période encore trop vide pour une lecture riche'}
+              {quickStats[0].val !== '0%' || financeSummary.net !== 0 ? 'Analyse alignée sur les données récentes' : 'Période encore trop vide pour une lecture riche'}
             </h4>
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="rounded-[1.75rem] border border-white/8 bg-slate-950/35 p-5"><p className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-500">Execution</p><p className="mt-3 text-2xl font-black text-white">{quickStats[0].val}</p><p className="mt-2 text-sm text-slate-400">{quickStats[0].sub} objectifs completes sur {periodLabel}</p></div>

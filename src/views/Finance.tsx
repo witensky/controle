@@ -27,7 +27,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
 import { isPlannedProvision } from '../utils/financeProvisions';
-import { getCurrencyLabel, getStoredCurrency } from '../utils/currency';
+import { formatCurrencyAmount, getCurrencyLabel, getStoredCurrency, resolveCurrency } from '../utils/currency';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
 import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
@@ -114,6 +114,9 @@ const Finance: React.FC = () => {
       customDailyQuota: nextCustomDailyQuota,
     };
   }, [profileData]);
+  const activeCurrency = resolveCurrency(profileData?.settings_config?.finance?.currency ?? getStoredCurrency());
+  const currencyLabel = getCurrencyLabel(activeCurrency);
+  const formatMoney = (value: number | string | null | undefined) => formatCurrencyAmount(value, activeCurrency);
 
   // Detail Modals State
   const [showDailyExpensesDetail, setShowDailyExpensesDetail] = useState(false);
@@ -1128,7 +1131,7 @@ const Finance: React.FC = () => {
                   <h2 className="text-[2rem] font-black tracking-[-0.06em] text-white transition-colors sm:text-[2.35rem]">
                     {financialState.totalSavings.toLocaleString()}
                   </h2>
-                  <span className="pb-1 text-sm font-black uppercase italic text-emerald-300">DH</span>
+                  <span className="pb-1 text-sm font-black uppercase italic text-emerald-300">{currencyLabel}</span>
                 </div>
               </div>
 
@@ -1211,7 +1214,7 @@ const Finance: React.FC = () => {
                   <h4 className={`text-lg font-black uppercase italic tracking-tight ${s.executed ? 'text-[color:var(--text-muted)] line-through dark:text-slate-500' : 'text-[color:var(--heading)] dark:text-white'}`}>{s.reason}</h4>
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className={`text-2xl font-black italic ${s.executed ? 'text-[color:var(--tone-success-text)] dark:text-emerald-600' : 'text-[color:var(--tone-info-text)] dark:text-blue-500'}`}>{s.amount.toLocaleString()} DH</p>
+                    <p className={`text-2xl font-black italic ${s.executed ? 'text-[color:var(--tone-success-text)] dark:text-emerald-600' : 'text-[color:var(--tone-info-text)] dark:text-blue-500'}`}>{formatMoney(s.amount)}</p>
                     {!s.executed && (
                       <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-4 py-3 dark:border-white/5 dark:bg-slate-950/60">
                         <input
@@ -1335,10 +1338,10 @@ const Finance: React.FC = () => {
 
                 <div className="flex flex-wrap items-center justify-end gap-2 text-[9px] font-black uppercase tracking-[0.22em]">
                   <span className="rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] px-2.5 py-1 text-[color:var(--tone-warning-text)] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                    Base {totalBudget.toLocaleString()} DH
+                    Base {formatMoney(totalBudget)}
                   </span>
                   <span className="rounded-full border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] px-2.5 py-1 text-[color:var(--tone-success-text)] dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                    Alloc {localBudgetTotals.allocated.toLocaleString()} DH
+                    Alloc {formatMoney(localBudgetTotals.allocated)}
                   </span>
                 </div>
               </div>
@@ -1346,20 +1349,20 @@ const Finance: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="rounded-[1.25rem] border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
                   <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-danger-text)] dark:text-[color:var(--text-muted)]">Utilisé</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-danger-text)] dark:text-rose-400">{localBudgetTotals.spent.toLocaleString()} DH</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-danger-text)] dark:text-rose-400">{formatMoney(localBudgetTotals.spent)}</p>
                 </div>
                 <div className="rounded-[1.25rem] border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
                   <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-info-text)] dark:text-[color:var(--text-muted)]">Prévu</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-sky-300">{localBudgetTotals.planned.toLocaleString()} DH</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-sky-300">{formatMoney(localBudgetTotals.planned)}</p>
                 </div>
                 <div className="rounded-[1.25rem] border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
                   <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-success-text)] dark:text-[color:var(--text-muted)]">Restant</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-success-text)] dark:text-emerald-400">{localBudgetTotals.remainingNow.toLocaleString()} DH</p>
+                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-success-text)] dark:text-emerald-400">{formatMoney(localBudgetTotals.remainingNow)}</p>
                 </div>
                 <div className="rounded-[1.25rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
                   <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">Après prévu</p>
                   <p className={`mt-2 text-lg font-black italic ${localBudgetTotals.remainingAfterPlanned < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : localBudgetTotals.remainingAfterPlanned === 0 ? 'text-[color:var(--tone-warning-text)] dark:text-amber-300' : 'text-[color:var(--tone-success-text)] dark:text-emerald-400'}`}>
-                    {localBudgetTotals.remainingAfterPlanned.toLocaleString()} DH
+                    {formatMoney(localBudgetTotals.remainingAfterPlanned)}
                   </p>
                 </div>
               </div>
@@ -1420,7 +1423,7 @@ const Finance: React.FC = () => {
                     </span>
                     {b.future > 0 ? (
                       <span className="rounded-full border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-2.5 py-1 text-[color:var(--tone-info-text)] dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
-                        Prévu {b.future.toLocaleString()} DH
+                        Prévu {formatMoney(b.future)}
                       </span>
                     ) : null}
                   </div>
@@ -1431,7 +1434,7 @@ const Finance: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
                     <span>Budget restant</span>
-                    <span className={`font-black italic ${remainingTextClass}`}>{b.remaining.toLocaleString()} DH</span>
+                    <span className={`font-black italic ${remainingTextClass}`}>{formatMoney(b.remaining)}</span>
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-[color:var(--tone-warning-surface)] ring-1 ring-inset ring-[color:var(--tone-warning-border)] dark:bg-white/[0.06] dark:ring-white/5">
                     <div
@@ -1440,12 +1443,12 @@ const Finance: React.FC = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                    <span>Utilisé {b.spent.toLocaleString()} DH</span>
+                    <span>Utilisé {formatMoney(b.spent)}</span>
                     <span className="text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-secondary)]">{b.limit > 0 ? `${Math.round(Math.max(0, Math.min(100, b.remainingPercent)))}% restant` : 'Aucune limite'}</span>
                   </div>
                 </div>
                 <div className="flex justify-end text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                  <span className="font-black italic text-[color:var(--heading)] dark:text-white">{b.limit.toLocaleString()} DH</span>
+                  <span className="font-black italic text-[color:var(--heading)] dark:text-white">{formatMoney(b.limit)}</span>
                 </div>
                 <input
                   type="number"
@@ -1540,7 +1543,7 @@ const Finance: React.FC = () => {
               </div>
               <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
                 <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Allocation moyenne</p>
-                <p className="mt-2 text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{forecastSummary.averageProvision.toLocaleString()} DH</p>
+                <p className="mt-2 text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{formatMoney(forecastSummary.averageProvision)}</p>
                 <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">{forecastSummary.categoriesImpacted} catégorie(s) impactée(s)</p>
               </div>
             </div>
@@ -1553,7 +1556,7 @@ const Finance: React.FC = () => {
                 </h3>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <div className="px-6 py-2 bg-slate-950 rounded-full border border-white/5 text-[10px] font-black text-emerald-500 italic">
-                    SOLDE PROJETÉ : {stats.projectedRemaining.toLocaleString()} DH
+                    SOLDE PROJETÉ : {formatMoney(stats.projectedRemaining)}
                   </div>
                   <button
                     type="button"
@@ -1596,11 +1599,11 @@ const Finance: React.FC = () => {
                             <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[#E9F0EF] dark:text-slate-400">{t.category}</p>
                             {categoryProjection !== null ? (
                               <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : 'text-[#E9F0EF] dark:text-slate-500'}`}>
-                                Budget après provisions: {categoryProjection.toLocaleString()} DH
+                                Budget après provisions: {formatMoney(categoryProjection)}
                               </p>
                             ) : null}
                           </div>
-                          <p className="text-lg font-black italic text-[color:var(--accent)] dark:text-blue-500">-{t.amount.toLocaleString()} DH</p>
+                          <p className="text-lg font-black italic text-[color:var(--accent)] dark:text-blue-500">-{formatMoney(t.amount)}</p>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={(event) => { event.stopPropagation(); handleExecuteTransaction(t.id); }} className="flex-1 rounded-2xl bg-emerald-500/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-emerald-400">Exécuter</button>
@@ -1645,9 +1648,9 @@ const Finance: React.FC = () => {
                             <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
                             <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-400">{t.category}</td>
                             <td className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection !== null && categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : 'text-[color:var(--tone-warning-text)] dark:text-slate-500'}`}>
-                              {categoryProjection !== null ? `${categoryProjection.toLocaleString()} DH restants` : 'Hors budget'}
+                              {categoryProjection !== null ? `${formatMoney(categoryProjection)} restants` : 'Hors budget'}
                             </td>
-                            <td className="px-8 py-6 text-right text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-blue-500">-{t.amount.toLocaleString()} DH</td>
+                            <td className="px-8 py-6 text-right text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-blue-500">-{formatMoney(t.amount)}</td>
                             <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
                               <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-xl p-2 text-[color:var(--tone-warning-text)] transition-colors hover:text-[color:var(--heading)] dark:text-slate-500 dark:hover:text-white"><Pencil size={16} /></button>
                               <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-xl p-2 text-[color:var(--tone-danger-text)] transition-colors hover:text-[color:var(--danger)] dark:text-slate-500 dark:hover:text-rose-500"><Trash2 size={16} /></button>
@@ -1747,7 +1750,7 @@ const Finance: React.FC = () => {
                           <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</p>
                         </div>
                         <p className={`text-lg font-black italic ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
-                          {t.type === 'deposit' ? '+' : '-'}{t.amount.toLocaleString()} DH
+                          {t.type === 'deposit' ? '+' : '-'}{formatMoney(t.amount)}
                         </p>
                       </div>
                       <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.ghostButton, 'w-full rounded-2xl border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)]')}>Supprimer</button>
@@ -1773,7 +1776,7 @@ const Finance: React.FC = () => {
                           <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
                           <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</td>
                           <td className={`px-8 py-6 text-right font-black italic text-lg ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
-                            {t.type === 'deposit' ? '+' : '-'}{t.amount.toLocaleString()} DH
+                            {t.type === 'deposit' ? '+' : '-'}{formatMoney(t.amount)}
                           </td>
                           <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
                             <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.actionIcon, toneClassNames.danger.text)}><Trash2 size={16} /></button>
@@ -1819,7 +1822,7 @@ const Finance: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`0.00 ${getCurrencyLabel(getStoredCurrency())}`} className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`0.00 ${currencyLabel}`} className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
             <input id="finance-transaction-title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TITRE DE L'OPÉRATION" className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-sm font-bold uppercase tracking-widest outline-none transition-all focus:border-amber-500/30" />
           </div>
 

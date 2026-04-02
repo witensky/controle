@@ -13,6 +13,7 @@ import { Transaction } from '../../features/finance/types';
 import { isPlannedProvision } from '../../utils/financeProvisions';
 import { cx, uiRecipes } from '../../theme/recipes';
 import { toneClassNames } from '../../theme/tokens';
+import { getCurrencyLabel, getStoredCurrency } from '../../utils/currency';
 
 interface TransactionDetailModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   const isExecutedProvision = !isDeposit && transaction.planned === false && Boolean(transaction.planned_date);
   const badgeTone = isDeposit ? toneClassNames.success.chip : toneClassNames.danger.chip;
   const amountTone = isDeposit ? toneClassNames.success.text : toneClassNames.danger.text;
+  const currencyLabel = getCurrencyLabel(getStoredCurrency());
 
   return (
     <ModalShell
@@ -85,7 +87,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               {isDeposit ? '+' : '-'}
               {transaction.amount.toLocaleString()}
             </p>
-            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">DH</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">{currencyLabel}</span>
           </div>
         </div>
       </div>

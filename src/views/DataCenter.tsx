@@ -6,6 +6,7 @@ import { offlineRepository } from '../data/offlineRepository';
 import { AppView } from '../types';
 import { navigateBackWithFallback } from '../router/viewRouter';
 import { exportHtmlToPdf } from '../utils/pdfExport';
+import { formatCurrencyAmount, getStoredCurrency } from '../utils/currency';
 
 type DataCollectionKey =
    | 'missions'
@@ -84,6 +85,7 @@ interface DataCenterProps {
 }
 
 const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
+   const activeCurrency = getStoredCurrency();
    const queryClient = useQueryClient();
    const { showAlert, showConfirm } = useAppDialog();
    const [loading, setLoading] = useState(true);
@@ -114,7 +116,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                title: transaction.title,
                category: transaction.category || transaction.type,
                date: transaction.date || '',
-               summary: `${transaction.type} | ${transaction.amount} DH`,
+               summary: `${transaction.type} | ${formatCurrencyAmount(transaction.amount, activeCurrency)}`,
                raw: transaction as unknown as Record<string, unknown>,
             })),
             ...snapshot.savings.map((saving) => ({
@@ -123,7 +125,7 @@ const DataCenter: React.FC<DataCenterProps> = ({ onNavigate }) => {
                title: saving.reason,
                category: saving.executed ? 'Executee' : 'Disponible',
                date: saving.date || saving.execution_date || '',
-               summary: `${saving.amount} DH`,
+               summary: formatCurrencyAmount(saving.amount, activeCurrency),
                raw: saving as unknown as Record<string, unknown>,
             })),
             ...snapshot.subjects.map((subject) => ({

@@ -3,6 +3,7 @@ import { Sparkles, Clock, Activity, Brain, Coffee, ArrowUpRight, BookOpen, Langu
 import { AppView, LawSubject } from '../../types';
 import { QuickActionType, dispatchQuickAction } from '../../lib/quickActions';
 import { localStore, LOCAL_KEYS } from '../../lib/localStorage';
+import { formatCurrencyAmount, getStoredCurrency } from '../../utils/currency';
 
 type PlannerSuggestion = {
     id: string;
@@ -41,6 +42,7 @@ const DailyPlanner: React.FC<DailyPlannerProps> = ({
     subjects,
     learnedWordsCount,
 }) => {
+    const activeCurrency = getStoredCurrency();
     const currentHour = new Date().getHours();
     const [dismissedTipState, setDismissedTipState] = useState<DismissedTipState | null>(() => {
         const stored = localStore.get<DismissedTipState | string>(LOCAL_KEYS.DASHBOARD_DISMISSED_TIP);
@@ -129,7 +131,7 @@ const DailyPlanner: React.FC<DailyPlannerProps> = ({
                 id: 'finance-review',
                 title: remainingRatio < 0.35 ? 'Ajuster budget et depenses' : 'Gestion budget et finances',
                 category: 'Finance',
-                type: `Reste ${Math.round(financeRemaining)} DH`,
+                type: `Reste ${formatCurrencyAmount(Math.round(financeRemaining), activeCurrency)}`,
                 icon: Activity,
                 color: 'text-amber-500',
                 view: 'FINANCE',

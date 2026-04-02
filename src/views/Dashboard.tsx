@@ -26,6 +26,7 @@ import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { resolveProfileRankTitle } from '../utils/profileRank';
 import { isPlannedProvision } from '../utils/financeProvisions';
 import { formatChartCurrency } from '../utils/chartHelpers';
+import { formatCurrencyAmount, getCurrencyLabel, resolveCurrency } from '../utils/currency';
 
 interface DashboardProps {
   onNavigate: (view: AppView) => void;
@@ -132,6 +133,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const learnedWords = learnedWordsRaw || [];
   const studyDomainLabel = resolveStudyDomainLabel(profile?.settings_config?.study?.primaryDomain);
   const showDashboardJournal = profile?.settings_config?.terminalLogging !== false;
+  const activeCurrency = resolveCurrency(profile?.settings_config?.finance?.currency);
+  const currencyLabel = getCurrencyLabel(activeCurrency);
 
   const loading = !profile || !transactionsRaw || !missionsRaw || !subjectsRaw;
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -894,7 +897,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                           <p className="font-bold text-[color:var(--text-primary)] text-sm">{t.title}</p>
                           <p className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-wider">{t.category}</p>
                         </div>
-                        <span className="font-black text-rose-600 dark:text-rose-500 italic">-{t.amount} DH</span>
+                        <span className="font-black text-rose-600 dark:text-rose-500 italic">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
                       </div>
                     ))}
                   </div>
@@ -1022,7 +1025,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                             </div>
                           </div>
                         </div>
-                        <span className="text-xl font-black italic text-amber-500">-{t.amount.toLocaleString()} DH</span>
+                        <span className="text-xl font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
                       </div>
                     ))
                   ) : (
@@ -1045,7 +1048,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                             <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1">{t.category} — {new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
                           </div>
                         </div>
-                        <span className="text-[1.55rem] font-black italic text-amber-500">-{t.amount.toLocaleString()} DH</span>
+                        <span className="text-[1.55rem] font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
                       </div>
                     ))
                   ) : (
@@ -1085,18 +1088,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                         <DetailValueCard
                           eyebrow="Budget actif"
-                          value={`${financeTotals.totalAvailable.toLocaleString()} DH`}
+                          value={formatCurrencyAmount(financeTotals.totalAvailable, activeCurrency)}
                           helper="Montant disponible au depart"
                         />
                         <DetailValueCard
                           eyebrow="Consomme"
-                          value={`-${securitySnapshot.consumedPast.toLocaleString()} DH`}
+                          value={`-${formatCurrencyAmount(securitySnapshot.consumedPast, activeCurrency)}`}
                           tone="negative"
                           helper="Charges deja enregistrees"
                         />
                         <DetailValueCard
                           eyebrow="A venir"
-                          value={`-${stats.futureTotal.toLocaleString()} DH`}
+                          value={`-${formatCurrencyAmount(stats.futureTotal, activeCurrency)}`}
                           tone="warning"
                           helper={`${stats.futureCount} charge${stats.futureCount > 1 ? 's' : ''} planifiee${stats.futureCount > 1 ? 's' : ''}`}
                         />
@@ -1106,7 +1109,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         <div className="space-y-2.5">
                           <DetailSummaryRow
                             label="Solde actuel"
-                            value={`${financeTotals.currentBalance.toLocaleString()} DH`}
+                            value={formatCurrencyAmount(financeTotals.currentBalance, activeCurrency)}
                           />
                           <div className={`overflow-hidden rounded-[1.2rem] border p-3.5 transition-all duration-300 active:scale-[0.99] sm:hover:-translate-y-0.5 ${securityToneMeta.summaryClass}`}>
                             <div className="flex items-end justify-between gap-4">
@@ -1126,7 +1129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 }`}>
                                   {securitySnapshot.finalBalance.toLocaleString()}
                                 </p>
-                                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-500">DH</span>
+                                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-500">{currencyLabel}</span>
                               </div>
                             </div>
                           </div>
@@ -1145,25 +1148,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       <div className="space-y-2.5">
                         <div className="flex justify-between items-center text-sm gap-3">
                           <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">Budget AMCI</span>
-                          <span className="text-white font-black">{userProfile.budget.toLocaleString()} DH</span>
+                          <span className="text-white font-black">{formatCurrencyAmount(userProfile.budget, activeCurrency)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm gap-3">
                           <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">Consommé (Passé)</span>
-                          <span className="text-rose-500 font-black">-{(userProfile.budget - stats.financeRemaining).toLocaleString()} DH</span>
+                          <span className="text-rose-500 font-black">-{formatCurrencyAmount(userProfile.budget - stats.financeRemaining, activeCurrency)}</span>
                         </div>
                         <div className="h-px bg-white/5 my-1" />
                         <div className="flex justify-between items-center text-sm font-outfit gap-3">
                           <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">SOLDE ESTIMÉ</span>
-                          <span className="text-white font-black">{stats.financeRemaining.toLocaleString()} DH</span>
+                          <span className="text-white font-black">{formatCurrencyAmount(stats.financeRemaining, activeCurrency)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm font-outfit gap-3">
                           <span className="text-amber-500 font-bold uppercase italic font-outfit text-xs">Dépenses Planifiées</span>
-                          <span className="text-amber-500 font-black">-{stats.futureTotal.toLocaleString()} DH</span>
+                          <span className="text-amber-500 font-black">-{formatCurrencyAmount(stats.futureTotal, activeCurrency)}</span>
                         </div>
                         <div className="h-px bg-white/10 my-2" />
                         <div className="rounded-[1.5rem] border border-emerald-500/10 bg-emerald-500/[0.04] px-4 py-3.5 flex items-center justify-between gap-4">
                           <span className="text-emerald-500 font-black uppercase italic text-base tracking-tighter font-outfit">SOLDE FINAL</span>
-                          <span className="text-emerald-500 font-black text-2xl md:text-[2rem] italic tracking-tighter font-outfit">{stats.projectedRemaining.toLocaleString()} DH</span>
+                          <span className="text-emerald-500 font-black text-2xl md:text-[2rem] italic tracking-tighter font-outfit">{formatCurrencyAmount(stats.projectedRemaining, activeCurrency)}</span>
                         </div>
                       </div>
                     </div>
