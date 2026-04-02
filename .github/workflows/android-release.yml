@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,11 +27,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build web (Vite)
+      - name: Build web
         run: npm run build
 
       - name: Sync Capacitor
@@ -39,6 +41,7 @@ jobs:
       - name: Decode keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release-keystore.jks
+          test -f release-keystore.jks
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -48,14 +51,15 @@ jobs:
           cd android
           ./gradlew assembleRelease \
             -PMYAPP_UPLOAD_STORE_FILE=../release-keystore.jks \
-            -PMYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-            -PMYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }} \
-            -PMYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+            -PMYAPP_UPLOAD_STORE_PASSWORD="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -PMYAPP_UPLOAD_KEY_ALIAS="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -PMYAPP_UPLOAD_KEY_PASSWORD="${{ secrets.ANDROID_KEY_PASSWORD }}"
 
       - name: Copy APK
         run: |
-          mkdir output
+          mkdir -p output
           cp android/app/build/outputs/apk/release/app-release.apk output/myflow-release.apk
+          test -f output/myflow-release.apk
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
@@ -63,5 +67,6 @@ jobs:
           tag_name: latest
           name: Latest APK
           files: output/myflow-release.apk
+          replace_assets: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
