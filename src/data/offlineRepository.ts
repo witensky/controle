@@ -132,6 +132,9 @@ const DEFAULT_SETTINGS = {
   autoLockDelay: 5,
   devMode: false,
   offlineCache: true,
+  finance: {
+    currency: 'DH' as const,
+  },
   amci_recurrence: 'monthly' as const,
   amci_day_of_month: 10,
   daily_quota_override: null as number | null,
@@ -254,6 +257,17 @@ async function seedDefaults(): Promise<void> {
       avatar_url: '',
       settings_config: { ...DEFAULT_SETTINGS },
       created_at: nowIso(),
+    });
+  } else if (!profile.settings_config?.finance?.currency) {
+    await putRecord<Profile>('profiles', {
+      ...profile,
+      settings_config: {
+        ...(profile.settings_config ?? {}),
+        finance: {
+          ...(profile.settings_config?.finance ?? {}),
+          currency: 'DH',
+        },
+      },
     });
   }
 

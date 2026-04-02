@@ -5,6 +5,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import useChartContainerSize from '../../hooks/useChartContainerSize';
 import { chartToneByIntent, toneClassNames } from '../../theme/tokens';
 import { cx, uiRecipes } from '../../theme/recipes';
+import { formatChartCurrency } from '../../utils/chartHelpers';
 
 type SecurityTone = 'safe' | 'warning' | 'critical';
 
@@ -21,7 +22,7 @@ interface SecurityDetailModalProps {
   tone: SecurityTone;
 }
 
-const formatDh = (value: number) => `${Math.round(value).toLocaleString()} DH`;
+const formatDh = (value: number) => formatChartCurrency(Math.round(value));
 
 const toneMap = {
   safe: { badge: 'Zone saine', tone: toneClassNames.success, chart: chartToneByIntent.success },

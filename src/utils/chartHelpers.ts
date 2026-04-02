@@ -1,3 +1,4 @@
+import { getStoredCurrency, getCurrencyLabel } from './currency';
 export type ChartRecord = Record<string, string | number | null | undefined>;
 export type ChartPeriod = 'day' | 'week' | 'month';
 export const PRIMARY_CHART_AXIS_ID = 'primary-axis';
@@ -25,9 +26,9 @@ export const formatChartNumber = (value: unknown, options?: Intl.NumberFormatOpt
   }).format(numericValue);
 };
 
-export const formatChartCurrency = (value: unknown, currency = 'DH') => {
+export const formatChartCurrency = (value: unknown, currency = getStoredCurrency()) => {
   const formatted = formatChartNumber(value);
-  return formatted === '--' ? formatted : `${formatted} ${currency}`;
+  return formatted === '--' ? formatted : `${formatted} ${getCurrencyLabel(currency)}`;
 };
 
 export const createGradientId = (prefix: string, key: string) =>

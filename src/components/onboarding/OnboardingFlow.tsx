@@ -15,6 +15,7 @@ import { offlineRepository } from '../../data/offlineRepository';
 import { useProfile } from '../../features/profile/hooks/useProfile';
 import { cx, uiRecipes } from '../../theme/recipes';
 import { toneClassNames } from '../../theme/tokens';
+import { DEFAULT_CURRENCY, persistCurrency, resolveCurrency, SUPPORTED_CURRENCIES, type SupportedCurrencyCode } from '../../utils/currency';
 
 type OnboardingFlowProps = {
   onComplete: () => void;
@@ -25,6 +26,7 @@ type OnboardingForm = {
   email: string;
   phone: string;
   location: string;
+  currency: SupportedCurrencyCode;
   currentBalance: string;
   dailyQuota: string;
   studyDomain: string;
@@ -91,6 +93,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     email: '',
     phone: '',
     location: '',
+    currency: DEFAULT_CURRENCY,
     currentBalance: '',
     dailyQuota: '',
     studyDomain: '',
@@ -108,6 +111,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       email: previous.email || normalizeOnboardingValue(profile.settings_config?.contact?.email, DEFAULT_ONBOARDING_EMAILS),
       phone: previous.phone || normalizeOnboardingValue(profile.settings_config?.contact?.phone, DEFAULT_ONBOARDING_PHONES),
       location: previous.location || normalizeOnboardingValue(profile.location, DEFAULT_ONBOARDING_LOCATIONS),
+      currency:
+        previous.currency !== DEFAULT_CURRENCY || !profile.settings_config?.finance?.currency
+          ? previous.currency
+          : resolveCurrency(profile.settings_config?.finance?.currency),
       currentBalance: previous.currentBalance || normalizePositiveNumberInput(profile.amci_monthly_amount),
       dailyQuota: previous.dailyQuota || normalizePositiveNumberInput(profile.settings_config?.daily_quota_override),
       studyDomain: previous.studyDomain || profile.settings_config?.study?.primaryDomain || '',
@@ -161,6 +168,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           completed_at: new Date().toISOString(),
         },
         finance: {
+          currency: resolveCurrency(form.currency),
           currentBalance: normalizedBudget,
         },
         daily_quota_override: normalizedDailyQuota,
@@ -171,6 +179,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         },
       });
 
+      persistCurrency(form.currency);
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
       onComplete();
     } catch (error) {
@@ -276,6 +285,23 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   <div className="grid grid-cols-1 gap-4">
                     <label className="block">
                       <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
+                        <BadgeDollarSign size={12} /> Devise principale
+                      </span>
+                      <select
+                        value={form.currency}
+                        onChange={(event) => handleFieldChange('currency', resolveCurrency(event.target.value))}
+                        className={inputClassName}
+                      >
+                        {SUPPORTED_CURRENCIES.map((currency) => (
+                          <option key={currency.code} value={currency.code}>
+                            {currency.label} ({currency.description})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
                         <BadgeDollarSign size={12} /> Solde actuel / budget de depart
                       </span>
                       <input
@@ -283,7 +309,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                         min="0"
                         value={form.currentBalance}
                         onChange={(event) => handleFieldChange('currentBalance', event.target.value)}
-                        placeholder="Ex: 3500"
+                        placeholder={`Ex: 3500 ${form.currency === 'FRANC' ? 'Franc' : form.currency}`}
                         className={inputClassName}
                       />
                     </label>
@@ -297,7 +323,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                         min="0"
                         value={form.dailyQuota}
                         onChange={(event) => handleFieldChange('dailyQuota', event.target.value)}
-                        placeholder="Ex: 150"
+                        placeholder={`Ex: 150 ${form.currency === 'FRANC' ? 'Franc' : form.currency}`}
                         className={inputClassName}
                       />
                     </label>

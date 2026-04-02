@@ -35,5 +35,9 @@ export interface FinanceProfile {
         amci_recurrence?: 'monthly' | 'custom';
         amci_day_of_month?: number;
         daily_quota_override?: number | null;
+        finance?: {
+            currency?: 'USD' | 'DH' | 'HTG' | 'EUR' | 'FRANC';
+            currentBalance?: number;
+        };
     };
 }
