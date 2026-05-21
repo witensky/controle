@@ -30,6 +30,7 @@ import { isPlannedProvision } from '../utils/financeProvisions';
 import { formatCurrencyAmount, getCurrencyLabel, getStoredCurrency, resolveCurrency } from '../utils/currency';
 
 import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
+import { useTransactionForm } from '../features/finance/hooks/useTransactionForm';
 import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
 import { formatChartCurrency } from '../utils/chartHelpers';
 

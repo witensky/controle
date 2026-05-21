@@ -6,6 +6,7 @@ import AppNavigation from './components/navigation/AppNavigation';
 import QuickActionsFab from './components/navigation/QuickActionsFab';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import AppReminderCenter from './components/common/AppReminderCenter';
+import AppErrorBoundary from './components/common/AppErrorBoundary';
 import { AppDialogProvider } from './components/common/AppDialogProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 import DailyRoutineScheduler from './components/settings/DailyRoutineScheduler';
@@ -245,7 +246,9 @@ const App: React.FC = () => {
                       transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                       className="motion-reduce:transform-none"
                     >
-                      <AppRouter view={view} onNavigate={handleNavigate} />
+                      <AppErrorBoundary>
+                        <AppRouter view={view} onNavigate={handleNavigate} />
+                      </AppErrorBoundary>
                     </motion.div>
                   </AnimatePresence>
                 </div>

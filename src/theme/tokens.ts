@@ -18,6 +18,16 @@ export const chartToneByIntent = {
   success: 'var(--chart-6)',
 } as const;
 
+export const radius = {
+  sm: 'rounded-lg',
+  md: 'rounded-[0.875rem]',
+  lg: 'rounded-[1.25rem]',
+  xl: 'rounded-[1.75rem]',
+  full: 'rounded-full',
+} as const;
+
+export type RadiusKey = keyof typeof radius;
+
 export const toneClassNames: Record<
   ToneKey,
   {
