@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Wallet, Target, Zap, Loader2, Shield, Trophy, Activity, BookOpen, Flame, BrainCircuit,
-  Calendar as CalendarIcon, ChevronLeft, ChevronRight, CheckCircle2, Clock, TrendingDown, Sparkles, Brain, ArrowUpRight, Plus, StickyNote, X
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, CheckCircle2, Clock, TrendingDown, Sparkles, Brain, ArrowUpRight, ArrowRight, Plus, StickyNote, X
 } from 'lucide-react';
 import ActivityCharts from '../components/dashboard/ActivityCharts';
 import DashboardCard from '../components/dashboard/DashboardCard';
@@ -751,16 +751,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       {/* OLD CHARTS SECTION - For context or removal later */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* DEPENSES PAR CATEGORIE (STACKED) */}
-        <div className="lg:col-span-8 glass rounded-[2.5rem] p-8">
+        <div className="lg:col-span-8 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm sm:p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[9px] font-black text-[color:var(--text-primary)] uppercase tracking-widest flex items-center gap-2">
+            <h3 className="flex items-center gap-2 text-xs font-semibold text-[color:var(--text-secondary)]">
               <Wallet size={14} className="text-amber-500" /> Repartition categorielle (7J)
             </h3>
           </div>
-          <div className="h-[280px] w-full relative">
+          <div className="h-[240px] w-full relative">
             {transactions.filter((t) => t.type === 'expense' && !isPlannedProvision(t)).length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <p className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest bg-[color:var(--surface-2)] px-4 py-2 rounded-full border border-[color:var(--border)] backdrop-blur-sm">En attente de données financières...</p>
+                <p className="text-xs text-[color:var(--text-muted)]">En attente de données financières...</p>
               </div>
             )}
             <ChartErrorBoundary fallbackTitle="Repartition indisponible" minHeightClassName="min-h-[200px]">
@@ -1022,7 +1022,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {activeDetail && activeDetail !== 'SECURITE' && (
         <div className={`fixed inset-0 flex items-center justify-center bg-[color:rgba(247,249,252,0.88)] backdrop-blur-xl animate-in fade-in duration-200 ${activeDetail === 'SECURITE' ? 'z-[320] p-0 sm:p-4' : 'z-[320] p-4'}`}>
-          <div className={`relative flex w-full flex-col overflow-hidden border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_24px_70px_rgba(15,23,42,0.12)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${activeDetail === 'SECURITE' ? 'min-h-[100dvh] rounded-none border-0 px-4 pb-5 pt-4 sm:min-h-0 sm:max-w-md sm:rounded-[1.5rem] sm:border sm:p-5' : 'max-w-[28rem] rounded-[2rem] px-6 pb-6 pt-7 max-h-[85vh] sm:px-7 sm:pb-7 sm:pt-8'}`}>
+          <div className={`relative flex w-full flex-col overflow-hidden border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_24px_70px_rgba(15,23,42,0.12)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${activeDetail === 'SECURITE' ? 'min-h-[100dvh] rounded-none border-0 px-4 pb-5 pt-4 sm:min-h-0 sm:max-w-md sm:rounded-[1.5rem] sm:border sm:p-5' : 'max-w-[28rem] rounded-2xl px-5 pb-5 pt-6 max-h-[85vh] sm:px-6 sm:pb-6'}`}>
             {activeDetail === 'SECURITE' ? (
               <button
                 onClick={() => setActiveDetail(null)}
@@ -1035,8 +1035,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             )}
 
             <div className={activeDetail === 'SECURITE' ? 'mb-4' : 'mb-6 space-y-2'}>
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Détails</p>
-              <h2 className="pr-12 text-[1.9rem] leading-[0.95] font-black italic uppercase tracking-[-0.04em] text-[color:var(--text-primary)] md:text-[2.2rem]">
+              <p className="mb-1.5 text-xs font-semibold text-[color:var(--primary)]">Détails</p>
+              <h2 className="pr-12 text-xl leading-tight font-black italic uppercase tracking-tight text-[color:var(--text-primary)]">
                 {activeDetail === 'DEPENSES_JOUR' && "Dépenses du Jour"}
                 {activeDetail === 'PROVISIONS' && "Dépenses à Venir"}
                 {activeDetail === 'SECURITE' && "Solde Disponible"}
@@ -1069,7 +1069,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 italic text-center py-10">Aucune dépense enregistrée aujourd'hui.</p>
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
+                      <TrendingDown size={26} className="mb-3 text-[color:var(--text-muted)]" />
+                      <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense aujourd'hui</p>
+                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les dépenses du jour apparaîtront ici.</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -1092,7 +1096,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500 italic text-center py-10">Aucune provision future détectée.</p>
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
+                      <Wallet size={26} className="mb-3 text-[color:var(--text-muted)]" />
+                      <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense à venir</p>
+                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les provisions futures apparaîtront ici.</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -1242,13 +1250,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   onNavigate(target as AppView);
                   setActiveDetail(null);
                 }}
-                className={`w-full rounded-[1.25rem] py-4 font-black uppercase text-[11px] tracking-[0.22em] transition-all active:scale-[0.99] shadow-[0_14px_30px_rgba(17,24,39,0.18)] ${
+                className={`flex w-full items-center justify-center gap-2 rounded-[1rem] border px-4 py-3.5 text-xs font-semibold transition-all active:scale-[0.99] ${
                   activeDetail === 'SECURITE'
-                    ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-emerald-500/20'
-                    : 'bg-[color:var(--text-primary)] text-[color:var(--text-on-accent)] hover:bg-[color:var(--text-secondary)]'
+                    ? 'border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] hover:bg-[color:var(--surface-muted)]'
+                    : 'border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-primary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]'
                 }`}
               >
                 Ouvrir module complet
+                <ArrowRight size={15} />
               </button>
             </div>
           </div>

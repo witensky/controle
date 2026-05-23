@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, ChevronLeft, Clock3, Shield, TrendingDown, Wallet } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Clock3, Shield, TrendingDown, Wallet } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import useChartContainerSize from '../../hooks/useChartContainerSize';
 import { chartToneByIntent, toneClassNames } from '../../theme/tokens';
@@ -76,8 +76,8 @@ const SecurityDetailModal: React.FC<SecurityDetailModalProps> = ({
                   <ChevronLeft size={20} />
                 </button>
                 <div className="min-w-0 flex-1 pt-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--tone-warning-text)]">Details</p>
-                  <h2 className="mt-1 text-[2rem] font-black uppercase italic leading-[0.92] tracking-[-0.06em] text-[color:var(--heading)] font-outfit">
+                  <p className="text-xs font-semibold text-[color:var(--primary)]">Details</p>
+                  <h2 className="mt-1 text-xl font-black uppercase italic leading-tight tracking-tight text-[color:var(--heading)] font-outfit">
                     Solde disponible
                   </h2>
                 </div>
@@ -190,9 +190,9 @@ const SecurityDetailModal: React.FC<SecurityDetailModalProps> = ({
               </div>
 
               <div className="mt-4 border-t border-[color:var(--border)] pt-4">
-                <button onClick={onOpenModule} className={cx(uiRecipes.primaryButton, 'flex w-full items-center justify-center gap-2 rounded-[1rem] px-4 py-3.5')}>
+                <button onClick={onOpenModule} className="flex w-full items-center justify-center gap-2 rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-3.5 text-xs font-semibold text-[color:var(--text-primary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]">
                   Ouvrir module complet
-                  <ArrowUpRight size={15} />
+                  <ArrowRight size={15} />
                 </button>
               </div>
             </div>

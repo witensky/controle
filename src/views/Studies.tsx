@@ -300,10 +300,10 @@ const Studies: React.FC = () => {
             >
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tight text-[color:var(--text-primary)]">
-                    Paramètres du <span className="text-amber-500">module</span>
+                  <p className="mb-1.5 text-[10px] font-semibold text-[color:var(--text-muted)]">Cours, rappels et focus de revision</p>
+                  <h3 className="text-xl font-black uppercase italic tracking-tight text-[color:var(--text-primary)]">
+                    Paramètres du module
                   </h3>
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Cours, rappels et focus de révision</p>
                 </div>
                 <button
                   onClick={() => { setIsModalOpen(false); resetForm(); }}
@@ -315,59 +315,59 @@ const Studies: React.FC = () => {
 
               <div className="space-y-5">
                 <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                  <label className={uiRecipes.fieldLabel}>Nom du module</label>
+                  <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Nom du module</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(event) => setFormName(event.target.value)}
                     placeholder="Ex: module principal"
-                    className={cx(uiRecipes.field, 'rounded-2xl px-6 py-5 text-sm font-bold')}
+                    className={cx(uiRecipes.field, 'rounded-2xl px-4 py-3.5 text-sm font-semibold')}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                    <label className={uiRecipes.fieldLabel}>Semestre</label>
+                    <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Semestre</label>
                     <select
                       value={formSemester}
                       onChange={(event) => setFormSemester(event.target.value)}
-                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[10px] font-black uppercase')}
+                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-3.5 text-sm font-semibold')}
                     >
                       {['S1', 'S2', 'S3', 'S4', 'S5', 'S6'].map((semester) => <option key={semester} value={semester}>{semester}</option>)}
                     </select>
                   </div>
 
                   <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Crédits ECTS</label>
+                    <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Crédits ECTS</label>
                     <input
                       type="number"
                       value={formEcts}
                       onChange={(event) => setFormEcts(Number(event.target.value))}
-                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-4 text-[11px] font-black')}
+                      className={cx(uiRecipes.field, 'rounded-2xl px-4 py-3.5 text-sm font-semibold')}
                     />
                   </div>
                 </div>
 
                 <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Professeur référent</label>
+                  <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Professeur référent</label>
                   <input
                     type="text"
                     value={formProf}
                     onChange={(event) => setFormProf(event.target.value)}
                     placeholder="Pr. Dupont"
-                    className={cx(uiRecipes.field, 'rounded-2xl px-6 py-4 text-sm font-bold')}
+                    className={cx(uiRecipes.field, 'rounded-2xl px-4 py-3.5 text-sm font-semibold')}
                   />
                 </div>
 
                 <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Statut</label>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Statut</label>
+                  <div className="flex flex-wrap gap-2">
                     {STATUS_OPTIONS.map((status) => (
                       <button
                         key={status.value}
                         type="button"
                         onClick={() => setFormStatus(status.value)}
-                        className={`rounded-xl border py-3 text-[10px] font-black uppercase tracking-[0.22em] transition-all ${
+                        className={`rounded-xl border px-4 py-2.5 text-[10px] font-semibold transition-all ${
                           formStatus === status.value
                             ? status.activeClass
                             : 'border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--text-primary)]'
@@ -381,7 +381,7 @@ const Studies: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Chapitres faits</label>
+                    <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Chapitres faits</label>
                     <input
                       type="number"
                       value={formChaptersDone}
@@ -391,7 +391,7 @@ const Studies: React.FC = () => {
                   </div>
 
                   <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Total chapitres</label>
+                    <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Total chapitres</label>
                     <input
                       type="number"
                       value={formChaptersTotal}
@@ -416,7 +416,7 @@ const Studies: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                    <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Date d'examen</label>
+                    <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Date d'examen</label>
                     <input
                       type="date"
                       value={formExamDate}
@@ -437,7 +437,7 @@ const Studies: React.FC = () => {
                 </div>
 
                 <div className={cx(uiRecipes.formSection, 'space-y-1.5')}>
-                  <label className="ml-2 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Notes de cours</label>
+                  <label className="ml-1 text-[10px] font-semibold text-[color:var(--text-muted)]">Notes de cours</label>
                   <textarea
                     value={formNotes}
                     onChange={(event) => setFormNotes(event.target.value)}

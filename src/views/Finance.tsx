@@ -1031,15 +1031,16 @@ const Finance: React.FC = () => {
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl md:text-4xl font-black text-[color:var(--text-primary)] tracking-tighter uppercase leading-none">
-            MES <span className="text-amber-500 font-outfit">FINANCES</span>
+          <h2 className="text-2xl font-black text-[color:var(--text-primary)] tracking-tight leading-none sm:text-3xl">
+            Finances
           </h2>
-          <p className="text-[color:var(--text-muted)] text-[10px] font-bold uppercase tracking-[0.2em] mt-2 italic">
-            GESTION DU BUDGET & SUIVI DES DÉPENSES
+          <p className="mt-1.5 text-[10px] font-semibold text-[color:var(--text-muted)] sm:text-xs">
+            Budget, provisions et suivi des dépenses
           </p>
         </div>
 
-        <div className="flex w-full justify-center overflow-x-auto rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1 shadow-card scrollbar-hide md:w-auto md:rounded-[2rem]">
+        <div className="flex w-full justify-end overflow-x-auto scrollbar-hide md:w-auto">
+          <div className="inline-flex rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-1">
           {[
             { id: 'summary', label: 'Synthèse', icon: Sparkles },
             { id: 'forecast', label: 'Provisions', icon: Calculator },
@@ -1048,15 +1049,17 @@ const Finance: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setViewMode(tab.id as any)}
-              className={`flex shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-[9px] font-black uppercase tracking-widest transition-all md:rounded-3xl md:px-6 md:py-4 md:text-xs ${
+              className={`flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[10px] font-semibold transition-all sm:px-4 ${
                 viewMode === tab.id
-                  ? 'bg-[color:var(--surface)] text-[color:var(--text-primary)] shadow-[0_14px_40px_var(--shadow)]'
+                  ? 'bg-[color:var(--surface)] text-[color:var(--text-primary)] shadow-sm'
                   : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--muted)]'
               }`}
             >
-              <tab.icon size={14} /> {tab.label}
+              <tab.icon size={14} />
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
+          </div>
         </div>
       </div>
 
@@ -1651,61 +1654,67 @@ const Finance: React.FC = () => {
         viewMode === 'forecast' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-8 duration-700">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Prochaine sortie</p>
-                <p className="mt-2 text-sm font-black text-[color:var(--text-primary)]">
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Prochaine sortie</p>
+                <p className="mt-2 text-sm font-bold text-[color:var(--heading)]">
                   {forecastSummary.nextProvision ? forecastSummary.nextProvision.date : 'Aucune'}
                 </p>
                 <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">
                   {forecastSummary.nextProvision ? forecastSummary.nextProvision.title : 'Aucune provision planifiée'}
                 </p>
               </div>
-              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Pression budgets</p>
-                <p className="mt-2 text-2xl font-black italic text-amber-600 dark:text-amber-300">{forecastSummary.budgetPressureCount}</p>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Pression budgets</p>
+                <p className="mt-2 text-2xl font-black tracking-tight text-[color:var(--tone-warning-text)]">{forecastSummary.budgetPressureCount}</p>
                 <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">Catégorie(s) sous tension</p>
               </div>
-              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Sous 7 jours</p>
-                <p className="mt-2 text-2xl font-black italic text-blue-600 dark:text-blue-400">{forecastSummary.dueSoonCount}</p>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Sous 7 jours</p>
+                <p className="mt-2 text-2xl font-black tracking-tight text-[color:var(--tone-info-text)]">{forecastSummary.dueSoonCount}</p>
                 <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">Échéance(s) imminente(s)</p>
               </div>
-              <div className="rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
-                <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Allocation moyenne</p>
-                <p className="mt-2 text-2xl font-black italic text-emerald-600 dark:text-emerald-400">{formatMoney(forecastSummary.averageProvision)}</p>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Allocation moyenne</p>
+                <p className="mt-2 text-2xl font-black tracking-tight text-[color:var(--tone-success-text)]">{formatMoney(forecastSummary.averageProvision)}</p>
                 <p className="mt-1 text-[10px] text-[color:var(--text-secondary)]">{forecastSummary.categoriesImpacted} catégorie(s) impactée(s)</p>
               </div>
             </div>
 
             {/* Analytic Table Section */}
-            <div className="glass rounded-[2rem] p-5 border-white/5 bg-[#0f172a]/40 overflow-hidden shadow-2xl sm:p-6 md:p-8">
+            <div className="overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm sm:p-6">
               <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic flex items-center gap-3">
-                  <Calculator size={18} className="text-blue-500" /> REGISTRE DES DÉPENSES PRÉVUES
-                </h3>
+                <div>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-[color:var(--heading)]">
+                    <Calculator size={16} className="text-[color:var(--primary)]" /> Registre des dépenses prévues
+                  </h3>
+                  <p className="mt-1 text-xs text-[color:var(--text-muted)]">Charges planifiées et impact budgétaire.</p>
+                </div>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <div className="px-6 py-2 bg-slate-950 rounded-full border border-white/5 text-[10px] font-black text-emerald-500 italic">
-                    SOLDE PROJETÉ : {formatMoney(stats.projectedRemaining)}
+                  <div className="rounded-full border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] px-3 py-1.5 text-[10px] font-semibold text-[color:var(--tone-success-text)]">
+                    Solde projeté : {formatMoney(stats.projectedRemaining)}
                   </div>
                   <button
                     type="button"
                     onClick={() => openPlannedExpenseModal()}
-                    className="rounded-full border border-blue-500/20 bg-blue-500/10 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 transition-all hover:bg-blue-500 hover:text-slate-950"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--primary)]/25 bg-[color:var(--primary)]/10 px-4 py-2 text-[10px] font-semibold text-[color:var(--primary)] transition-all hover:bg-[color:var(--primary)] hover:text-[color:var(--primary-foreground)]"
                   >
-                    Planifier une depense
+                    <Plus size={13} />
+                    Planifier
                   </button>
                 </div>
               </div>
               {futureExpenseTransactions.length === 0 ? (
-                <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-slate-950/30 px-6 py-14 text-center">
-                  <Calculator size={42} className="mx-auto mb-4 text-slate-700" />
-                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">Aucune provision scellée dans le registre</p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-12 text-center">
+                  <Calculator size={34} className="mb-3 text-[color:var(--text-muted)]" />
+                  <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense prévue</p>
+                  <p className="mt-1 max-w-sm text-xs text-[color:var(--text-muted)]">Planifiez une provision pour la voir apparaître ici avec son impact budget.</p>
                   <button
                     type="button"
                     onClick={() => openPlannedExpenseModal()}
-                    className="mt-5 rounded-2xl border border-blue-500/20 bg-blue-500/10 px-5 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 transition-all hover:bg-blue-500 hover:text-slate-950"
+                    className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl border border-[color:var(--primary)]/25 bg-[color:var(--surface)] px-4 py-2.5 text-xs font-semibold text-[color:var(--primary)] transition-all hover:bg-[color:var(--primary)] hover:text-[color:var(--primary-foreground)]"
                   >
-                    Ajouter une premiere provision
+                    <Plus size={14} />
+                    Ajouter une première provision
                   </button>
                 </div>
               ) : (
@@ -1744,43 +1753,43 @@ const Finance: React.FC = () => {
                   </div>
 
                   <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full text-left border-separate border-spacing-y-4">
+                    <table className="w-full border-collapse text-left">
                       <thead>
-                        <tr className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] italic">
-                          <th className="px-4 pb-4 text-center">Exécuter</th>
-                          <th className="px-8 pb-4">Échéance</th>
-                          <th className="px-8 pb-4">Titre / Flux</th>
-                          <th className="px-8 pb-4">Catégorie</th>
-                          <th className="px-8 pb-4">Impact budget</th>
-                          <th className="px-8 pb-4 text-right">Volume</th>
-                          <th className="px-8 pb-4 text-center">Actions</th>
+                        <tr className="border-b border-[color:var(--border)] text-[10px] font-semibold text-[color:var(--text-muted)]">
+                          <th className="px-3 py-3 text-center">Exécuter</th>
+                          <th className="px-4 py-3">Échéance</th>
+                          <th className="px-4 py-3">Titre / Flux</th>
+                          <th className="px-4 py-3">Catégorie</th>
+                          <th className="px-4 py-3">Impact budget</th>
+                          <th className="px-4 py-3 text-right">Volume</th>
+                          <th className="px-4 py-3 text-center">Actions</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-[color:var(--border)]">
                         {futureExpenseTransactions.map(t => {
                           const categoryBudget = budgetAnalysis.find((budget) => budget.category === t.category);
                           const categoryProjection = categoryBudget ? categoryBudget.limit - categoryBudget.spent - categoryBudget.future : null;
                           return (
-                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer rounded-3xl border-l-4 border-blue-500 bg-[color:var(--surface)] transition-all">
-                            <td className="px-4 py-6 text-center">
+                          <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer transition-colors hover:bg-[color:var(--surface-muted)]">
+                            <td className="px-3 py-4 text-center">
                               <div className="flex items-center justify-center">
                                 <input
                                   type="checkbox"
                                   onChange={() => handleExecuteTransaction(t.id)}
                                   onClick={(event) => event.stopPropagation()}
-                                  className="h-5 w-5 rounded border-2 border-blue-500 bg-slate-950 accent-blue-500"
+                                  className="h-5 w-5 rounded border-2 border-[color:var(--primary)] bg-[color:var(--surface)] accent-[color:var(--primary)]"
                                   title="Marquer comme exécuté (passer à aujourd'hui)"
                                 />
                               </div>
                             </td>
-                            <td className="px-8 py-6 font-black text-xs italic text-[color:var(--tone-info-text)] dark:text-slate-500">{t.date}</td>
-                            <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
-                            <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)] dark:text-slate-400">{t.category}</td>
-                            <td className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.16em] ${categoryProjection !== null && categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : 'text-[color:var(--tone-warning-text)] dark:text-slate-500'}`}>
+                            <td className="px-4 py-4 text-xs font-semibold text-[color:var(--tone-info-text)]">{t.date}</td>
+                            <td className="px-4 py-4 text-sm font-semibold text-[color:var(--heading)]">{t.title}</td>
+                            <td className="px-4 py-4 text-xs text-[color:var(--text-secondary)]">{t.category}</td>
+                            <td className={`px-4 py-4 text-xs font-semibold ${categoryProjection !== null && categoryProjection < 0 ? 'text-[color:var(--tone-danger-text)]' : 'text-[color:var(--tone-warning-text)]'}`}>
                               {categoryProjection !== null ? `${formatMoney(categoryProjection)} restants` : 'Hors budget'}
                             </td>
-                            <td className="px-8 py-6 text-right text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-blue-500">-{formatMoney(t.amount)}</td>
-                            <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
+                            <td className="px-4 py-4 text-right text-base font-black text-[color:var(--tone-info-text)]">-{formatMoney(t.amount)}</td>
+                            <td className="px-4 py-4 text-center">
                               <button onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }} className="rounded-xl p-2 text-[color:var(--tone-warning-text)] transition-colors hover:text-[color:var(--heading)] dark:text-slate-500 dark:hover:text-white"><Pencil size={16} /></button>
                               <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Cette provision future sera retiree du registre.'); }} className="rounded-xl p-2 text-[color:var(--tone-danger-text)] transition-colors hover:text-[color:var(--danger)] dark:text-slate-500 dark:hover:text-rose-500"><Trash2 size={16} /></button>
                             </td>
@@ -1795,11 +1804,11 @@ const Finance: React.FC = () => {
 
             {/* Analytical Control Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              <div className="rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:p-6 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40 dark:shadow-card">
-                <h3 className="mb-5 text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.32em] italic flex items-center gap-3">
-                  <LucidePieChart size={18} className="text-blue-500" /> RÉPARTITION CERCLE (PROVISIONS)
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm sm:p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-xs font-semibold text-[color:var(--heading)]">
+                  <LucidePieChart size={16} className="text-[color:var(--primary)]" /> Répartition des provisions
                 </h3>
-                <div className="rounded-[1.5rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-3 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/20 dark:shadow-none">
+                <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3">
                   <PieChartComponent
                     data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
                     dataKey="value"
@@ -1813,11 +1822,11 @@ const Finance: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:p-6 dark:glass dark:border-white/5 dark:bg-[#0f172a]/40 dark:shadow-card">
-                <h3 className="mb-5 text-[10px] font-black text-[color:var(--text-primary)] uppercase tracking-[0.32em] italic flex items-center gap-3">
-                  <BarChart3 size={18} className="text-blue-500" /> CONTRÔLE BARRE (VOLUMES FUTURS)
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm sm:p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-xs font-semibold text-[color:var(--heading)]">
+                  <BarChart3 size={16} className="text-[color:var(--primary)]" /> Volumes futurs
                 </h3>
-                <div className="rounded-[1.5rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-3 shadow-[0_4px_12px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-slate-950/20 dark:shadow-none">
+                <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3">
                   <BarChartComponent
                     data={budgetAnalysis.filter(b => b.future > 0).map(b => ({ name: b.category, value: b.future }))}
                     xKey="name"
@@ -1959,26 +1968,26 @@ const Finance: React.FC = () => {
                 </div>
 
                 <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full text-left border-separate border-spacing-y-4">
+                  <table className="w-full border-collapse text-left">
                     <thead>
-                      <tr className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.3em] italic">
-                        <th className="px-8 pb-4">Date</th>
-                        <th className="px-8 pb-4">Flux / DÉPENSE PLANIFIÉE</th>
-                        <th className="px-8 pb-4">Catégorie</th>
-                        <th className="px-8 pb-4 text-right">Volume</th>
-                        <th className="px-8 pb-4 text-center">Actions</th>
+                      <tr className="border-b border-[color:var(--border)] text-[10px] font-semibold text-[color:var(--text-muted)]">
+                        <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Flux / dépense planifiée</th>
+                        <th className="px-4 py-3">Catégorie</th>
+                        <th className="px-4 py-3 text-right">Volume</th>
+                        <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-[color:var(--border)]">
                       {filteredTransactions.map(t => (
-                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="ui-item-card cursor-pointer rounded-3xl transition-all">
-                          <td className="rounded-l-[1.5rem] px-8 py-6 font-black text-xs italic text-[color:var(--text-muted)]">{t.date}</td>
-                          <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
-                          <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</td>
-                          <td className={`px-8 py-6 text-right font-black italic text-lg ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
+                        <tr key={t.id} onClick={() => openTransactionDetail(t)} className="cursor-pointer transition-colors hover:bg-[color:var(--surface-muted)]">
+                          <td className="px-4 py-4 text-xs font-semibold text-[color:var(--text-muted)]">{t.date}</td>
+                          <td className="px-4 py-4 text-sm font-semibold text-[color:var(--heading)]">{t.title}</td>
+                          <td className="px-4 py-4 text-xs text-[color:var(--text-secondary)]">{t.category}</td>
+                          <td className={`px-4 py-4 text-right text-base font-black ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
                             {t.type === 'deposit' ? '+' : '-'}{formatMoney(t.amount)}
                           </td>
-                          <td className="rounded-r-[1.5rem] px-8 py-6">
+                          <td className="px-4 py-4">
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 type="button"
