@@ -45,7 +45,15 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   const s = SIZE_STYLES[size];
 
   return (
-    <div className={cx(uiRecipes.emptyState, 'flex flex-col items-center', s.wrapper, s.gap, className)}>
+    <div
+      className={cx(
+        uiRecipes.emptyState,
+        'flex flex-col items-center',
+        s.wrapper,
+        s.gap,
+        className,
+      )}
+    >
       {icon ? (
         <div
           className={cx(
@@ -56,12 +64,14 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           {icon}
         </div>
       ) : null}
+
       <div className="space-y-1.5">
         <p className={cx(s.title, 'text-[color:var(--text-secondary)]')}>{title}</p>
         {description ? (
           <p className={cx(s.description, 'text-[color:var(--text-muted)]')}>{description}</p>
         ) : null}
       </div>
+
       {action ? <div>{action}</div> : null}
     </div>
   );

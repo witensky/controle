@@ -263,6 +263,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     };
   }, [financeTotals, futureExpenseTransactions.length, missions, settledExpenseTransactions, subjects]);
 
+  const weeklyRecap = useMemo(() => {
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    monday.setHours(0, 0, 0, 0);
+    const mondayStr = monday.toISOString().split('T')[0];
+
+    const thisWeekTx = (transactions || []).filter(t =>
+      t.type === 'expense' && t.date >= mondayStr && !isPlannedProvision(t)
+    );
+    const thisWeekMissions = (missions || []).filter(m =>
+      m.status === 'Terminé' && (m.completed_at || '') >= mondayStr
+    );
+
+    const spent = thisWeekTx.reduce((sum, t) => sum + t.amount, 0);
+    const missionsDone = thisWeekMissions.length;
+    const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+    const daysLeft = 7 - dayOfWeek;
+
+    return { spent, missionsDone, daysLeft, dayOfWeek };
+  }, [transactions, missions]);
+
 
   // --- CHARTS DATA PREPARATION ---
 
@@ -650,6 +672,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {/* QUICK GRID */}
       <div className="space-y-3 sm:space-y-3.5 lg:space-y-4">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[color:var(--primary)]/10 text-[color:var(--primary)]">
+              <CalendarIcon size={15} />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Cette semaine</p>
+              <p className="text-xs font-bold text-[color:var(--text)]">
+                {weeklyRecap.missionsDone} mission{weeklyRecap.missionsDone !== 1 ? 's' : ''} · {formatCurrencyAmount(weeklyRecap.spent, activeCurrency)} dépensés
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold text-[color:var(--text-muted)]">
+            {weeklyRecap.daysLeft}j restants
+          </span>
+        </div>
+
         <DashboardCard
           title={primaryQuickStat.label}
           value={primaryQuickStat.val}
@@ -658,7 +697,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           tone={primaryQuickStat.tone}
           index={0}
           onClick={() => setActiveDetail(primaryQuickStat.id)}
-          className="w-full"
+          className="w-full animate-fade-up animate-fade-up-delay-1"
           featured
         />
 
@@ -674,6 +713,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               index={index + 1}
               onClick={() => setActiveDetail(stat.id)}
               trendData={stat.trendData}
+              className={`animate-fade-up animate-fade-up-delay-${index + 2}`}
               compact
             />
           ))}
@@ -1228,4 +1268,3 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 };
 
 export default Dashboard;
-

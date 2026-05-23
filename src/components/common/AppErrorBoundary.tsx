@@ -20,6 +20,7 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // In production this would go to a monitoring service (Sentry, etc.)
     console.error('[AppErrorBoundary]', error, info.componentStack);
   }
 
@@ -37,6 +38,7 @@ export class AppErrorBoundary extends Component<Props, State> {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)]">
               <AlertTriangle size={24} className="text-[color:var(--tone-danger-text)]" />
             </div>
+
             <div className="space-y-2">
               <h2 className="text-lg font-black uppercase italic tracking-tight text-[color:var(--heading)]">
                 Erreur inattendue
@@ -50,6 +52,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 </p>
               ) : null}
             </div>
+
             <button
               onClick={this.handleReset}
               className="inline-flex items-center gap-2 rounded-[1.15rem] bg-[color:var(--primary)] px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--primary-foreground)] transition-all hover:bg-[color:var(--primary-hover)] active:scale-[0.97]"

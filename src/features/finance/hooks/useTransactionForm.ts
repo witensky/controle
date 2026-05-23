@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Transaction } from '../types';
 import { isPlannedProvision } from '../../../utils/financeProvisions';
 import { normalizeDateOnly } from '../../../utils/transactionDates';
@@ -62,10 +62,7 @@ export function useTransactionForm(): UseTransactionFormReturn {
   const setCategoryValue = useCallback((categoryValue: string) => setForm((p) => ({ ...p, categoryValue })), []);
   const setDate = useCallback((date: string) => setForm((p) => ({ ...p, date })), []);
   const setComment = useCallback((comment: string) => setForm((p) => ({ ...p, comment })), []);
-  const setIsPlanningProvision = useCallback(
-    (isPlanningProvision: boolean) => setForm((p) => ({ ...p, isPlanningProvision })),
-    [],
-  );
+  const setIsPlanningProvision = useCallback((isPlanningProvision: boolean) => setForm((p) => ({ ...p, isPlanningProvision })), []);
 
   const reset = useCallback(() => {
     setForm({ ...INITIAL_STATE, date: todayStr() });
@@ -85,7 +82,9 @@ export function useTransactionForm(): UseTransactionFormReturn {
       type: transaction.type,
       amount: transaction.amount.toString(),
       title: transaction.title,
-      categoryValue: transaction.type === 'deposit' ? transaction.source || INITIAL_DEPOSIT_SOURCE : transaction.category,
+      categoryValue: transaction.type === 'deposit'
+        ? (transaction.source || INITIAL_DEPOSIT_SOURCE)
+        : transaction.category,
       date: transaction.date,
       comment: transaction.comment || '',
       isPlanningProvision: isPlannedProvision(transaction),
@@ -93,17 +92,13 @@ export function useTransactionForm(): UseTransactionFormReturn {
     });
   }, []);
 
-  const isValid =
-    form.amount.trim().length > 0 &&
-    form.title.trim().length > 0 &&
-    !Number.isNaN(Number(form.amount)) &&
-    Number(form.amount) > 0;
+  const isValid = form.amount.trim().length > 0 && form.title.trim().length > 0 && !isNaN(Number(form.amount)) && Number(form.amount) > 0;
 
   const isProvision =
     form.type === 'expense' &&
     (form.isPlanningProvision ||
       (form.editingTransaction ? isPlannedProvision(form.editingTransaction) : false) ||
-      normalizeDateOnly(form.date) > todayStr());
+      normalizeDateOnly(form.date) > new Date().toISOString().split('T')[0]);
 
   return {
     form,

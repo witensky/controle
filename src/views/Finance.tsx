@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Plus, ShoppingCart, History, X, Banknote, ArrowUpCircle, Wallet, Tag, MessageSquare, Edit3, Trash2, Search, Loader2, Sparkles, AlertCircle, Calendar, TrendingDown, Target, ArrowRight, ShieldCheck, Save, Settings2, LineChart as LucideLineChart, FileDown, ArrowDownCircle, PieChart as LucidePieChart, Calculator, TrendingUp, Layers, PiggyBank, Pencil, BarChart3
+  Plus, ShoppingCart, History, X, Banknote, ArrowUpCircle, Wallet, Tag, MessageSquare, Edit3, Trash2, Search, Loader2, Sparkles, AlertCircle, Calendar, TrendingDown, Target, ArrowRight, ShieldCheck, Save, Settings2, LineChart as LucideLineChart, FileDown, ArrowDownCircle, PieChart as LucidePieChart, Calculator, TrendingUp, Layers, PiggyBank, Pencil, BarChart3, Copy
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import ModalShell from '../components/common/ModalShell';
@@ -23,6 +23,7 @@ import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBu
 import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurrence } from '../utils/financeReset';
 import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
+import { useSwipeDelete } from '../hooks/useSwipeDelete';
 import { useTheme } from '../theme/ThemeProvider';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
@@ -41,6 +42,86 @@ type FinanceAlert = {
   message: string;
   action?: string;
   onAction?: () => void;
+};
+
+type SwipeableTransactionCardProps = {
+  transaction: Transaction;
+  formatMoney: (value: number | string | null | undefined) => string;
+  onOpen: (transaction: Transaction) => void;
+  onEdit: (transaction: Transaction) => void;
+  onDuplicate: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
+};
+
+const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
+  transaction,
+  formatMoney,
+  onOpen,
+  onEdit,
+  onDuplicate,
+  onDelete,
+}) => {
+  const swipe = useSwipeDelete(() => onDelete(transaction));
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl"
+      onTouchStart={swipe.onTouchStart}
+      onTouchMove={swipe.onTouchMove}
+      onTouchEnd={swipe.onTouchEnd}
+    >
+      <div className="absolute inset-0 flex items-center justify-end rounded-2xl bg-[color:var(--danger)] px-5">
+        <Trash2 size={18} className="text-white" />
+      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onOpen(transaction)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpen(transaction);
+          }
+        }}
+        className="ui-item-card relative block w-full rounded-[1.5rem] p-4 text-left transition-transform duration-200"
+        style={{ transform: `translateX(-${swipe.offset}px)`, opacity: swipe.swiped ? 0 : 1 }}
+      >
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{transaction.date}</p>
+            <h4 className="mt-2 text-sm font-black uppercase italic text-[color:var(--heading)] dark:text-white">{transaction.title}</h4>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{transaction.category}</p>
+          </div>
+          <p className={`text-lg font-black italic ${transaction.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
+            {transaction.type === 'deposit' ? '+' : '-'}{formatMoney(transaction.amount)}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={(event) => { event.stopPropagation(); onEdit(transaction); }}
+            className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+          >
+            Modifier
+          </button>
+          <button
+            type="button"
+            onClick={(event) => { event.stopPropagation(); onDuplicate(transaction); }}
+            className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+          >
+            Dupliquer
+          </button>
+          <button
+            type="button"
+            onClick={(event) => { event.stopPropagation(); onDelete(transaction); }}
+            className={cx(uiRecipes.ghostButton, 'rounded-2xl border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)]')}
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const Finance: React.FC = () => {
@@ -66,6 +147,9 @@ const Finance: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [isEditingBudgets, setIsEditingBudgets] = useState(false);
   const [viewMode, setViewMode] = useState<'summary' | 'table' | 'forecast'>('summary');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'expense' | 'deposit'>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
 
   const [localBudgets, setLocalBudgets] = useState<CategoryBudget[]>([]);
 
@@ -131,14 +215,16 @@ const Finance: React.FC = () => {
     () => localStore.get<Record<string, string>>(LOCAL_KEYS.FINANCE_DISMISSED_ALERTS) || {}
   );
 
-  // Form State
-  const [type, setType] = useState<'expense' | 'deposit'>('expense');
-  const [amount, setAmount] = useState('');
-  const [title, setTitle] = useState('');
-  const [categoryValue, setCategoryValue] = useState('Courses');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [comment, setComment] = useState('');
-  const [isPlanningProvision, setIsPlanningProvision] = useState(false);
+  // Form State — extracted to useTransactionForm hook
+  const txForm = useTransactionForm();
+  const { form: { type, amount, title, categoryValue, date, comment, isPlanningProvision, editingTransaction: _editingTxFromForm } } = txForm;
+  const setType = txForm.setType;
+  const setAmount = txForm.setAmount;
+  const setTitle = txForm.setTitle;
+  const setCategoryValue = txForm.setCategoryValue;
+  const setDate = txForm.setDate;
+  const setComment = txForm.setComment;
+  const setIsPlanningProvision = txForm.setIsPlanningProvision;
 
   // New Category State
   const [newCatName, setNewCatName] = useState('');
@@ -610,6 +696,26 @@ const Finance: React.FC = () => {
     [transactions, today]
   );
 
+  const filteredTransactions = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return pastTransactions.filter((transaction) => {
+      const matchSearch = normalizedQuery === '' ||
+        transaction.title.toLowerCase().includes(normalizedQuery) ||
+        transaction.category.toLowerCase().includes(normalizedQuery) ||
+        (transaction.source || '').toLowerCase().includes(normalizedQuery);
+      const matchType = filterType === 'all' || transaction.type === filterType;
+      const matchCat = filterCategory === 'all' || transaction.category === filterCategory;
+
+      return matchSearch && matchType && matchCat;
+    });
+  }, [pastTransactions, searchQuery, filterType, filterCategory]);
+
+  const uniqueCategories = useMemo(
+    () => [...new Set(pastTransactions.map((transaction) => transaction.category))].sort(),
+    [pastTransactions]
+  );
+
   const quotaHistoryLast7Days = useMemo(
     () =>
       Array.from({ length: 7 }, (_, index) => {
@@ -835,6 +941,18 @@ const Finance: React.FC = () => {
     setShowModal(true);
   };
 
+  const handleDuplicateTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(null);
+    resetForm();
+    setType(transaction.type);
+    setTitle(`${transaction.title} (copie)`);
+    setAmount(transaction.amount.toString());
+    setCategoryValue(transaction.type === 'deposit' ? (transaction.source || 'AMCI') : transaction.category);
+    setDate(new Date().toISOString().split('T')[0]);
+    setComment(transaction.comment || '');
+    setShowModal(true);
+  };
+
   const handleDeleteTransaction = async (transaction: Transaction) => {
     const confirmed = await showConfirm({
       title: 'Supprimer la transaction',
@@ -893,10 +1011,23 @@ const Finance: React.FC = () => {
       (editingTransaction ? isPlannedProvision(editingTransaction) : false) ||
       normalizeDateOnly(date) > today);
 
-  if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin text-amber-500 w-10 h-10 border-4 border-current border-t-transparent rounded-full" /></div>;
+  if (loading) return (
+    <div className="space-y-4 pb-24 animate-pulse">
+      <div className="skeleton h-10 w-48" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="skeleton h-28" />
+        <div className="skeleton h-28" />
+      </div>
+      <div className="skeleton h-48" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="skeleton h-32" />
+        <div className="skeleton h-32" />
+      </div>
+    </div>
+  );
 
   return (
-      <div className="space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:space-y-10 md:pb-24 animate-in fade-in duration-700">
+      <div className="space-y-6 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:space-y-10 md:pb-24 animate-fade-up">
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -1001,72 +1132,76 @@ const Finance: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-1">
-              <button onClick={() => { setLocalBudgets(budgets); setShowAddCat(false); setShowBudgetModal(true); }} className="min-h-[136px] rounded-[1.5rem] border border-emerald-500/20 bg-[color:var(--surface)] p-4 shadow-card transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-emerald-400/40 hover:bg-emerald-500/[0.05] dark:glass dark:bg-emerald-500/[0.03] dark:hover:bg-emerald-500/10">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-emerald-500/10 text-emerald-500 transition-all group-hover:bg-emerald-500/15 sm:h-16 sm:w-16 sm:rounded-3xl dark:text-emerald-400 dark:group-hover:bg-slate-950">
-                  <Target size={26} strokeWidth={2.5} className="sm:hidden" />
-                  <Target size={32} strokeWidth={2.5} className="hidden sm:block" />
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
+              {/* Gérer budgets */}
+              <button
+                onClick={() => { setLocalBudgets(budgets); setShowAddCat(false); setShowBudgetModal(true); }}
+                className="group flex min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-center transition-all hover:border-[color:var(--success)]/40 hover:bg-[color:var(--success)]/5 active:scale-[0.98] sm:min-h-[140px]"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[color:var(--success)]/10 text-[color:var(--success)] transition-all group-hover:bg-[color:var(--success)]/20">
+                  <Target size={22} strokeWidth={2} />
                 </div>
                 <div>
-                  <h4 className="font-black text-[color:var(--text-primary)] uppercase italic text-[11px] sm:text-sm">GÉRER BUDGETS</h4>
-                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] sm:text-[8px] sm:tracking-widest">PLANIFIER UNE DÉPENSE</p>
+                  <p className="text-xs font-bold text-[color:var(--text)]">Budgets</p>
+                  <p className="mt-0.5 text-[10px] text-[color:var(--text-muted)]">Gérer les limites</p>
                 </div>
               </button>
-              <button onClick={() => { resetForm(); setType('expense'); setIsPlanningProvision(false); setShowModal(true); }} className="min-h-[136px] rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-card transition-all group flex flex-col items-center justify-center text-center gap-2 sm:min-h-[164px] sm:rounded-[2rem] sm:p-6 sm:gap-3 hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)] dark:glass dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-[color:var(--surface-2)] text-[color:var(--text-primary)] transition-all sm:h-16 sm:w-16 sm:rounded-3xl dark:bg-white/10 dark:text-white dark:group-hover:bg-slate-950">
-                  <Plus size={26} strokeWidth={3} className="sm:hidden" />
-                  <Plus size={32} strokeWidth={3} className="hidden sm:block" />
+
+              {/* Nouveau flux */}
+              <button
+                onClick={() => { resetForm(); setType('expense'); setIsPlanningProvision(false); setShowModal(true); }}
+                className="group flex min-h-[120px] flex-col items-center justify-center gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-center transition-all hover:border-[color:var(--primary)]/40 hover:bg-[color:var(--primary)]/5 active:scale-[0.98] sm:min-h-[140px]"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[color:var(--primary)]/10 text-[color:var(--primary)] transition-all group-hover:bg-[color:var(--primary)]/20">
+                  <Plus size={22} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h4 className="font-black text-[color:var(--text-primary)] uppercase italic text-[11px] sm:text-sm">NOUVEAU FLUX</h4>
-                  <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] sm:text-[8px] sm:tracking-widest">AJOUTER UNE TRANSACTION</p>
+                  <p className="text-xs font-bold text-[color:var(--text)]">Nouveau flux</p>
+                  <p className="mt-0.5 text-[10px] text-[color:var(--text-muted)]">Ajouter une opération</p>
                 </div>
               </button>
             </div>
           </div>
 
           {/* QUICK STATS SUMMARY */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <div
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
+            {/* Dépenses totales */}
+            <button
               onClick={() => setViewMode('table')}
-              className="glass rounded-[2rem] min-h-[172px] p-5 border-rose-500/20 bg-rose-500/[0.03] shadow-xl animate-pulse-glow cursor-pointer transition-all group overflow-hidden relative sm:min-h-[196px] sm:p-6"
+              className="group flex flex-col gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left transition-all hover:border-[color:var(--danger)]/30 hover:bg-[color:var(--danger)]/5 active:scale-[0.98] sm:p-5"
             >
-              <div className="absolute -right-4 -bottom-4 opacity-5 text-rose-500 group-hover:scale-125 transition-transform duration-1000">
-                <TrendingDown size={100} />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold text-[color:var(--danger)]">Dépenses</span>
+                <ArrowDownCircle size={14} className="text-[color:var(--danger)] opacity-60" />
               </div>
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest italic flex items-center gap-2">
-                  <ArrowDownCircle size={14} /> Dépenses Totales
-                </p>
-              </div>
-              <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
+              <p className="text-2xl font-black tracking-tight text-[color:var(--heading)] sm:text-3xl">
                 {formatChartCurrency(financialState.totalExpenses)}
-              </h2>
-              <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
-                AUJOURD'HUI {formatChartCurrency(financialState.todaySpent)} <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
               </p>
-            </div>
+              <p className="text-[10px] text-[color:var(--text-muted)]">
+                Aujourd'hui {formatChartCurrency(financialState.todaySpent)}
+              </p>
+            </button>
 
-            <div
+            {/* Provisions totales */}
+            <button
               onClick={() => setShowProvisionsDetail(true)}
-              className="glass rounded-[2rem] min-h-[172px] p-5 border-amber-500/20 bg-amber-500/[0.03] cursor-pointer transition-all group overflow-hidden relative sm:min-h-[196px] sm:p-6 dark:border-amber-500/10 dark:bg-[#0f172a]/40"
+              className="group flex flex-col gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-left transition-all hover:border-[color:var(--warning)]/30 hover:bg-[color:var(--warning)]/5 active:scale-[0.98] sm:p-5"
             >
-              <div className="absolute -right-4 -bottom-4 opacity-5 text-amber-500 group-hover:scale-125 transition-transform duration-1000">
-                <Calculator size={100} />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold text-[color:var(--warning)]">Provisions</span>
+                <Calculator size={14} className="text-[color:var(--warning)] opacity-60" />
               </div>
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-2">
-                  <Calculator size={14} /> Provisions Totales
-                </p>
-              </div>
-              <h2 className="text-3xl font-black text-[color:var(--text-primary)] tracking-tighter transition-colors sm:text-4xl dark:text-white">
+              <p className="text-2xl font-black tracking-tight text-[color:var(--heading)] sm:text-3xl">
                 {formatChartCurrency(financialState.futureExpenses)}
-              </h2>
-              <p className="text-[11px] text-[color:var(--text-muted)] mt-2 font-bold uppercase tracking-widest italic flex items-center gap-2">
-                {financialState.futureTransactions.length} OPÉRATIONS <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
               </p>
-            </div>
+              <p className="text-[10px] text-[color:var(--text-muted)]">
+                {financialState.futureTransactions.length} opération{financialState.futureTransactions.length !== 1 ? 's' : ''}
+              </p>
+            </button>
+          </div>
 
+          {/* Reste à vivre + Épargne */}
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
             <ResteAVivreWidget
               amount={financialState.projectedBalance}
               totalBudget={financialState.sources.total}
@@ -1147,7 +1282,7 @@ const Finance: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </div>
+          </div>{/* end 2-col grid */}
         </>
       )}
 
@@ -1297,100 +1432,85 @@ const Finance: React.FC = () => {
       <ModalShell
         isOpen={showBudgetModal}
         onClose={() => setShowBudgetModal(false)}
-        title={<><span>GESTION DU </span><span className="text-emerald-500">BUDGET</span></>}
-        icon={<Target size={20} className="text-emerald-500" />}
+        title="Gestion du budget"
+        icon={<Target size={20} className="text-[color:var(--success)]" />}
         maxWidthClassName="max-w-5xl"
         bodyClassName="space-y-5"
         footer={
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={handleSaveBudgets}
               disabled={saving}
-              className="flex flex-1 items-center justify-center gap-3 rounded-3xl bg-emerald-500 px-6 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-slate-950 shadow-[0_20px_40px_-10px_rgba(16,185,129,0.3)] disabled:opacity-40"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[color:var(--primary)] px-6 py-3.5 text-[11px] font-bold text-[color:var(--primary-foreground)] disabled:opacity-40 transition-all hover:opacity-90"
             >
-              {saving ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} strokeWidth={3} className="shrink-0" />}
-              <span className="whitespace-nowrap">ENREGISTRER LES OBJECTIFS</span>
+              {saving ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} strokeWidth={2} className="shrink-0" />}
+              Enregistrer les objectifs
             </button>
             <button
               onClick={() => setShowAddCat(true)}
-              className="rounded-3xl border border-white/5 bg-[#1e293b]/40 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:bg-[#1e293b] hover:text-white"
+              className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-3.5 text-[11px] font-medium text-[color:var(--text-secondary)] transition-all hover:text-[color:var(--text)]"
             >
-              NOUVELLE CATÉGORIE
+              + Nouvelle catégorie
             </button>
           </div>
         }
       >
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="glass relative overflow-hidden rounded-[1.75rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-br from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--tone-warning-surface)] p-5 shadow-xl sm:p-6 lg:col-span-2 dark:border-white/5 dark:bg-slate-950/60">
-            <div className="absolute -right-10 -top-10 opacity-[0.08] text-emerald-500 dark:opacity-[0.06] dark:text-emerald-400">
-              <Layers size={180} />
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 sm:p-6 lg:col-span-2">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h4 className="text-base font-bold text-[color:var(--heading)]">Vue d'ensemble</h4>
+                <p className="mt-0.5 text-xs text-[color:var(--text-muted)]">Toutes catégories confondues</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-[10px] font-semibold text-[color:var(--text-secondary)]">
+                  Base {formatMoney(totalBudget)}
+                </span>
+                <span className="rounded-full border border-[color:var(--success)]/30 bg-[color:var(--success)]/10 px-3 py-1 text-[10px] font-semibold text-[color:var(--success)]">
+                  Alloué {formatMoney(localBudgetTotals.allocated)}
+                </span>
+              </div>
             </div>
 
-            <div className="relative z-10 flex flex-col gap-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <h4 className="text-lg font-black uppercase italic tracking-tight leading-none text-[color:var(--heading)] sm:text-xl dark:text-white">
-                    Ensemble
-                  </h4>
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                    Total des allocations (toutes catégories)
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-end gap-2 text-[9px] font-black uppercase tracking-[0.22em]">
-                  <span className="rounded-full border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] px-2.5 py-1 text-[color:var(--tone-warning-text)] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                    Base {formatMoney(totalBudget)}
-                  </span>
-                  <span className="rounded-full border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] px-2.5 py-1 text-[color:var(--tone-success-text)] dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-                    Alloc {formatMoney(localBudgetTotals.allocated)}
-                  </span>
-                </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-5">
+              <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Utilisé</p>
+                <p className="mt-2 text-lg font-black text-[color:var(--danger)]">{formatMoney(localBudgetTotals.spent)}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-[1.25rem] border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-danger-text)] dark:text-[color:var(--text-muted)]">Utilisé</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-danger-text)] dark:text-rose-400">{formatMoney(localBudgetTotals.spent)}</p>
-                </div>
-                <div className="rounded-[1.25rem] border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-info-text)] dark:text-[color:var(--text-muted)]">Prévu</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-info-text)] dark:text-sky-300">{formatMoney(localBudgetTotals.planned)}</p>
-                </div>
-                <div className="rounded-[1.25rem] border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-success-text)] dark:text-[color:var(--text-muted)]">Restant</p>
-                  <p className="mt-2 text-lg font-black italic text-[color:var(--tone-success-text)] dark:text-emerald-400">{formatMoney(localBudgetTotals.remainingNow)}</p>
-                </div>
-                <div className="rounded-[1.25rem] border border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">Après prévu</p>
-                  <p className={`mt-2 text-lg font-black italic ${localBudgetTotals.remainingAfterPlanned < 0 ? 'text-[color:var(--tone-danger-text)] dark:text-rose-400' : localBudgetTotals.remainingAfterPlanned === 0 ? 'text-[color:var(--tone-warning-text)] dark:text-amber-300' : 'text-[color:var(--tone-success-text)] dark:text-emerald-400'}`}>
-                    {formatMoney(localBudgetTotals.remainingAfterPlanned)}
-                  </p>
-                </div>
+              <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Prévu</p>
+                <p className="mt-2 text-lg font-black text-[color:var(--info)]">{formatMoney(localBudgetTotals.planned)}</p>
               </div>
+              <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Restant</p>
+                <p className="mt-2 text-lg font-black text-[color:var(--success)]">{formatMoney(localBudgetTotals.remainingNow)}</p>
+              </div>
+              <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3.5">
+                <p className="text-[10px] font-semibold text-[color:var(--text-muted)]">Après prévu</p>
+                <p className={`mt-2 text-lg font-black ${localBudgetTotals.remainingAfterPlanned < 0 ? 'text-[color:var(--danger)]' : localBudgetTotals.remainingAfterPlanned === 0 ? 'text-[color:var(--warning)]' : 'text-[color:var(--success)]'}`}>
+                  {formatMoney(localBudgetTotals.remainingAfterPlanned)}
+                </p>
+              </div>
+            </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                  <span>Projection globale</span>
-                  <span className="text-[color:var(--heading)] dark:text-white">{Math.round(localBudgetTotals.remainingPercent)}% restant</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-[color:var(--tone-warning-surface)] ring-1 ring-inset ring-[color:var(--tone-warning-border)] dark:bg-white/[0.06] dark:ring-white/5">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
-                      localBudgetTotals.tone === 'critical'
-                        ? 'from-rose-500 via-red-400 to-orange-400 shadow-[0_0_30px_rgba(244,63,94,0.28)]'
-                        : localBudgetTotals.tone === 'warning'
-                          ? 'from-amber-400 via-yellow-300 to-orange-300 shadow-[0_0_24px_rgba(251,191,36,0.24)]'
-                          : localBudgetTotals.tone === 'healthy'
-                            ? 'from-emerald-400 via-teal-300 to-cyan-300 shadow-[0_0_24px_rgba(16,185,129,0.2)]'
-                            : 'from-amber-500 via-orange-400 to-orange-300'
-                    }`}
-                    style={{ width: `${Math.max(0, Math.min(100, localBudgetTotals.remainingPercent))}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                  <span>{Math.round(localBudgetTotals.usedPercent)}% utilisé</span>
-                  <span className="text-[color:var(--tone-warning-text)] dark:text-slate-400">Après déduction des provisions</span>
-                </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-medium text-[color:var(--text-secondary)]">
+                <span>Projection globale</span>
+                <span className="font-bold text-[color:var(--heading)]">{Math.round(localBudgetTotals.remainingPercent)}% restant</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[color:var(--surface-muted)]">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    localBudgetTotals.tone === 'critical' ? 'bg-[color:var(--danger)]'
+                    : localBudgetTotals.tone === 'warning' ? 'bg-[color:var(--warning)]'
+                    : 'bg-[color:var(--success)]'
+                  }`}
+                  style={{ width: `${Math.max(0, Math.min(100, localBudgetTotals.remainingPercent))}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-[color:var(--text-muted)]">
+                <span>{Math.round(localBudgetTotals.usedPercent)}% utilisé</span>
+                <span>Après déduction des provisions</span>
               </div>
             </div>
           </div>
@@ -1414,49 +1534,57 @@ const Finance: React.FC = () => {
                   : 'text-emerald-400';
 
             return (
-            <div key={`${b.category}-${i}`} className="glass rounded-[1.75rem] border border-[color:var(--tone-warning-border)] bg-gradient-to-br from-[color:var(--surface-elevated)] via-[color:var(--surface)] to-[color:var(--tone-warning-surface)] p-5 shadow-xl sm:p-6 dark:border-white/5 dark:bg-slate-950/60">
+            <div key={`${b.category}-${i}`} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="space-y-2">
-                  <h4 className="text-lg font-black uppercase italic tracking-tight leading-none text-[color:var(--heading)] sm:text-xl dark:text-white">{b.category}</h4>
-                  <div className="flex flex-wrap items-center gap-2 text-[9px] font-black uppercase tracking-[0.22em]">
-                    <span className={`rounded-full border px-2.5 py-1 ${b.tone === 'critical' ? 'border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)] dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300' : b.tone === 'warning' ? 'border-[color:var(--tone-warning-border)] bg-[color:var(--tone-warning-surface)] text-[color:var(--tone-warning-text)] dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200' : 'border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'}`}>
+                <div>
+                  <h4 className="text-sm font-bold text-[color:var(--heading)]">{b.category}</h4>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold ${
+                      b.tone === 'critical' ? 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/10 text-[color:var(--danger)]'
+                      : b.tone === 'warning' ? 'border-[color:var(--warning)]/30 bg-[color:var(--warning)]/10 text-[color:var(--warning)]'
+                      : 'border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]'
+                    }`}>
                       {spentLabel}
                     </span>
-                    {b.future > 0 ? (
-                      <span className="rounded-full border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] px-2.5 py-1 text-[color:var(--tone-info-text)] dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
+                    {b.future > 0 && (
+                      <span className="rounded-full border border-[color:var(--info)]/30 bg-[color:var(--info)]/10 px-2 py-0.5 text-[9px] font-semibold text-[color:var(--info)]">
                         Prévu {formatMoney(b.future)}
                       </span>
-                    ) : null}
+                    )}
                   </div>
                 </div>
-                <Edit3 size={16} className="text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]" />
+                <Edit3 size={14} className="shrink-0 text-[color:var(--text-muted)]" />
               </div>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                    <span>Budget restant</span>
-                    <span className={`font-black italic ${remainingTextClass}`}>{formatMoney(b.remaining)}</span>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-[color:var(--text-muted)]">Budget restant</span>
+                    <span className={`font-bold ${remainingTextClass}`}>{formatMoney(b.remaining)}</span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[color:var(--tone-warning-surface)] ring-1 ring-inset ring-[color:var(--tone-warning-border)] dark:bg-white/[0.06] dark:ring-white/5">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[color:var(--surface-muted)]">
                     <div
-                      className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${progressToneClass}`}
+                      className={`h-full rounded-full transition-all duration-500 ${progressToneClass}`}
                       style={{ width: progressWidth }}
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
+                  <div className="flex items-center justify-between text-[10px] text-[color:var(--text-muted)]">
                     <span>Utilisé {formatMoney(b.spent)}</span>
-                    <span className="text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-secondary)]">{b.limit > 0 ? `${Math.round(Math.max(0, Math.min(100, b.remainingPercent)))}% restant` : 'Aucune limite'}</span>
+                    <span>{b.limit > 0 ? `${Math.round(Math.max(0, Math.min(100, b.remainingPercent)))}% restant` : 'Aucune limite'}</span>
                   </div>
                 </div>
-                <div className="flex justify-end text-[10px] font-black uppercase tracking-widest text-[color:var(--tone-warning-text)] dark:text-[color:var(--text-muted)]">
-                  <span className="font-black italic text-[color:var(--heading)] dark:text-white">{formatMoney(b.limit)}</span>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-[color:var(--text-muted)]">
+                    Limite mensuelle ({currencyLabel})
+                  </label>
+                  <input
+                    type="number"
+                    value={b.limit}
+                    onChange={(e) => setLocalBudgets(prev => prev.map(old => old.category === b.category ? { ...old, limit: Number(e.target.value) } : old))}
+                    className="w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-3 text-base font-bold text-[color:var(--heading)] outline-none transition-all focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--focus-ring)]"
+                  />
                 </div>
-                <input
-                  type="number"
-                  value={b.limit}
-                  onChange={(e) => setLocalBudgets(prev => prev.map(old => old.category === b.category ? { ...old, limit: Number(e.target.value) } : old))}
-                  className="w-full rounded-[1.25rem] border border-[color:var(--border)] bg-[#EAF2FF] px-5 py-4 text-xl font-black italic text-[color:var(--tone-success-text)] outline-none focus:border-[color:var(--tone-success-border)] dark:border-white/10 dark:bg-[#0b1121] dark:text-emerald-500 dark:focus:border-emerald-500/50"
-                />
               </div>
             </div>
           )})}
@@ -1727,6 +1855,68 @@ const Finance: React.FC = () => {
                 <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] px-3 py-1.5"><div className="h-2.5 w-2.5 rounded-full bg-[color:var(--danger)]" /> <span className="text-[8px] font-black uppercase tracking-[0.18em] text-[color:var(--tone-danger-text)]">DEPENSE</span></div>
               </div>
             </div>
+            <div className="mb-5 space-y-3">
+              <div className="relative">
+                <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Rechercher une transaction..."
+                  className="ui-field w-full rounded-2xl border py-3 pl-11 pr-4 text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--text-muted)] hover:text-[color:var(--text)]"
+                    aria-label="Effacer la recherche"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(['all', 'expense', 'deposit'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setFilterType(filter)}
+                    className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold transition-all ${
+                      filterType === filter
+                        ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--primary-foreground)]'
+                        : 'border-[color:var(--border)] text-[color:var(--text-muted)] hover:text-[color:var(--text)]'
+                    }`}
+                  >
+                    {filter === 'all' ? 'Tout' : filter === 'expense' ? 'Dépenses' : 'Dépôts'}
+                  </button>
+                ))}
+
+                <select
+                  value={filterCategory}
+                  onChange={(event) => setFilterCategory(event.target.value)}
+                  className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-[10px] font-semibold text-[color:var(--text-secondary)] outline-none"
+                >
+                  <option value="all">Toutes catégories</option>
+                  {uniqueCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+                </select>
+              </div>
+
+              {(searchQuery || filterType !== 'all' || filterCategory !== 'all') && (
+                <p className="text-[10px] text-[color:var(--text-muted)]">
+                  {filteredTransactions.length} résultat{filteredTransactions.length !== 1 ? 's' : ''}
+                  {' '}
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); setFilterType('all'); setFilterCategory('all'); }}
+                    className="ml-1 text-[color:var(--primary)] hover:underline"
+                  >
+                    Effacer
+                  </button>
+                </p>
+              )}
+            </div>
             {pastTransactions.length === 0 ? (
               <div className={cx(uiRecipes.emptyPanel, 'px-6 py-14')}>
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] shadow-soft">
@@ -1734,28 +1924,37 @@ const Finance: React.FC = () => {
                 </div>
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)]">Aucun flux passé à afficher</p>
               </div>
+            ) : filteredTransactions.length === 0 ? (
+              <div className={cx(uiRecipes.emptyPanel, 'px-6 py-14')}>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] shadow-soft">
+                  <Search size={28} />
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[color:var(--text-secondary)]">Aucun flux ne correspond aux filtres</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterType('all');
+                    setFilterCategory('all');
+                  }}
+                  className={cx(uiRecipes.ghostButton, 'mt-5')}
+                >
+                  Reinitialiser
+                </button>
+              </div>
             ) : (
               <>
                 <div className="space-y-3 md:hidden">
-                  {pastTransactions.map(t => (
-                    <div key={t.id} role="button" tabIndex={0} onClick={() => openTransactionDetail(t)} onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        openTransactionDetail(t);
-                      }
-                    }} className="ui-item-card block w-full rounded-[1.5rem] p-4 text-left">
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">{t.date}</p>
-                          <h4 className="mt-2 text-sm font-black uppercase italic text-[color:var(--heading)] dark:text-white">{t.title}</h4>
-                          <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">{t.category}</p>
-                        </div>
-                        <p className={`text-lg font-black italic ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
-                          {t.type === 'deposit' ? '+' : '-'}{formatMoney(t.amount)}
-                        </p>
-                      </div>
-                      <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.ghostButton, 'w-full rounded-2xl border-[color:var(--tone-danger-border)] bg-[color:var(--tone-danger-surface)] text-[color:var(--tone-danger-text)]')}>Supprimer</button>
-                    </div>
+                  {filteredTransactions.map((transaction) => (
+                    <SwipeableTransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      formatMoney={formatMoney}
+                      onOpen={openTransactionDetail}
+                      onEdit={handleEditTransaction}
+                      onDuplicate={handleDuplicateTransaction}
+                      onDelete={(item) => handleDeleteTransactionById(item.id, 'Transaction supprimée.')}
+                    />
                   ))}
                 </div>
 
@@ -1771,7 +1970,7 @@ const Finance: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {pastTransactions.map(t => (
+                      {filteredTransactions.map(t => (
                         <tr key={t.id} onClick={() => openTransactionDetail(t)} className="ui-item-card cursor-pointer rounded-3xl transition-all">
                           <td className="rounded-l-[1.5rem] px-8 py-6 font-black text-xs italic text-[color:var(--text-muted)]">{t.date}</td>
                           <td className="px-8 py-6 text-sm font-black uppercase italic tracking-tight text-[color:var(--heading)] dark:text-white">{t.title}</td>
@@ -1779,8 +1978,38 @@ const Finance: React.FC = () => {
                           <td className={`px-8 py-6 text-right font-black italic text-lg ${t.type === 'deposit' ? 'text-[color:var(--tone-success-text)]' : 'text-[color:var(--tone-danger-text)]'}`}>
                             {t.type === 'deposit' ? '+' : '-'}{formatMoney(t.amount)}
                           </td>
-                          <td className="px-8 py-6 rounded-r-[1.5rem] text-center">
-                            <button onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }} className={cx(uiRecipes.actionIcon, toneClassNames.danger.text)}><Trash2 size={16} /></button>
+                          <td className="rounded-r-[1.5rem] px-8 py-6">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(event) => { event.stopPropagation(); handleEditTransaction(t); }}
+                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+                                aria-label="Modifier"
+                                title="Modifier cette transaction"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleDuplicateTransaction(t);
+                                }}
+                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+                                aria-label="Dupliquer"
+                                title="Réutiliser cette transaction"
+                              >
+                                <Copy size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async (event) => { event.stopPropagation(); await handleDeleteTransactionById(t.id, 'Ce flux passe sera retire de votre registre financier.'); }}
+                                className={cx(uiRecipes.actionIcon, toneClassNames.danger.text)}
+                                aria-label="Supprimer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1796,8 +2025,8 @@ const Finance: React.FC = () => {
       <ModalShell
         isOpen={showModal}
         onClose={() => { setShowModal(false); resetForm(); }}
-        title={<><span>{editingTransaction ? 'AJUSTER UN ' : 'SÉCURISER UN '}</span><span className="text-amber-500">FLUX</span></>}
-        subtitle={editingTransaction ? "Modifier une transaction liée au pilotage financier" : "Créer une dépense planifiée ou enregistrer un dépôt"}
+        title={editingTransaction ? 'Modifier l\'opération' : 'Nouvelle opération'}
+        subtitle={editingTransaction ? "Ajuster les détails de cette transaction" : "Enregistrer une dépense ou un dépôt"}
         icon={<ShieldCheck size={20} className="text-amber-500" />}
         maxWidthClassName="max-w-2xl"
         centered
@@ -1805,53 +2034,133 @@ const Finance: React.FC = () => {
           <button
             onClick={handleSaveTransaction}
             disabled={saving || !amount || !title}
-            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-amber-500 px-6 py-4 text-xs font-black uppercase tracking-[0.22em] text-slate-950 shadow-3xl transition-all disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--primary)] px-6 py-4 text-[11px] font-bold text-[color:var(--primary-foreground)] shadow-sm transition-all disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
           >
-            {saving ? <Loader2 className="animate-spin shrink-0" size={18} /> : <ShieldCheck size={18} strokeWidth={3} className="shrink-0" />}
+            {saving ? <Loader2 className="animate-spin shrink-0" size={17} /> : <ShieldCheck size={17} strokeWidth={2.5} className="shrink-0" />}
             <span className="truncate">
               {editingTransaction
-                ? (isProvisionForm ? 'METTRE À JOUR LA PROVISION' : "METTRE À JOUR L'OPÉRATION")
-                : (isProvisionForm ? 'PLANIFIER LA DÉPENSE' : "CONFIRMER L'OPÉRATION")}
+                ? (isProvisionForm ? 'Mettre à jour la provision' : "Mettre à jour")
+                : (isProvisionForm ? 'Planifier la dépense' : "Confirmer")}
             </span>
           </button>
         }
       >
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] p-1.5">
-            <button onClick={() => { setType('expense'); setCategoryValue('Courses'); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'expense' ? 'bg-rose-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPENSE</button>
-            <button onClick={() => { setType('deposit'); setCategoryValue('AMCI'); setIsPlanningProvision(false); }} className={`rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${type === 'deposit' ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'}`}>DÉPÔT</button>
+
+          {/* ── Type toggle ── */}
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-1.5">
+            <button
+              type="button"
+              onClick={() => { setType('expense'); setCategoryValue('Courses'); }}
+              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold transition-all ${
+                type === 'expense'
+                  ? 'bg-[color:var(--danger)] text-white shadow-sm'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text)]'
+              }`}
+            >
+              <ArrowDownCircle size={14} />
+              Dépense
+            </button>
+            <button
+              type="button"
+              onClick={() => { setType('deposit'); setCategoryValue('AMCI'); setIsPlanningProvision(false); }}
+              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold transition-all ${
+                type === 'deposit'
+                  ? 'bg-[color:var(--success)] text-white shadow-sm'
+                  : 'text-[color:var(--text-muted)] hover:text-[color:var(--text)]'
+              }`}
+            >
+              <ArrowUpCircle size={14} />
+              Dépôt
+            </button>
           </div>
 
-          <div className="space-y-4">
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`0.00 ${currencyLabel}`} className="ui-field w-full rounded-[1.5rem] border px-6 py-5 text-center text-3xl font-black italic outline-none transition-all focus:border-amber-500 sm:text-4xl" />
-            <input id="finance-transaction-title" type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="TITRE DE L'OPÉRATION" className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-sm font-bold uppercase tracking-widest outline-none transition-all focus:border-amber-500/30" />
+          {/* ── Amount ── */}
+          <div className="relative">
+            <input
+              type="number"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="ui-field w-full rounded-2xl border px-6 py-5 text-center text-4xl font-black tracking-tight outline-none transition-all focus:border-[color:var(--primary)]"
+            />
+            <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-[color:var(--text-muted)]">
+              {currencyLabel}
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Catégorie</label>
-              <select value={categoryValue} onChange={e => setCategoryValue(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none">
+          {type === 'expense' && amount && !Number.isNaN(Number(amount)) && Number(amount) > 0 && (() => {
+            const categoryBudget = budgets.find((budget) => budget.category === categoryValue);
+            const budgetAnalysisItem = budgetAnalysis.find((budget) => budget.category === categoryValue);
+            if (!categoryBudget || !budgetAnalysisItem) return null;
+            const remaining = budgetAnalysisItem.remaining - Number(amount);
+            const isOver = remaining < 0;
+
+            return (
+              <div className={`flex items-center justify-between rounded-xl border px-4 py-2.5 text-xs ${
+                isOver
+                  ? 'border-[color:var(--danger)]/30 bg-[color:var(--danger)]/8 text-[color:var(--danger)]'
+                  : 'border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)]'
+              }`}>
+                <span className="font-medium">Budget {categoryValue}</span>
+                <span className="font-bold">
+                  {isOver ? '⚠ ' : ''}{formatMoney(Math.abs(remaining))} {isOver ? 'de dépassement' : 'restant après'}
+                </span>
+              </div>
+            );
+          })()}
+
+          {/* ── Title ── */}
+          <div className="space-y-1.5">
+            <label className="ml-1 text-[11px] font-semibold text-[color:var(--text-muted)]">
+              Libellé de l'opération
+            </label>
+            <input
+              id="finance-transaction-title"
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Ex: Courses Marjane"
+              className="ui-field w-full rounded-2xl border px-5 py-3.5 text-sm font-medium outline-none transition-all focus:border-[color:var(--primary)]"
+            />
+          </div>
+
+          {/* ── Category + Date ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[11px] font-semibold text-[color:var(--text-muted)]">Catégorie</label>
+              <select
+                value={categoryValue}
+                onChange={e => setCategoryValue(e.target.value)}
+                className="ui-field w-full rounded-2xl border px-4 py-3.5 text-sm font-medium outline-none"
+              >
                 {type === 'expense' ? (
                   <>
-                    {budgets.map(b => <option key={b.category} value={b.category}>{b.category.toUpperCase()}</option>)}
-                    <option value="Admin">ADMIN</option>
-                    <option value="Santé">SANTÉ</option>
-                    <option value="Loyer">LOYER</option>
+                    {budgets.map(b => <option key={b.category} value={b.category}>{b.category}</option>)}
+                    <option value="Admin">Admin</option>
+                    <option value="Santé">Santé</option>
+                    <option value="Loyer">Loyer</option>
                   </>
                 ) : (
                   <>
                     <option value="AMCI">AMCI</option>
-                    <option value="Don">DON</option>
-                    <option value="Autres">AUTRES</option>
+                    <option value="Don">Don</option>
+                    <option value="Autres">Autres</option>
                   </>
                 )}
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Date d'exécution</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ui-field w-full rounded-[1.25rem] border px-5 py-4 text-[11px] font-black uppercase outline-none" />
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[11px] font-semibold text-[color:var(--text-muted)]">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="ui-field w-full rounded-2xl border px-4 py-3.5 text-sm font-medium outline-none"
+              />
             </div>
           </div>
+
         </div>
       </ModalShell>
       {/* 5. NEW DETAIL MODALS */}

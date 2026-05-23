@@ -1,6 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cx, uiRecipes } from '../../theme/recipes';
 
 interface ModalShellProps {
@@ -47,6 +47,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
   panelClassName = '',
   centered = false,
 }) => {
+  // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       const prev = document.body.style.overflow;
@@ -55,6 +56,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
     }
   }, [isOpen]);
 
+  // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -74,7 +76,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
           animate="visible"
           exit="exit"
           transition={EXIT_TRANSITION}
-          className="fixed inset-0 z-[300] bg-[color:var(--overlay)]/92 backdrop-blur-2xl"
+          className="fixed inset-0 z-[300] bg-[color:var(--overlay)]/90 backdrop-blur-2xl after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:to-[color:var(--overlay)]/20 after:pointer-events-none"
           onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
           <motion.div
@@ -95,6 +97,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
               ].join(' ')}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* ── Header ── */}
               <div className="ui-modal-header shrink-0 px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -116,6 +119,7 @@ const ModalShell: React.FC<ModalShellProps> = ({
                       </div>
                     </div>
                   </div>
+
                   <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     {headerActions}
                     <button
@@ -129,9 +133,18 @@ const ModalShell: React.FC<ModalShellProps> = ({
                   </div>
                 </div>
               </div>
-              <div className={['min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8', bodyClassName].join(' ')}>
+
+              {/* ── Body ── */}
+              <div
+                className={[
+                  'min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8',
+                  bodyClassName,
+                ].join(' ')}
+              >
                 {children}
               </div>
+
+              {/* ── Footer ── */}
               {footer ? (
                 <div className="ui-modal-footer shrink-0 px-4 py-4 sm:px-6 md:px-8">
                   {footer}
@@ -146,4 +159,3 @@ const ModalShell: React.FC<ModalShellProps> = ({
 };
 
 export default ModalShell;
-

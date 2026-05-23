@@ -9,13 +9,19 @@ import {
   MapPin,
   Phone,
   User2,
+  CheckCircle2,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { offlineRepository } from '../../data/offlineRepository';
 import { useProfile } from '../../features/profile/hooks/useProfile';
-import { cx, uiRecipes } from '../../theme/recipes';
-import { toneClassNames } from '../../theme/tokens';
-import { DEFAULT_CURRENCY, persistCurrency, resolveCurrency, SUPPORTED_CURRENCIES, type SupportedCurrencyCode } from '../../utils/currency';
+import { cx } from '../../theme/recipes';
+import {
+  DEFAULT_CURRENCY,
+  persistCurrency,
+  resolveCurrency,
+  SUPPORTED_CURRENCIES,
+  type SupportedCurrencyCode,
+} from '../../utils/currency';
 
 type OnboardingFlowProps = {
   onComplete: () => void;
@@ -38,27 +44,35 @@ type OnboardingForm = {
 const SLIDES = [
   {
     id: 'identity',
-    eyebrow: '',
-    title: 'Qui utilise Myflow ?',
-    subtitle: 'On commence par les informations de base pour personnaliser le profil.',
+    step: 1,
+    eyebrow: 'Bienvenue',
+    title: 'Qui es-tu ?',
+    subtitle: 'Commence par les informations de base pour personnaliser ton profil.',
+    emoji: '👋',
   },
   {
     id: 'contact',
+    step: 2,
     eyebrow: 'Contact',
     title: 'Reste joignable',
-    subtitle: 'Ces donnees serviront aux rapports, exports et rappels utiles.',
+    subtitle: 'Utilisés pour les rapports, exports et rappels.',
+    emoji: '📬',
   },
   {
     id: 'finance',
-    eyebrow: 'Finance',
-    title: 'Initialise ton solde',
-    subtitle: 'Le budget de depart alimente les modules finances, quota et projections.',
+    step: 3,
+    eyebrow: 'Finances',
+    title: 'Ton budget',
+    subtitle: 'Le solde de départ alimente tout le module financier.',
+    emoji: '💰',
   },
   {
     id: 'studies',
-    eyebrow: 'Etudes',
-    title: 'Definis ton contexte',
-    subtitle: "Le domaine d'etude et l'objectif principal rendent les analyses plus pertinentes.",
+    step: 4,
+    eyebrow: 'Études',
+    title: 'Ton contexte',
+    subtitle: 'Pour des analyses et recommandations plus pertinentes.',
+    emoji: '🎯',
   },
 ] as const;
 
@@ -74,20 +88,36 @@ const normalizeOnboardingValue = (value: string | null | undefined, defaults: Se
 };
 
 const normalizePositiveNumberInput = (value: number | null | undefined) => {
-  if (value == null || Number.isNaN(Number(value)) || Number(value) <= 0) {
-    return '';
-  }
-
+  if (value == null || Number.isNaN(Number(value)) || Number(value) <= 0) return '';
   return String(value);
 };
 
-const inputClassName = cx(uiRecipes.field, 'rounded-[1.35rem] px-4 py-4');
+/* ─── Input field ─── */
+const Field: React.FC<{
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  hint?: string;
+}> = ({ label, icon, children, hint }) => (
+  <div className="space-y-2">
+    <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
+      <span className="text-[color:var(--primary)]">{icon}</span>
+      {label}
+    </label>
+    {children}
+    {hint ? <p className="ml-1 text-[10px] text-[color:var(--text-muted)]">{hint}</p> : null}
+  </div>
+);
+
+const inputCls =
+  'w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3.5 text-sm font-medium text-[color:var(--text)] outline-none transition-all placeholder:text-[color:var(--text-muted)] focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--focus-ring)]';
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const queryClient = useQueryClient();
   const { data: profile } = useProfile();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+
   const [form, setForm] = useState<OnboardingForm>({
     fullName: '',
     email: '',
@@ -104,46 +134,37 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   useEffect(() => {
     if (!profile) return;
-
-    setForm((previous) => ({
-      ...previous,
-      fullName: previous.fullName || normalizeOnboardingValue(profile.username, DEFAULT_ONBOARDING_NAMES),
-      email: previous.email || normalizeOnboardingValue(profile.settings_config?.contact?.email, DEFAULT_ONBOARDING_EMAILS),
-      phone: previous.phone || normalizeOnboardingValue(profile.settings_config?.contact?.phone, DEFAULT_ONBOARDING_PHONES),
-      location: previous.location || normalizeOnboardingValue(profile.location, DEFAULT_ONBOARDING_LOCATIONS),
+    setForm((prev) => ({
+      ...prev,
+      fullName: prev.fullName || normalizeOnboardingValue(profile.username, DEFAULT_ONBOARDING_NAMES),
+      email: prev.email || normalizeOnboardingValue(profile.settings_config?.contact?.email, DEFAULT_ONBOARDING_EMAILS),
+      phone: prev.phone || normalizeOnboardingValue(profile.settings_config?.contact?.phone, DEFAULT_ONBOARDING_PHONES),
+      location: prev.location || normalizeOnboardingValue(profile.location, DEFAULT_ONBOARDING_LOCATIONS),
       currency:
-        previous.currency !== DEFAULT_CURRENCY || !profile.settings_config?.finance?.currency
-          ? previous.currency
+        prev.currency !== DEFAULT_CURRENCY || !profile.settings_config?.finance?.currency
+          ? prev.currency
           : resolveCurrency(profile.settings_config?.finance?.currency),
-      currentBalance: previous.currentBalance || normalizePositiveNumberInput(profile.amci_monthly_amount),
-      dailyQuota: previous.dailyQuota || normalizePositiveNumberInput(profile.settings_config?.daily_quota_override),
-      studyDomain: previous.studyDomain || profile.settings_config?.study?.primaryDomain || '',
-      studyLevel: previous.studyLevel || profile.settings_config?.study?.level || '',
-      institution: previous.institution || profile.settings_config?.study?.institution || '',
-      mainGoal: previous.mainGoal || normalizeOnboardingValue(profile.bio, DEFAULT_ONBOARDING_BIOS),
+      currentBalance: prev.currentBalance || normalizePositiveNumberInput(profile.amci_monthly_amount),
+      dailyQuota: prev.dailyQuota || normalizePositiveNumberInput(profile.settings_config?.daily_quota_override),
+      studyDomain: prev.studyDomain || profile.settings_config?.study?.primaryDomain || '',
+      studyLevel: prev.studyLevel || profile.settings_config?.study?.level || '',
+      institution: prev.institution || profile.settings_config?.study?.institution || '',
+      mainGoal: prev.mainGoal || normalizeOnboardingValue(profile.bio, DEFAULT_ONBOARDING_BIOS),
     }));
   }, [profile]);
 
-  const completionRatio = ((currentStep + 1) / SLIDES.length) * 100;
-
   const isCurrentStepValid = useMemo(() => {
     switch (SLIDES[currentStep].id) {
-      case 'identity':
-        return Boolean(form.fullName.trim());
-      case 'contact':
-        return Boolean(form.email.trim()) && Boolean(form.phone.trim());
-      case 'finance':
-        return form.currentBalance.trim() !== '';
-      case 'studies':
-        return Boolean(form.studyDomain.trim()) && Boolean(form.mainGoal.trim());
-      default:
-        return true;
+      case 'identity': return Boolean(form.fullName.trim());
+      case 'contact': return Boolean(form.email.trim()) && Boolean(form.phone.trim());
+      case 'finance': return form.currentBalance.trim() !== '';
+      case 'studies': return Boolean(form.studyDomain.trim()) && Boolean(form.mainGoal.trim());
+      default: return true;
     }
   }, [currentStep, form]);
 
-  const handleFieldChange = <K extends keyof OnboardingForm>(key: K, value: OnboardingForm[K]) => {
-    setForm((previous) => ({ ...previous, [key]: value }));
-  };
+  const set = <K extends keyof OnboardingForm>(key: K, value: OnboardingForm[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = async () => {
     const normalizedBudget = Math.max(0, Number(form.currentBalance) || 0);
@@ -157,28 +178,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         amci_monthly_amount: normalizedBudget,
         bio: form.mainGoal.trim(),
       });
-
       await offlineRepository.profile.updateSettings({
-        contact: {
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-        },
-        onboarding: {
-          completed: true,
-          completed_at: new Date().toISOString(),
-        },
-        finance: {
-          currency: resolveCurrency(form.currency),
-          currentBalance: normalizedBudget,
-        },
+        contact: { email: form.email.trim(), phone: form.phone.trim() },
+        onboarding: { completed: true, completed_at: new Date().toISOString() },
+        finance: { currency: resolveCurrency(form.currency), currentBalance: normalizedBudget },
         daily_quota_override: normalizedDailyQuota,
-        study: {
-          primaryDomain: form.studyDomain.trim(),
-          level: form.studyLevel.trim(),
-          institution: form.institution.trim(),
-        },
+        study: { primaryDomain: form.studyDomain.trim(), level: form.studyLevel.trim(), institution: form.institution.trim() },
       });
-
       persistCurrency(form.currency);
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
       onComplete();
@@ -189,261 +195,257 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   };
 
+  const slide = SLIDES[currentStep];
+  const progress = ((currentStep + 1) / SLIDES.length) * 100;
+
   return (
     <div className="min-h-[100dvh] bg-[color:var(--background)] text-[color:var(--text)]">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col justify-between px-5 py-6 sm:px-6">
-        <div>
-          <div className="mb-8">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[color:var(--tone-primary-text)]">Bienvenue</p>
-                <h1 className="mt-2 font-outfit text-[2rem] font-black uppercase italic tracking-[-0.06em] text-[color:var(--heading)]">
-                  Configuration initiale
-                </h1>
-              </div>
-              <div className={cx(uiRecipes.chip, 'px-3 py-1.5')}>
-                {currentStep + 1}/{SLIDES.length}
-              </div>
-            </div>
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-sm flex-col px-5 py-8 sm:px-6">
 
-            <div className="h-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-0.5">
-              <div className="h-full rounded-full bg-[color:var(--primary)] transition-all duration-500" style={{ width: `${completionRatio}%` }} />
-            </div>
+        {/* ── Top bar ── */}
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--primary)]">
+              {slide.eyebrow}
+            </p>
+            <h1 className="mt-1 text-[1.75rem] font-black uppercase italic tracking-tight text-[color:var(--heading)]">
+              {slide.title}
+            </h1>
           </div>
 
-          <div className={cx(uiRecipes.panel, 'rounded-[2rem] p-5')}>
-            {SLIDES[currentStep].eyebrow ? (
-              <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-muted)]">
-                {SLIDES[currentStep].eyebrow}
-              </p>
-            ) : null}
-            <h2 className={`font-outfit text-[1.9rem] font-black uppercase italic leading-[0.92] tracking-[-0.05em] text-[color:var(--heading)] ${SLIDES[currentStep].eyebrow ? 'mt-3' : ''}`}>
-              {SLIDES[currentStep].title}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[color:var(--text-secondary)]">{SLIDES[currentStep].subtitle}</p>
-
-            <div className="mt-6 space-y-4">
-              {SLIDES[currentStep].id === 'identity' ? (
-                <>
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <User2 size={12} /> Nom complet
-                    </span>
-                    <input
-                      value={form.fullName}
-                      onChange={(event) => handleFieldChange('fullName', event.target.value)}
-                      placeholder="Ex: Ahmed Benali"
-                      className={inputClassName}
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <MapPin size={12} /> Ville / localisation
-                    </span>
-                    <input
-                      value={form.location}
-                      onChange={(event) => handleFieldChange('location', event.target.value)}
-                      placeholder="Ex: Casablanca, Maroc"
-                      className={inputClassName}
-                    />
-                  </label>
-                </>
-              ) : null}
-
-              {SLIDES[currentStep].id === 'contact' ? (
-                <>
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <Mail size={12} /> Email
-                    </span>
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(event) => handleFieldChange('email', event.target.value)}
-                      placeholder="nom@exemple.com"
-                      className={inputClassName}
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <Phone size={12} /> Telephone
-                    </span>
-                    <input
-                      value={form.phone}
-                      onChange={(event) => handleFieldChange('phone', event.target.value)}
-                      placeholder="+212 6 00 00 00 00"
-                      className={inputClassName}
-                    />
-                  </label>
-                </>
-              ) : null}
-
-              {SLIDES[currentStep].id === 'finance' ? (
-                <>
-                  <div className="grid grid-cols-1 gap-4">
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                        <BadgeDollarSign size={12} /> Devise principale
-                      </span>
-                      <select
-                        value={form.currency}
-                        onChange={(event) => handleFieldChange('currency', resolveCurrency(event.target.value))}
-                        className={inputClassName}
-                      >
-                        {SUPPORTED_CURRENCIES.map((currency) => (
-                          <option key={currency.code} value={currency.code}>
-                            {currency.label} ({currency.description})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                        <BadgeDollarSign size={12} /> Solde actuel / budget de depart
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.currentBalance}
-                        onChange={(event) => handleFieldChange('currentBalance', event.target.value)}
-                        placeholder={`Ex: 3500 ${form.currency === 'FRANC' ? 'Franc' : form.currency}`}
-                        className={inputClassName}
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                        <BadgeDollarSign size={12} /> Limite de depense journaliere
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.dailyQuota}
-                        onChange={(event) => handleFieldChange('dailyQuota', event.target.value)}
-                        placeholder={`Ex: 150 ${form.currency === 'FRANC' ? 'Franc' : form.currency}`}
-                        className={inputClassName}
-                      />
-                    </label>
-                  </div>
-
-                  <div className={cx('rounded-[1.35rem] border p-4', toneClassNames.success.shell)}>
-                    <p className={cx('text-[10px] font-black uppercase tracking-[0.22em]', toneClassNames.success.text)}>Impact app</p>
-                    <p className="mt-2 text-sm leading-relaxed text-[color:var(--text-secondary)]">
-                      Le solde et la limite journaliere alimentent les quotas, projections, burn rate et toutes les analyses budgetaires.
-                    </p>
-                  </div>
-                </>
-              ) : null}
-
-              {SLIDES[currentStep].id === 'studies' ? (
-                <>
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <GraduationCap size={12} /> Domaine d'etude principal
-                    </span>
-                    <input
-                      value={form.studyDomain}
-                      onChange={(event) => handleFieldChange('studyDomain', event.target.value)}
-                      placeholder="Ex: Marketing digital"
-                      className={inputClassName}
-                    />
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                        <Briefcase size={12} /> Niveau
-                      </span>
-                      <input
-                        value={form.studyLevel}
-                        onChange={(event) => handleFieldChange('studyLevel', event.target.value)}
-                        placeholder="Ex: Licence 3"
-                        className={inputClassName}
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                        <GraduationCap size={12} /> Etablissement
-                      </span>
-                      <input
-                        value={form.institution}
-                        onChange={(event) => handleFieldChange('institution', event.target.value)}
-                        placeholder="Ex: FSJES"
-                        className={inputClassName}
-                      />
-                    </label>
-                  </div>
-
-                  <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                      <GraduationCap size={12} /> Objectif principal
-                    </span>
-                    <textarea
-                      value={form.mainGoal}
-                      onChange={(event) => handleFieldChange('mainGoal', event.target.value)}
-                      rows={4}
-                      placeholder="Ex: Structurer mes objectifs, suivre mes finances et avancer sur mes etudes chaque semaine."
-                      className={`${inputClassName} resize-none`}
-                    />
-                  </label>
-                </>
-              ) : null}
-            </div>
+          {/* Step counter */}
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-[11px] font-bold text-[color:var(--text-secondary)]">
+              {currentStep + 1} / {SLIDES.length}
+            </span>
           </div>
         </div>
 
-        <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            {SLIDES.map((slide, index) => (
+        {/* ── Progress ── */}
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5">
+            {SLIDES.map((s, i) => (
               <button
-                key={slide.id}
+                key={s.id}
                 type="button"
-                onClick={() => {
-                  if (index <= currentStep) {
-                    setCurrentStep(index);
-                  }
-                }}
-                className={`h-2.5 rounded-full transition-all ${index === currentStep ? 'w-10 bg-[color:var(--primary)]' : index < currentStep ? 'w-6 bg-[color:var(--tone-primary-border)]' : 'w-2.5 bg-[color:var(--muted)]'}`}
-                aria-label={`Etape ${index + 1}`}
+                onClick={() => { if (i <= currentStep) setCurrentStep(i); }}
+                className={cx(
+                  'h-1.5 rounded-full transition-all duration-300',
+                  i === currentStep
+                    ? 'flex-1 bg-[color:var(--primary)]'
+                    : i < currentStep
+                    ? 'w-8 bg-[color:var(--primary)] opacity-40'
+                    : 'w-8 bg-[color:var(--border-strong)] opacity-30',
+                )}
+                aria-label={`Étape ${i + 1}`}
               />
             ))}
           </div>
+        </div>
 
-          <div className="flex items-center gap-3">
+        {/* ── Description ── */}
+        <p className="mb-6 text-sm leading-relaxed text-[color:var(--text-secondary)]">
+          {slide.subtitle}
+        </p>
+
+        {/* ── Fields ── */}
+        <div className="flex-1 space-y-4">
+
+          {/* STEP 1 — Identity */}
+          {slide.id === 'identity' && (
+            <>
+              <Field label="Nom complet" icon={<User2 size={13} />}>
+                <input
+                  value={form.fullName}
+                  onChange={(e) => set('fullName', e.target.value)}
+                  placeholder="Ahmed Benali"
+                  className={inputCls}
+                  autoFocus
+                />
+              </Field>
+              <Field label="Ville" icon={<MapPin size={13} />}>
+                <input
+                  value={form.location}
+                  onChange={(e) => set('location', e.target.value)}
+                  placeholder="Casablanca, Maroc"
+                  className={inputCls}
+                />
+              </Field>
+            </>
+          )}
+
+          {/* STEP 2 — Contact */}
+          {slide.id === 'contact' && (
+            <>
+              <Field label="Email" icon={<Mail size={13} />}>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => set('email', e.target.value)}
+                  placeholder="nom@exemple.com"
+                  className={inputCls}
+                  autoFocus
+                />
+              </Field>
+              <Field label="Téléphone" icon={<Phone size={13} />}>
+                <input
+                  value={form.phone}
+                  onChange={(e) => set('phone', e.target.value)}
+                  placeholder="+212 6 00 00 00 00"
+                  className={inputCls}
+                />
+              </Field>
+            </>
+          )}
+
+          {/* STEP 3 — Finance */}
+          {slide.id === 'finance' && (
+            <>
+              <Field label="Devise" icon={<BadgeDollarSign size={13} />}>
+                <select
+                  value={form.currency}
+                  onChange={(e) => set('currency', resolveCurrency(e.target.value))}
+                  className={inputCls}
+                >
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.description} — {c.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field
+                label="Budget mensuel"
+                icon={<BadgeDollarSign size={13} />}
+                hint="Ton solde de départ. Alimente quotas, projections et alertes."
+              >
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.currentBalance}
+                    onChange={(e) => set('currentBalance', e.target.value)}
+                    placeholder="3500"
+                    className={cx(inputCls, 'pr-16 text-lg font-bold')}
+                    autoFocus
+                  />
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]">
+                    {form.currency === 'FRANC' ? 'Franc' : form.currency}
+                  </span>
+                </div>
+              </Field>
+
+              <Field
+                label="Limite journalière"
+                icon={<BadgeDollarSign size={13} />}
+                hint="Optionnel — combien tu peux dépenser par jour."
+              >
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.dailyQuota}
+                    onChange={(e) => set('dailyQuota', e.target.value)}
+                    placeholder="150"
+                    className={cx(inputCls, 'pr-16')}
+                  />
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[color:var(--text-muted)]">
+                    {form.currency === 'FRANC' ? 'Franc' : form.currency}
+                  </span>
+                </div>
+              </Field>
+            </>
+          )}
+
+          {/* STEP 4 — Studies */}
+          {slide.id === 'studies' && (
+            <>
+              <Field label="Domaine d'étude" icon={<GraduationCap size={13} />}>
+                <input
+                  value={form.studyDomain}
+                  onChange={(e) => set('studyDomain', e.target.value)}
+                  placeholder="Marketing digital"
+                  className={inputCls}
+                  autoFocus
+                />
+              </Field>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Niveau" icon={<Briefcase size={13} />}>
+                  <input
+                    value={form.studyLevel}
+                    onChange={(e) => set('studyLevel', e.target.value)}
+                    placeholder="Licence 3"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Établissement" icon={<GraduationCap size={13} />}>
+                  <input
+                    value={form.institution}
+                    onChange={(e) => set('institution', e.target.value)}
+                    placeholder="FSJES"
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+
+              <Field label="Objectif principal" icon={<GraduationCap size={13} />}>
+                <textarea
+                  value={form.mainGoal}
+                  onChange={(e) => set('mainGoal', e.target.value)}
+                  rows={3}
+                  placeholder="Ex: Structurer mes objectifs et avancer chaque semaine."
+                  className={cx(inputCls, 'resize-none')}
+                />
+              </Field>
+            </>
+          )}
+        </div>
+
+        {/* ── Navigation ── */}
+        <div className="mt-8 flex items-center gap-3">
+          {currentStep > 0 ? (
             <button
               type="button"
-              onClick={() => setCurrentStep((previous) => Math.max(0, previous - 1))}
-              disabled={currentStep === 0 || isSaving}
-              className={cx(uiRecipes.ghostButton, 'h-14 w-14 rounded-[1.25rem] px-0 py-0')}
+              onClick={() => setCurrentStep((p) => Math.max(0, p - 1))}
+              disabled={isSaving}
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-secondary)] transition-all hover:border-[color:var(--border-strong)] disabled:opacity-40"
+              aria-label="Retour"
             >
               <ArrowLeft size={18} />
             </button>
+          ) : (
+            <div className="h-14 w-14 shrink-0" />
+          )}
 
-            {currentStep === SLIDES.length - 1 ? (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!isCurrentStepValid || isSaving}
-                className={cx(uiRecipes.primaryButton, 'flex-1 rounded-[1.35rem] px-5 py-4')}
-              >
-                {isSaving ? 'Configuration...' : 'Terminer'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((previous) => Math.min(SLIDES.length - 1, previous + 1))}
-                disabled={!isCurrentStepValid}
-                className={cx(uiRecipes.secondaryButton, 'flex flex-1 items-center justify-center gap-2 rounded-[1.35rem] px-5 py-4')}
-              >
-                Continuer <ArrowRight size={16} />
-              </button>
-            )}
-          </div>
+          {currentStep === SLIDES.length - 1 ? (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isCurrentStepValid || isSaving}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[color:var(--primary)] text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--primary-foreground)] transition-all disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
+            >
+              {isSaving ? (
+                <span className="animate-spin">⟳</span>
+              ) : (
+                <CheckCircle2 size={17} />
+              )}
+              {isSaving ? 'Enregistrement…' : 'Terminer'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCurrentStep((p) => Math.min(SLIDES.length - 1, p + 1))}
+              disabled={!isCurrentStepValid}
+              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[color:var(--primary)] text-[11px] font-black uppercase tracking-[0.2em] text-[color:var(--primary-foreground)] transition-all disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
+            >
+              Continuer
+              <ArrowRight size={16} />
+            </button>
+          )}
         </div>
+
       </div>
     </div>
   );

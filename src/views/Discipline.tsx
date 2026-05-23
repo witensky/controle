@@ -1,7 +1,7 @@
 ﻿
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  Zap, ShieldAlert, Dumbbell, Brain, CheckCircle2, Plus, Trash2, ListTodo, History, Target, Clock, ArrowUpRight, Loader2, Moon, Sun, SlidersHorizontal, Star, AlertCircle, PlayCircle, PauseCircle, Timer, RotateCcw, MessageSquare, ShieldCheck, ChevronRight, BarChart3, TrendingUp, MoreVertical, X, Power, Layers, Activity, Calendar as CalendarIcon, FilterX, Database, Award, ClipboardCheck, BookOpen, Heart, Wallet, FileDown, Eye, Sparkles, CheckSquare, Sunrise, Sunset, Play, Square, FastForward, RefreshCcw, Pencil
+  Zap, ShieldAlert, Dumbbell, Brain, CheckCircle2, Plus, Trash2, ListTodo, History, Target, Clock, ArrowUpRight, Loader2, Moon, Sun, SlidersHorizontal, Star, AlertCircle, PlayCircle, PauseCircle, Timer, RotateCcw, MessageSquare, ShieldCheck, ChevronRight, BarChart3, TrendingUp, MoreVertical, X, Power, Layers, Activity, Calendar, Calendar as CalendarIcon, FilterX, Database, Award, ClipboardCheck, BookOpen, Heart, Wallet, FileDown, Eye, Sparkles, CheckSquare, Sunrise, Sunset, Play, Square, FastForward, RefreshCcw, Pencil
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import ModalShell from '../components/common/ModalShell';
@@ -526,7 +526,42 @@ const Discipline: React.FC = () => {
     return { score: Math.round((completed / total) * 100), pending: missions.filter(m => m.status !== 'Terminé').length };
   }, [missions]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-amber-500" size={40} /></div>;
+  const todayStats = useMemo(() => {
+    const todayKey = new Date().toISOString().split('T')[0];
+    const completedToday = missions.filter(m =>
+      m.status === 'Terminé' &&
+      m.completed_at?.startsWith(todayKey)
+    ).length;
+    const totalToday = missions.filter(m =>
+      m.planned_date?.startsWith(todayKey) || m.created_at?.startsWith(todayKey)
+    ).length;
+
+    return { completedToday, totalToday };
+  }, [missions]);
+
+  const getDeadlineStatus = (deadline?: string) => {
+    if (!deadline) return null;
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((deadlineDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return { label: 'Dépassée', color: 'text-[color:var(--danger)]', bg: 'bg-[color:var(--danger)]/10 border-[color:var(--danger)]/30' };
+    if (diff === 0) return { label: "Aujourd'hui", color: 'text-[color:var(--warning)]', bg: 'bg-[color:var(--warning)]/10 border-[color:var(--warning)]/30' };
+    if (diff <= 2) return { label: `${diff}j`, color: 'text-[color:var(--warning)]', bg: 'bg-[color:var(--warning)]/10 border-[color:var(--warning)]/30' };
+    if (diff <= 7) return { label: `${diff}j`, color: 'text-[color:var(--text-secondary)]', bg: 'bg-[color:var(--surface-muted)] border-[color:var(--border)]' };
+    return null;
+  };
+
+  if (loading) return (
+    <div className="space-y-3 pb-24">
+      <div className="skeleton h-9 w-56" />
+      <div className="skeleton h-14" />
+      <div className="skeleton h-14" />
+      <div className="skeleton h-14" />
+      <div className="skeleton h-14 opacity-60" />
+    </div>
+  );
 
   return (
     <div className="space-y-4 pb-44 animate-in fade-in duration-700 min-h-screen bg-[color:var(--app-bg)]">
@@ -681,7 +716,18 @@ const Discipline: React.FC = () => {
                       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={80} className="text-amber-500" /></div>
                       <div className="relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                          <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-lg text-[8px] font-black uppercase tracking-widest border border-amber-500/20">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="px-3 py-1 bg-amber-500/20 text-amber-500 rounded-lg text-[8px] font-black uppercase tracking-widest border border-amber-500/20">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
+                            {(() => {
+                              const deadlineStatus = getDeadlineStatus(mission.deadline);
+                              return deadlineStatus ? (
+                                <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-bold ${deadlineStatus.bg} ${deadlineStatus.color}`}>
+                                  <Calendar size={9} />
+                                  {deadlineStatus.label}
+                                </span>
+                              ) : null;
+                            })()}
+                          </div>
                           {mission.id === focusMission?.id && <div className="flex items-center gap-2 text-rose-500 animate-pulse font-mono font-bold">{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</div>}
                         </div>
                         <h4 className="text-lg md:text-xl font-black text-[color:var(--text-primary)] italic uppercase mb-6 leading-tight">{mission.title}</h4>
@@ -717,6 +763,16 @@ const Discipline: React.FC = () => {
                 <h3 className="text-xs font-black text-[color:var(--text-muted)] uppercase tracking-[0.2em]">LISTE ({pendingMissions.length})</h3>
               </div>
 
+              {todayStats.completedToday > 0 && (
+                <div className="mb-3 flex items-center gap-2 rounded-2xl border border-[color:var(--success)]/25 bg-[color:var(--success)]/8 px-4 py-3">
+                  <CheckCircle2 size={15} className="shrink-0 text-[color:var(--success)]" />
+                  <p className="text-xs font-semibold text-[color:var(--text-secondary)]">
+                    <span className="font-bold text-[color:var(--success)]">{todayStats.completedToday} mission{todayStats.completedToday > 1 ? 's' : ''}</span>
+                    {' '}terminée{todayStats.completedToday > 1 ? 's' : ''} aujourd'hui
+                  </p>
+                </div>
+              )}
+
               {pendingMissions.length === 0 ? (
                 <div className="py-12 rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] flex flex-col items-center justify-center text-[color:var(--text-muted)] shadow-card dark:bg-transparent dark:border-white/10 dark:text-slate-600">
                   <Target size={32} className="mb-4 opacity-50" />
@@ -725,36 +781,73 @@ const Discipline: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 gap-3">
                   {pendingMissions.map(mission => (
-                    // QUEUE CARD
-                    <div key={mission.id} className="group flex flex-col justify-between gap-4 rounded-xl border border-[color:var(--border)] bg-gradient-to-r from-[color:var(--surface-elevated)] to-[color:var(--surface)] p-4 shadow-soft transition-all hover:translate-x-1 hover:border-[color:var(--border-strong)] hover:shadow-card md:flex-row md:items-center md:gap-0">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-12 w-1 rounded-full ${mission.priority === 'critical' ? 'bg-[color:var(--danger)]' : mission.priority === 'high' ? 'bg-[color:var(--warning)]' : 'bg-[color:var(--border-strong)]'}`} />
-                        <div>
-                          <h4 className="text-sm font-bold uppercase tracking-tight text-[color:var(--heading)] transition-colors group-hover:text-[color:var(--tone-warning-text)] dark:text-slate-200 dark:group-hover:text-white">{mission.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="rounded px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-colors group-hover:text-[color:var(--tone-warning-text)]">{displayMissionCategoryLabel(mission.category, studyDomainLabel)}</span>
-                            {mission.priority === 'critical' && <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-[color:var(--tone-danger-text)]"><AlertCircle size={8} /> CRITIQUE</span>}
-                          </div>
+                    <div
+                      key={mission.id}
+                      className="group flex items-center gap-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3.5 transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
+                    >
+                      {/* Priority stripe */}
+                      <div className={`h-8 w-1 shrink-0 rounded-full ${
+                        mission.priority === 'critical' ? 'bg-[color:var(--danger)]'
+                        : mission.priority === 'high' ? 'bg-[color:var(--warning)]'
+                        : 'bg-[color:var(--border-strong)]'
+                      }`} />
+
+                      {/* Title + category */}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[color:var(--text)]">
+                          {mission.title}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="rounded-md border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-1.5 py-0.5 text-[9px] font-semibold text-[color:var(--text-muted)]">
+                            {displayMissionCategoryLabel(mission.category, studyDomainLabel)}
+                          </span>
+                          {(() => {
+                            const deadlineStatus = getDeadlineStatus(mission.deadline);
+                            return deadlineStatus ? (
+                              <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-bold ${deadlineStatus.bg} ${deadlineStatus.color}`}>
+                                <Calendar size={9} />
+                                {deadlineStatus.label}
+                              </span>
+                            ) : null;
+                          })()}
+                          {mission.priority === 'critical' && (
+                            <span className="text-[9px] font-bold text-[color:var(--danger)]">Critique</span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 w-full md:w-auto justify-end md:opacity-0 md:group-hover:opacity-100 md:translate-x-4 md:group-hover:translate-x-0 transition-all duration-300">
-                        <button onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }} className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text-primary)] md:h-8 md:w-8">
-                          <MoreVertical size={16} />
+
+                      {/* Actions — always visible on mobile, hover on desktop */}
+                      <div className="flex shrink-0 items-center gap-1.5 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
+                        <button
+                          onClick={() => { setEditingMission(mission); setEditTitle(mission.title); setEditCategory(mission.category); setEditPriority(mission.priority); }}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+                          aria-label="Modifier"
+                        >
+                          <MoreVertical size={15} />
                         </button>
                         <button
                           onClick={() => {
                             setStartMissionModal(mission);
                             setStartDurationMinutes(Math.max(5, Number(profile?.settings_config?.defaultMissionDuration) || 25));
                           }}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--tone-info-border)] bg-[color:var(--tone-info-surface)] text-[color:var(--tone-info-text)] transition-all hover:border-[color:var(--tone-info-text)] md:h-8 md:w-8"
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--info)]/30 bg-[color:var(--info)]/10 text-[color:var(--info)] transition-all hover:bg-[color:var(--info)]/20"
+                          aria-label="Démarrer"
                         >
-                          <Play size={16} fill="currentColor" />
+                          <Play size={14} fill="currentColor" />
                         </button>
-                        <button onClick={() => updateMissionStatus(mission.id, 'Terminé')} className="flex h-10 w-10 items-center justify-center rounded-lg border border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] transition-all hover:border-[color:var(--tone-success-text)] md:h-8 md:w-8">
-                          <CheckCircle2 size={16} />
+                        <button
+                          onClick={() => updateMissionStatus(mission.id, 'Terminé')}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl border border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)] transition-all hover:bg-[color:var(--success)]/20"
+                          aria-label="Terminer"
+                        >
+                          <CheckCircle2 size={15} />
                         </button>
-                        <button onClick={() => deleteMissionHandler(mission.id)} className="w-10 h-10 md:w-8 md:h-8 rounded-lg text-[color:var(--text-muted)] hover:text-rose-500 flex items-center justify-center transition-all">
-                          <Trash2 size={16} />
+                        <button
+                          onClick={() => deleteMissionHandler(mission.id)}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-muted)] transition-all hover:text-[color:var(--danger)]"
+                          aria-label="Supprimer"
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -786,7 +879,7 @@ const Discipline: React.FC = () => {
 
         {/* === RITUALS VIEW === */}
         {activeTab === 'rituals' && (
-          <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
+          <div className="space-y-8 animate-fade-up">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* MORNING */}
               <div className="glass group rounded-[2rem] p-5 md:p-6 relative overflow-hidden hover:border-amber-500/30 transition-all">
@@ -972,42 +1065,42 @@ const Discipline: React.FC = () => {
       {/* MODALS & OVERLAYS */}
 
       {startMissionModal && (
-        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-[color:var(--overlay)]/70 p-4 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-sm overflow-hidden rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_30px_90px_var(--shadow-strong)] dark:border-white/10 dark:bg-[#111a30]">
-            <div className="border-b border-[color:var(--border)] px-5 pb-5 pt-6 dark:border-white/5">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/15 bg-blue-500/10 px-3 py-1.5">
-                <Timer size={12} className="text-blue-400" />
-                <span className="text-[9px] font-black uppercase tracking-[0.28em] text-blue-300">Duree focus</span>
+        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-[color:var(--overlay)]/75 p-4 backdrop-blur-xl">
+          <div className="w-full max-w-sm overflow-hidden rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_30px_90px_rgba(0,0,0,0.2)]">
+
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-5 py-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--primary)]">
+                  Durée focus
+                </p>
+                <h3 className="mt-1 text-lg font-black uppercase italic tracking-tight text-[color:var(--heading)] truncate">
+                  {startMissionModal.title}
+                </h3>
+                <p className="mt-1 text-xs text-[color:var(--text-muted)]">
+                  Définis le temps de travail pour cette session.
+                </p>
               </div>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-[1.8rem] font-black uppercase italic leading-none tracking-[-0.04em] text-[color:var(--text-primary)] font-outfit">
-                    Demarrer
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-[color:var(--text-secondary)]">
-                    Definis la duree de travail pour <span className="font-black text-[color:var(--text-primary)]">{startMissionModal.title}</span>.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setStartMissionModal(null)}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-white"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+              <button
+                onClick={() => setStartMissionModal(null)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
+              >
+                <X size={16} />
+              </button>
             </div>
 
             <div className="space-y-5 px-5 py-5">
+              {/* Quick duration chips */}
               <div className="grid grid-cols-4 gap-2">
                 {[15, 25, 45, 60].map((minutes) => (
                   <button
                     key={minutes}
                     type="button"
                     onClick={() => setStartDurationMinutes(minutes)}
-                    className={`rounded-xl border px-3 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                    className={`rounded-xl border py-3 text-xs font-bold transition-all ${
                       startDurationMinutes === minutes
-                        ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                        : 'border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-white/20 dark:hover:text-white'
+                        ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--primary-foreground)]'
+                        : 'border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text)]'
                     }`}
                   >
                     {minutes}m
@@ -1015,9 +1108,10 @@ const Discipline: React.FC = () => {
                 ))}
               </div>
 
-              <div className="rounded-[1.4rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 dark:border-white/5 dark:bg-slate-950/50">
-                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
-                  Duree personnalisee
+              {/* Custom duration */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-[color:var(--text-muted)]">
+                  Durée personnalisée
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -1026,26 +1120,27 @@ const Discipline: React.FC = () => {
                     max={240}
                     step={5}
                     value={startDurationMinutes}
-                    onChange={(event) => setStartDurationMinutes(Math.max(5, Number(event.target.value) || 5))}
-                    className="ui-field w-full rounded-2xl border px-4 py-3 text-base font-black outline-none transition-all focus:border-blue-500/40"
+                    onChange={(e) => setStartDurationMinutes(Math.max(5, Number(e.target.value) || 5))}
+                    className="ui-field w-full rounded-2xl border px-4 py-3 text-lg font-bold outline-none transition-all focus:border-[color:var(--primary)]"
                   />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">min</span>
+                  <span className="text-sm font-semibold text-[color:var(--text-muted)]">min</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={handleStartMission}
-                  className="flex items-center justify-center gap-2 rounded-[1.25rem] bg-blue-600 px-5 py-4 text-[10px] font-black uppercase tracking-[0.24em] text-white transition-all hover:bg-blue-500"
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-[color:var(--primary)] px-5 py-3.5 text-[11px] font-bold text-[color:var(--primary-foreground)] transition-all hover:opacity-90 active:scale-[0.98]"
                 >
-                  <PlayCircle size={16} />
+                  <PlayCircle size={15} />
                   Lancer la session
                 </button>
                 <button
                   type="button"
                   onClick={() => setStartMissionModal(null)}
-                  className="rounded-[1.1rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] px-5 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)] dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:border-white/20 dark:hover:text-white"
+                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-3 text-[11px] font-medium text-[color:var(--text-muted)] transition-all hover:text-[color:var(--text)]"
                 >
                   Annuler
                 </button>

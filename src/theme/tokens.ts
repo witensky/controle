@@ -18,16 +18,6 @@ export const chartToneByIntent = {
   success: 'var(--chart-6)',
 } as const;
 
-export const radius = {
-  sm: 'rounded-lg',
-  md: 'rounded-[0.875rem]',
-  lg: 'rounded-[1.25rem]',
-  xl: 'rounded-[1.75rem]',
-  full: 'rounded-full',
-} as const;
-
-export type RadiusKey = keyof typeof radius;
-
 export const toneClassNames: Record<
   ToneKey,
   {
@@ -105,3 +95,26 @@ export const dashboardToneTokens = {
     spark: 'var(--chart-2)',
   },
 } as const;
+
+/**
+ * Border-radius semantic scale.
+ *
+ * BEFORE: rounded-[1.35rem], rounded-[1.9rem], rounded-[2.25rem] dispersés partout
+ * AFTER:  radius.sm / radius.md / radius.lg / radius.xl / radius.full
+ *
+ * Usage: <div className={radius.lg}>
+ */
+export const radius = {
+  /** 8px — inputs, badges, small chips */
+  sm: 'rounded-lg',
+  /** 14px — compact cards, metric cards */
+  md: 'rounded-[0.875rem]',
+  /** 20px — standard cards, sections */
+  lg: 'rounded-[1.25rem]',
+  /** 28px — modales, hero panels */
+  xl: 'rounded-[1.75rem]',
+  /** 9999px — pills, bottom nav, FAB */
+  full: 'rounded-full',
+} as const;
+
+export type RadiusKey = keyof typeof radius;

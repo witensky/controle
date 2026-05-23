@@ -19,30 +19,69 @@ body {
   font-family: 'Outfit', sans-serif;
 }
 
-/* -----------------------------------------------------------------------------
-   SHIMS SUPPRIMES - utiliser les CSS variables semantiques uniquement.
-   OK  bg-[color:var(--surface)]   au lieu de  bg-white dark:bg-slate-950
-   OK  text-[color:var(--text)]    au lieu de  text-slate-900 dark:text-white
-   OK  border-[color:var(--border)] au lieu de border-gray-200 dark:border-white/8
-   ----------------------------------------------------------------------------- */
+/* ─────────────────────────────────────────────────────────────────────────────
+   LEGACY SHIM REMOVAL
+   ─────────────────────────────────────────────────────────────────────────────
+   The ~200 lines of html:not(.dark) override rules that used to live here have
+   been removed. They were band-aids for components using raw Tailwind dark:
+   utilities (dark:bg-slate-950, dark:text-white, etc.) instead of the semantic
+   CSS variables defined in theme.css.
 
-/* Scrollbar Customization */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+   Going forward, ALL color tokens must use CSS variables:
+     ✅  bg-[color:var(--surface)]              instead of  bg-white dark:bg-slate-950
+     ✅  text-[color:var(--text)]               instead of  text-slate-900 dark:text-white
+     ✅  border-[color:var(--border)]           instead of  border-slate-200 dark:border-white/8
+
+   The theme.css file already defines these variables for both light and dark.
+   Components that still use raw dark: utilities will render incorrectly in light
+   mode until they are migrated to semantic tokens.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Fond de page : grain très léger (donne de la profondeur) ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.018;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--scroll-track);
+/* ── App main content au-dessus du grain ── */
+#root {
+    position: relative;
+    z-index: 1;
 }
 
+/* ── Scrollbar thème cohérent ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-    background: var(--scroll-thumb);
-    border-radius: 3px;
+    background: var(--border-strong);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--scroll-thumb-hover);
+/* ── Transition de vue douce ── */
+.view-transition {
+    animation: fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Card hover premium ── */
+.card-interactive {
+    transition: transform 180ms cubic-bezier(0.22,1,0.36,1),
+                box-shadow 180ms ease,
+                border-color 180ms ease;
+}
+.card-interactive:hover {
+    transform: translateY(-2px);
+}
+.card-interactive:active {
+    transform: scale(0.98);
 }
 
 /* Glassmorphism Utilities */

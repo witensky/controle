@@ -701,6 +701,114 @@ html[data-theme='dark'] {
   .study-progress-fill {
     background: var(--study-progress-fill);
   }
+
+  /* ── Entrées de page ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-up-delay-1 { animation-delay: 60ms; }
+  .animate-fade-up-delay-2 { animation-delay: 120ms; }
+  .animate-fade-up-delay-3 { animation-delay: 180ms; }
+  .animate-fade-up-delay-4 { animation-delay: 240ms; }
+
+  /* ── Card avec micro-lift au hover ── */
+  .card-lift {
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 200ms ease;
+  }
+
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ── Trait décoratif sous les titres de section ── */
+  .section-title {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-title::after {
+    content: '';
+    display: block;
+    height: 2px;
+    width: 2rem;
+    border-radius: 9999px;
+    background: var(--primary);
+    opacity: 0.5;
+  }
+
+  /* ── Skeleton loader ── */
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+
+  .skeleton {
+    border-radius: 0.75rem;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--surface-muted) 100%, transparent) 25%,
+      color-mix(in srgb, var(--surface-elevated) 90%, transparent) 50%,
+      color-mix(in srgb, var(--surface-muted) 100%, transparent) 75%
+    );
+    background-size: 800px 100%;
+    animation: shimmer 1.6s infinite linear;
+  }
+
+  /* ── Ligne de séparation avec label centré ── */
+  .divider-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  .divider-label::before,
+  .divider-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Bouton primaire plus doux ── */
+  .ui-primary-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ui-primary-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .ui-primary-button:active {
+    transform: scale(0.97);
+  }
+
+  /* ── Input focus plus visible ── */
+  .ui-field:focus,
+  .ui-field:focus-visible {
+    border-color: var(--primary) !important;
+  }
 }
 
 .glass {
