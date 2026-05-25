@@ -39,13 +39,15 @@ const quickActions: Array<{
   },
 ];
 
+const FAB_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
 const ITEM_VARIANTS = {
   hidden: { opacity: 0, y: 12, scale: 0.92 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { delay: i * 0.045, duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.045, duration: 0.22, ease: FAB_EASE },
   }),
   exit: (i: number) => ({
     opacity: 0,
@@ -146,7 +148,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, ease: FAB_EASE }}
           className={cx(
             uiRecipes.primaryButton,
             'pointer-events-auto h-16 w-16 rounded-full px-0 py-0 text-[#18212d] shadow-premium',
