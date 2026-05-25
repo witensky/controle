@@ -17,7 +17,7 @@ type StoreName =
   | 'protocol_logs';
 
 const DB_NAME = 'jb-command-center-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORE_CONFIG: Record<StoreName, { keyPath: string }> = {
   profiles: { keyPath: 'id' },

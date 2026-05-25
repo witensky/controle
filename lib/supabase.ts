@@ -1,8 +1,8 @@
 
 import { createClient, PostgrestError } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rhutpcvkzioepxiutwjd.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_nzwluSeOy1VFdVf0wFxn6Q_CH63ewii';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rhutpcvkzioepxiutwjd.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_nzwluSeOy1VFdVf0wFxn6Q_CH63ewii';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

@@ -122,6 +122,9 @@ const App: React.FC = () => {
           setNeedsOnboarding(isOnboardingRequired(profile));
         }
       })
+      .catch((error) => {
+        console.error('[App bootstrap]', error);
+      })
       .finally(() => {
         if (isMounted) {
           setIsAppReady(true);
@@ -224,12 +227,12 @@ const App: React.FC = () => {
                 ref={mainRef}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
-                className={`app-main relative min-h-0 flex-1 overflow-y-auto bg-[color:var(--background)] md:h-screen ${
+                className={`app-main app-main-surface relative min-h-0 flex-1 overflow-y-auto bg-[color:var(--background)] md:h-screen ${
                   showMobileNav || showFab ? 'pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:pb-0' : 'pb-0'
                 }`}
               >
                 <div
-                  className={`mx-auto w-full max-w-7xl px-4 pb-4 pt-3 md:px-8 md:py-8 lg:px-10 ${
+                  className={`app-content-frame mx-auto w-full max-w-7xl px-4 pb-4 pt-3 md:px-8 md:py-8 lg:px-10 ${
                     showMobileNav || showFab
                       ? 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-10'
                       : 'pb-6 md:pb-10'
