@@ -21,6 +21,8 @@ body {
 
 .app-shell {
   isolation: isolate;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 .app-main-surface {
@@ -551,4 +553,168 @@ body::before {
         color: #64748b;
         font-size: 11px;
     }
+}
+
+/* ── Keyboard / Visual Viewport handling (Capacitor Android) ── */
+/* Modal body: allow it to scroll up when keyboard is open */
+[data-modal-body] {
+  /* Ensure inputs are scrolled into view */
+  scroll-padding-bottom: 1.5rem;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Input fields: remove iOS default styling */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+  /* border-radius intentionally NOT reset here — ui-field recipe handles it */
+}
+
+/* Prevent iOS zoom on input focus (requires font-size >= 16px or this fix) */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+textarea {
+  font-size: max(16px, 1em);
+}
+
+/* Touch tap highlight already removed globally but re-enforce on interactive elements */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Minimum touch target size (WCAG 2.5.5: 44x44px = 2.75rem) */
+button:not([class*="h-"]):not([class*="min-h-"]),
+[role="button"]:not([class*="h-"]):not([class*="min-h-"]) {
+  min-height: 2.75rem; /* 44px */
+}
+
+/* Safe area padding utilities */
+.pt-safe  { padding-top:    env(safe-area-inset-top);    }
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom); }
+.pl-safe  { padding-left:   env(safe-area-inset-left);   }
+.pr-safe  { padding-right:  env(safe-area-inset-right);  }
+
+/* Safe area with minimum fallback (preferred for bottom bars) */
+.pb-safe-min { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.mb-safe-min { margin-bottom:  max(1rem, env(safe-area-inset-bottom)); }
+
+/* Padding bottom for scrollable content above fixed nav */
+.pb-nav  { padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem); }
+.pb-nav-fab { padding-bottom: calc(env(safe-area-inset-bottom) + 7.5rem); }
+
+/* ── Fade-up animation (used by views) ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.animate-fade-up {
+  animation: fade-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Animate-in utility ── */
+@keyframes slide-in-from-right-8 {
+  from { transform: translateX(2rem); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.animate-in.slide-in-from-right-8 {
+  animation: slide-in-from-right-8 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Missing animation classes (used throughout app) ── */
+@keyframes zoom-in-95-anim {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-in-from-top {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-from-bottom {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-from-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-in-from-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Tailwind v3-compatible animate-in utility */
+.animate-in {
+  animation-fill-mode: both;
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-in.fade-in              { animation-name: fade-up; }
+.animate-in.zoom-in-95           { animation-name: zoom-in-95-anim; }
+.animate-in.slide-in-from-top-2,
+.animate-in.slide-in-from-top-4,
+.animate-in.slide-in-from-top-10 { animation-name: slide-in-from-top; }
+.animate-in.slide-in-from-bottom-4,
+.animate-in.slide-in-from-bottom-8,
+.animate-in.slide-in-from-bottom-20 { animation-name: slide-in-from-bottom; }
+.animate-in.slide-in-from-right-4,
+.animate-in.slide-in-from-right-8  { animation-name: slide-in-from-right; }
+.animate-in.slide-in-from-left-4   { animation-name: slide-in-from-left; }
+
+/* duration modifiers */
+.duration-200 { animation-duration: 0.2s; }
+.duration-300 { animation-duration: 0.3s; }
+.duration-500 { animation-duration: 0.5s; }
+.duration-700 { animation-duration: 0.7s; }
+.duration-1000 { animation-duration: 1s; }
+.delay-100 { animation-delay: 0.1s; }
+
+/* ── Missing shadow utilities ── */
+.shadow-card    { box-shadow: var(--shadow-sm); }
+.shadow-3xl     { box-shadow: 0 40px 120px rgba(0, 0, 0, 0.5); }
+.shadow-premium { box-shadow: 0 22px 56px rgba(0, 0, 0, 0.34), 0 4px 14px rgba(0,0,0,0.18); }
+
+/* ── Backdrop blur utilities not in Tailwind ── */
+.backdrop-blur-3xl  { backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); }
+.backdrop-blur-\[100px\] { backdrop-filter: blur(100px); -webkit-backdrop-filter: blur(100px); }
+
+/* ── Dashboard shell class (used in Discipline) ── */
+.dashboard-shell {
+  border: 1px solid var(--dashboard-shell-border);
+  background: var(--dashboard-shell-bg);
+  box-shadow: var(--dashboard-shell-shadow);
+}
+
+/* ── Custom scrollbar utility ── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── No scrollbar ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── surface-2 alias ── */
+
+/* ── Modal drag handle (mobile bottom sheet indicator) ── */
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  transition: background-color 180ms ease;
+}
+
+.drag-handle:hover {
+  background: var(--text-muted);
 }
