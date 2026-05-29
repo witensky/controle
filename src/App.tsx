@@ -1,22 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppDialogProvider } from './components/common/AppDialogProvider';
+import AppErrorBoundary from './components/common/AppErrorBoundary';
+import AppReminderCenter from './components/common/AppReminderCenter';
+import NotificationInitializer from './components/common/NotificationInitializer';
 import AppNavigation from './components/navigation/AppNavigation';
 import QuickActionsFab from './components/navigation/QuickActionsFab';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
-import AppReminderCenter from './components/common/AppReminderCenter';
-import AppErrorBoundary from './components/common/AppErrorBoundary';
-import { AppDialogProvider } from './components/common/AppDialogProvider';
-import { ThemeProvider } from './theme/ThemeProvider';
 import DailyRoutineScheduler from './components/settings/DailyRoutineScheduler';
 import StudyReminderScheduler from './components/studies/StudyReminderScheduler';
-import { dispatchQuickAction, queueQuickAction, quickActionTargetView, QuickActionType } from './lib/quickActions';
 import { offlineRepository } from './data/offlineRepository';
-import AppRouter from './router/AppRouter';
-import { AppView } from './types';
-import { getViewFromLocation, syncLocationWithView } from './router/viewRouter';
 import { isOnboardingRequired } from './features/profile/utils/onboarding';
+import { dispatchQuickAction, queueQuickAction, quickActionTargetView, QuickActionType } from './lib/quickActions';
+import AppRouter from './router/AppRouter';
+import { getViewFromLocation, syncLocationWithView } from './router/viewRouter';
+import { ThemeProvider } from './theme/ThemeProvider';
+import { AppView } from './types';
 import { persistCurrency } from './utils/currency';
 
 const queryClient = new QueryClient({
@@ -205,6 +206,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AppDialogProvider>
+          <NotificationInitializer />
           <DailyRoutineScheduler />
           <StudyReminderScheduler />
           <AppReminderCenter />
@@ -222,6 +224,7 @@ const App: React.FC = () => {
                 isNavVisible={showMobileNav && isNavVisible}
                 showMobileUi={showMobileNav}
               />
+              <div id="modal-root"></div>
 
               <main
                 ref={mainRef}

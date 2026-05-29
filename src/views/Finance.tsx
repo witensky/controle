@@ -1,38 +1,58 @@
 ﻿
-import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Plus, ShoppingCart, History, X, Banknote, ArrowUpCircle, Wallet, Tag, MessageSquare, Edit3, Trash2, Search, Loader2, Sparkles, AlertCircle, Calendar, TrendingDown, Target, ArrowRight, ShieldCheck, Save, Settings2, LineChart as LucideLineChart, FileDown, ArrowDownCircle, PieChart as LucidePieChart, Calculator, TrendingUp, Layers, PiggyBank, Pencil, BarChart3, Copy
+    ArrowDownCircle,
+    ArrowRight,
+    ArrowUpCircle,
+    Banknote,
+    BarChart3,
+    Calculator,
+    Calendar,
+    Copy,
+    Edit3,
+    History,
+    Loader2,
+    PieChart as LucidePieChart,
+    Pencil,
+    PiggyBank,
+    Plus,
+    Search,
+    ShieldCheck,
+    Sparkles,
+    Target,
+    Trash2,
+    Wallet,
+    X
 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BarChartComponent, PieChartComponent, RadialProgressChart } from '../components/charts';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import ModalShell from '../components/common/ModalShell';
-import { BarChartComponent, PieChartComponent, RadialProgressChart } from '../components/charts';
 import { AlertBanner } from '../components/finance/AlertBanner';
+import { BurnRateAnalytics } from '../components/finance/BurnRateAnalytics';
 import { DailyExpensesDetail } from '../components/finance/DailyExpensesDetail';
 import { ProvisionsTimeline } from '../components/finance/ProvisionsTimeline';
-import { SecurityDashboard } from '../components/finance/SecurityDashboard';
 import { QuotaAnalysis } from '../components/finance/QuotaAnalysis';
-import { BurnRateAnalytics } from '../components/finance/BurnRateAnalytics';
-import { ExpensesEvolutionChart, VectorDistributionChart, ProjectionChart } from '../components/finance/FinancialCharts';
 import ResteAVivreWidget from '../components/finance/ResteAVivreWidget';
+import { SecurityDashboard } from '../components/finance/SecurityDashboard';
 import TacticalFinanceCharts from '../components/finance/TacticalFinanceCharts';
 import TransactionDetailModal from '../components/finance/TransactionDetailModal';
-import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
-import { localStore, LOCAL_KEYS } from '../lib/localStorage';
-import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBudget';
-import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurrence } from '../utils/financeReset';
-import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 import { useCurrentDayKey } from '../hooks/useCurrentDayKey';
 import { useSwipeDelete } from '../hooks/useSwipeDelete';
+import { LOCAL_KEYS, localStore } from '../lib/localStorage';
+import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { useTheme } from '../theme/ThemeProvider';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
-import { isPlannedProvision } from '../utils/financeProvisions';
 import { formatCurrencyAmount, getCurrencyLabel, getStoredCurrency, resolveCurrency } from '../utils/currency';
+import { DEFAULT_MONTHLY_BUDGET, resolveMonthlyBudget } from '../utils/financeBudget';
+import { isPlannedProvision } from '../utils/financeProvisions';
+import { computeDaysUntilReset, resolveFinanceResetDate, type FinanceResetRecurrence } from '../utils/financeReset';
+import { isPastOrTodayDateOnly, isSameDateOnly, normalizeDateOnly } from '../utils/transactionDates';
 
-import { useTransactions, useBudgets, useSavings, useFinanceProfile, useCreateTransaction, useCreateSavings, useUpdateSavings, useDeleteSavings, useUpdateBudgets, useDeleteTransaction, useUpdateTransaction, useExecuteSaving, useUpdateFinanceSettings } from '../features/finance/hooks/useFinance';
+import { useBudgets, useCreateSavings, useCreateTransaction, useDeleteSavings, useDeleteTransaction, useExecuteSaving, useFinanceProfile, useSavings, useTransactions, useUpdateBudgets, useUpdateFinanceSettings, useUpdateSavings, useUpdateTransaction } from '../features/finance/hooks/useFinance';
 import { useTransactionForm } from '../features/finance/hooks/useTransactionForm';
-import { Transaction, CategoryBudget, SavingsItem } from '../features/finance/types';
+import { CategoryBudget, Transaction } from '../features/finance/types';
 import { formatChartCurrency } from '../utils/chartHelpers';
 
 type FinanceAlert = {
@@ -296,6 +316,10 @@ const Finance: React.FC = () => {
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
+    const nextIncomeTransaction = transactions
+      .filter((t) => t.type === 'deposit' && ['AMCI', 'DON'].includes(String(t.source || '').toUpperCase()) && normalizeDateOnly(t.date) > today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+
     const totalSavings = savingsList.reduce((acc, s) => acc + s.amount, 0);
 
     // Balances
@@ -306,7 +330,10 @@ const Finance: React.FC = () => {
     const daysUntilReset = Math.max(0, computeDaysUntilReset(currentResetDate));
 
     // Metrics
-    const suggestedDailyQuota = Math.max(0, Math.round(currentBalance / Math.max(daysUntilReset, 1)));
+    const nextIncomeDate = nextIncomeTransaction?.date || profileData?.next_amci_date || nextAmciDate;
+    const daysUntilNextIncome = Math.max(1, Math.ceil((new Date(nextIncomeDate).getTime() - new Date(today).getTime()) / 86400000));
+    const autoSuggestedDailyQuota = Math.max(0, Math.round(currentBalance / daysUntilNextIncome));
+    const suggestedDailyQuota = autoSuggestedDailyQuota;
     const dailyQuota = customDailyQuota ?? suggestedDailyQuota;
     const burnRate = totalAvailable > 0 ? (totalExpenses / totalAvailable) * 100 : 0;
 
@@ -338,7 +365,7 @@ const Finance: React.FC = () => {
         total: totalAvailable
       }
     };
-  }, [transactions, totalBudget, currentResetDate, savingsList, today, customDailyQuota]);
+  }, [transactions, totalBudget, currentResetDate, savingsList, today, customDailyQuota, nextAmciDate, profileData]);
 
   // Migration / safety net:
   // Any expense dated in the future is treated as a planned provision (manual execution required).
@@ -374,6 +401,20 @@ const Finance: React.FC = () => {
       daily_quota_override: nextQuota,
     });
   };
+
+  const isAnyModalOpen = showModal || showBudgetModal || showSavingsModal || showDailyExpensesDetail || showProvisionsDetail || showSecurityDetail || showQuotaDetail || showBurnRateDetail;
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('app:mobile-ui-override', {
+      detail: { hideNav: isAnyModalOpen, hideFab: isAnyModalOpen },
+    }));
+
+    return () => {
+      window.dispatchEvent(new CustomEvent('app:mobile-ui-override', {
+        detail: { hideNav: false, hideFab: false },
+      }));
+    };
+  }, [isAnyModalOpen]);
 
   const openPlannedExpenseModal = (defaultDate?: string) => {
     resetForm();
@@ -1109,10 +1150,7 @@ const Finance: React.FC = () => {
               </button>
 
               <div className="relative z-10 w-full flex-1 space-y-5">
-                <h3 className="text-2xl font-black text-[color:var(--text-primary)] uppercase tracking-tighter sm:text-3xl">
-                  BUDGET <span className="text-amber-500">MENSUEL</span>
-                </h3>
-                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm sm:p-5">
                     <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-[color:var(--text-secondary)]">Reste disponible</p>
                     <p className="text-2xl font-black italic tracking-tight text-[color:var(--text-primary)] sm:text-3xl">{formatChartCurrency(amciStats.remaining)}</p>
@@ -1643,6 +1681,16 @@ const Finance: React.FC = () => {
               .sort((a, b) => b.value - a.value)
               .slice(0, 5) // Show top 5
             }
+            budgetUsageData={budgetAnalysis
+              .filter(b => b.limit > 0)
+              .map(b => ({
+                name: b.category,
+                spent: b.spent,
+                limit: b.limit,
+                percent: Math.min(100, b.percent),
+              }))
+              .sort((a, b) => b.percent - a.percent)
+            }
             onSelectTransaction={openTransactionDetail}
           />
         </div>
@@ -2043,14 +2091,10 @@ const Finance: React.FC = () => {
           <button
             onClick={handleSaveTransaction}
             disabled={saving || !amount || !title}
-            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--primary)] px-6 py-4 text-[11px] font-bold text-[color:var(--primary-foreground)] shadow-sm transition-all disabled:opacity-40 hover:opacity-90 active:scale-[0.98]"
+            aria-label={editingTransaction ? 'Enregistrer les modifications' : 'Enregistrer l’opération'}
+            className="ml-auto flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--primary)] text-[color:var(--primary-foreground)] shadow-lg transition-all hover:scale-105 hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? <Loader2 className="animate-spin shrink-0" size={17} /> : <ShieldCheck size={17} strokeWidth={2.5} className="shrink-0" />}
-            <span className="truncate">
-              {editingTransaction
-                ? (isProvisionForm ? 'Mettre à jour la provision' : "Mettre à jour")
-                : (isProvisionForm ? 'Planifier la dépense' : "Confirmer")}
-            </span>
+            {saving ? <Loader2 className="animate-spin shrink-0" size={18} /> : <ShieldCheck size={18} strokeWidth={2.5} className="shrink-0" />}
           </button>
         }
       >

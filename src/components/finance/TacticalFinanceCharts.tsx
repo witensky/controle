@@ -1,12 +1,12 @@
+import { Activity, ArrowUpRight, ChevronRight, PieChart, TrendingUp, Wallet } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
-import { TrendingUp, PieChart, ChevronRight, Activity, ArrowUpRight } from 'lucide-react';
-import ModalShell from '../common/ModalShell';
+import { Transaction } from '../../features/finance/types';
+import { cx, uiRecipes } from '../../theme/recipes';
+import { chartPalette, chartToneByIntent, toneClassNames } from '../../theme/tokens';
+import { formatChartCurrency } from '../../utils/chartHelpers';
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import { HorizontalBarsChart, SparklineChart } from '../common/InlineCharts';
-import { Transaction } from '../../features/finance/types';
-import { chartPalette, chartToneByIntent, toneClassNames } from '../../theme/tokens';
-import { cx, uiRecipes } from '../../theme/recipes';
-import { formatChartCurrency } from '../../utils/chartHelpers';
+import ModalShell from '../common/ModalShell';
 
 interface TacticalFinanceChartsProps {
   fluxData: Array<{
@@ -24,13 +24,20 @@ interface TacticalFinanceChartsProps {
     name: string;
     value: number;
   }>;
+  budgetUsageData?: Array<{
+    name: string;
+    spent: number;
+    limit: number;
+    percent: number;
+  }>;
   onSelectTransaction?: (transaction: Transaction) => void;
 }
 
-const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData, categoryData, onSelectTransaction }) => {
+const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData, categoryData, budgetUsageData = [], onSelectTransaction }) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const safeFluxData = useMemo(() => (Array.isArray(fluxData) ? fluxData : []), [fluxData]);
   const safeCategoryData = useMemo(() => (Array.isArray(categoryData) ? categoryData : []), [categoryData]);
+  const safeBudgetUsageData = useMemo(() => (Array.isArray(budgetUsageData) ? budgetUsageData : []), [budgetUsageData]);
 
   const menuDetails: Record<string, any> = {
     flux: {
@@ -207,6 +214,41 @@ const TacticalFinanceCharts: React.FC<TacticalFinanceChartsProps> = ({ fluxData,
                 getColor={(_, index) => chartPalette[index % chartPalette.length]}
               />
             </ChartErrorBoundary>
+          )}
+        </div>
+      </div>
+
+      <div className={cx(uiRecipes.cardElevated, 'min-h-[320px] overflow-hidden p-5 sm:p-6')}>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Wallet size={18} className={toneClassNames.warning.icon} />
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-[color:var(--heading)]">Consommation vs budget</h3>
+          </div>
+          <ArrowUpRight className="text-[color:var(--text-muted)]" size={16} />
+        </div>
+
+        <div className="space-y-3">
+          {safeBudgetUsageData.length === 0 ? (
+            <div className={cx(uiRecipes.emptyState, 'min-h-[220px] p-4')}>Aucune consommation budgétaire à afficher.</div>
+          ) : (
+            safeBudgetUsageData.slice(0, 5).map((item) => (
+              <div key={item.name} className="rounded-[1.25rem] border border-[color:var(--border-subtle)] bg-[color:var(--surface-muted)] p-4">
+                <div className="mb-2 flex items-center justify-between gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--text-muted)]">
+                  <span>{item.name}</span>
+                  <span className="text-[color:var(--heading)]">{Math.round(item.percent)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[color:var(--surface)]">
+                  <div
+                    className="h-full rounded-full bg-[color:var(--tone-warning-surface)]"
+                    style={{ width: `${Math.min(100, item.percent)}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-[color:var(--text-secondary)]">
+                  <span>Utilisé {formatChartCurrency(item.spent)}</span>
+                  <span>Budget {formatChartCurrency(item.limit)}</span>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>

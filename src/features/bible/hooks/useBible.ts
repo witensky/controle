@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { LOCAL_KEYS, localStore } from '@/lib/localStorage';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BibleService } from '../services/bible.service';
-import { CreateEntryDTO } from '../types';
-import { localStore, LOCAL_KEYS } from '@/lib/localStorage';
+import { CreateBookmarkDTO } from '../types';
 
 export const useBibleEntries = () => {
     return useQuery({
@@ -24,6 +24,18 @@ export const useBibleProgress = () => {
             return data;
         },
         placeholderData: localStore.get<string[]>(LOCAL_KEYS.BIBLE_PROGRESS) ?? undefined,
+    });
+};
+
+export const useBookmarks = () => {
+    return useQuery({
+        queryKey: ['bible', 'bookmarks'],
+        queryFn: async () => {
+            const data = await BibleService.getBookmarks();
+            localStore.set(LOCAL_KEYS.BIBLE_BOOKMARKS, data);
+            return data;
+        },
+        placeholderData: localStore.get<any[]>(LOCAL_KEYS.BIBLE_BOOKMARKS) ?? undefined,
     });
 };
 
@@ -53,6 +65,37 @@ export const useCreateEntry = () => {
         mutationFn: BibleService.createEntry,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['bible', 'entries'] });
+        },
+    });
+};
+
+export const useCreateBookmark = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: BibleService.createBookmark,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bible', 'bookmarks'] });
+        },
+    });
+};
+
+export const useDeleteBookmark = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: BibleService.deleteBookmark,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bible', 'bookmarks'] });
+        },
+    });
+};
+
+export const useUpdateBookmark = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ bookmarkId, bookmark }: { bookmarkId: string; bookmark: CreateBookmarkDTO }) =>
+            BibleService.updateBookmark(bookmarkId, bookmark),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bible', 'bookmarks'] });
         },
     });
 };

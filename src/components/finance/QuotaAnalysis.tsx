@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Calendar, Pencil, Target, Zap } from 'lucide-react';
-import ModalShell from '../common/ModalShell';
-import { BarChartComponent } from '../charts';
+import React, { useEffect, useState } from 'react';
 import { formatChartCurrency } from '../../utils/chartHelpers';
+import { BarChartComponent } from '../charts';
+import ModalShell from '../common/ModalShell';
 
 interface QuotaAnalysisProps {
   isOpen: boolean;
@@ -106,7 +106,7 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
               <Pencil size={12} /> Quota du jour
             </p>
             <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
-              Modifiez la limite du jour ou revenez au calcul auto.
+              Mode auto : le quota est recalculé jusqu’au prochain AMCI/DON disponible.
             </p>
           </div>
           <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] ${hasCustomQuota ? 'border border-amber-500/20 bg-amber-500/10 text-amber-300' : 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-400'}`}>
@@ -136,6 +136,9 @@ export const QuotaAnalysis: React.FC<QuotaAnalysisProps> = ({
           >
             {isSavingQuota ? '...' : 'Appliquer'}
           </button>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
+            Auto : {formatChartCurrency(safeSuggestedDailyQuota)} / jour
+          </span>
         </div>
 
         {hasCustomQuota ? (

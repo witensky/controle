@@ -1,6 +1,7 @@
 export type MissionStatus = 'Backlog' | 'Planifiée' | 'En cours' | 'Terminé' | 'Reporté' | 'Abandonné';
 export type MissionPriority = 'low' | 'medium' | 'high' | 'critical';
 export type MissionCategory = 'Admin' | 'Droit' | 'Sport' | 'Personnel' | 'Spirituel' | 'Langues';
+export type MissionRecurrence = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly';
 
 export interface Mission {
     id: string;
@@ -20,6 +21,9 @@ export interface Mission {
     impact_score: number;
     created_at: string;
     completed_at?: string;
+    recurrence?: MissionRecurrence;
+    recurrence_end_date?: string;
+    parent_mission_id?: string;
 }
 
 export interface MissionFilters {
@@ -39,6 +43,9 @@ export interface CreateMissionDTO {
     planned_date: string;
     estimated_duration?: number;
     actual_duration?: number;
+    recurrence?: MissionRecurrence;
+    recurrence_end_date?: string;
+    parent_mission_id?: string;
 }
 
 export interface UpdateMissionDTO extends Partial<CreateMissionDTO> {

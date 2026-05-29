@@ -1,17 +1,17 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
-   Dumbbell, Flame, TrendingUp, Calendar, Clock, Zap, ChevronRight, Activity,
-   History, X, Plus, Trash2, Edit3, ShieldCheck, PlayCircle, Timer, Save,
-   ArrowUpRight, BarChart3, Target, Info, Loader2, List, CheckCircle2,
-   Scale as ScaleIcon, Trophy, Heart, ArrowDown, ArrowUp, RefreshCcw
+   Dumbbell, Flame, TrendingUp, Calendar, Zap, Activity,
+   History, Plus, Trash2, Edit3, ShieldCheck, PlayCircle, Timer,
+   BarChart3, Target, Loader2, List, CheckCircle2,
+   Scale as ScaleIcon, Trophy, ArrowDown, ArrowUp
 } from 'lucide-react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
 import { useSportData, useSaveRoutine, useSaveLog, useAddMetric, useDeleteRoutine } from '../features/sport/hooks/useSport';
-import { WorkoutRoutine, Exercise, WorkoutLog, BodyMetric, FitnessGoal } from '../features/sport/types';
+import { WorkoutRoutine, Exercise, FitnessGoal } from '../features/sport/types';
 import { consumeQueuedQuickAction, QUICK_ACTION_EVENT, QuickActionType } from '../lib/quickActions';
 import { AreaChartComponent, LineChartComponent } from '../components/charts';
 import { getChartDomain } from '../utils/chartHelpers';
+import ModalShell from '../components/common/ModalShell';
 
 const Sport: React.FC = () => {
    const { data: sportData, isLoading } = useSportData();
@@ -277,7 +277,7 @@ const Sport: React.FC = () => {
                </div>
             </div>
 
-            <div className="flex p-1.5 bg-[color:var(--surface-2)] border border-[color:var(--border)] rounded-[2.5rem] shadow-2xl overflow-x-auto max-w-full no-scrollbar">
+            <div className="flex p-1.5 bg-[color:var(--surface-2)] border border-[color:var(--border)] rounded-[2.5rem] shadow-2xl overflow-x-auto no-scrollbar w-full lg:w-auto">
                {[
                   { id: 'overview', label: 'VUE GLOBALE', icon: Activity },
                   { id: 'routines', label: 'PROGRAMMES', icon: List },
@@ -288,10 +288,15 @@ const Sport: React.FC = () => {
                   <button
                      key={tab.id}
                      onClick={() => setActiveTab(tab.id as any)}
-                     className={`flex items-center gap-3 px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-rose-500 text-white shadow-lg scale-105' : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
-                        }`}
+                     className={`flex items-center gap-2 px-4 sm:px-6 py-3.5 rounded-[1.8rem] text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                        activeTab === tab.id
+                           ? 'bg-rose-500 text-white shadow-lg scale-105'
+                           : 'text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]'
+                     }`}
                   >
-                     <tab.icon size={16} /> {tab.label}
+                     <tab.icon size={14} />
+                     <span className="hidden sm:inline">{tab.label}</span>
+                     <span className="sm:hidden">{tab.icon === Activity ? 'VUE' : tab.id === 'routines' ? 'PROG.' : tab.id === 'session' ? 'SÉANCE' : tab.id === 'metrics' ? 'MÉTRICS' : 'ANALYSE'}</span>
                   </button>
                ))}
             </div>
@@ -697,78 +702,118 @@ const Sport: React.FC = () => {
             </div>
          )}
 
-         {/* --- MODAL ROUTINE CREATOR --- */}
-         {isModalOpen && (
-            <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 md:p-6 bg-[color:var(--overlay)] backdrop-blur-3xl animate-in zoom-in-95">
-               <div className="w-full max-w-3xl mx-auto bg-[color:var(--surface)] border border-[color:var(--border)] rounded-[2.75rem] p-5 md:p-7 shadow-3xl flex flex-col">
-                  <div className="flex justify-between items-center mb-5 md:mb-6">
-                     <h3 className="text-2xl md:text-3xl font-black text-[color:var(--text-primary)] uppercase italic tracking-tighter leading-tight">CRÉATION DE <span className="text-rose-500">PROGRAMME</span></h3>
-                     <button onClick={() => setIsModalOpen(false)} className="p-3 bg-[color:var(--muted)] rounded-2xl text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-all"><X size={22} /></button>
-                  </div>
+         {/* --- MODAL ROUTINE CREATOR (via ModalShell) --- */}
+         <ModalShell
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            title={<>CRÉATION DE <span className="text-rose-500">PROGRAMME</span></>}
+            subtitle="Définissez le nom et les exercices de votre routine"
+            icon={<Dumbbell size={20} />}
+            maxWidthClassName="max-w-3xl"
+            centered
+            footer={
+               <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                  <button
+                     onClick={() => setIsModalOpen(false)}
+                     className="sm:min-w-[160px] px-8 py-4 border border-[color:var(--border)] bg-[color:var(--surface-2)] rounded-2xl text-[9px] font-black text-[color:var(--text-secondary)] uppercase tracking-widest hover:text-[color:var(--text-primary)] transition-all"
+                  >
+                     ANNULER
+                  </button>
+                  <button
+                     onClick={handleSaveRoutine}
+                     disabled={!newRoutineName || newRoutineEx.length === 0}
+                     className="flex-1 sm:max-w-[320px] py-4 bg-rose-500 text-slate-950 font-black uppercase rounded-2xl shadow-xl hover:scale-[1.01] active:scale-95 transition-all text-[10px] tracking-widest flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
+                  >
+                     <ShieldCheck size={18} strokeWidth={3} /> ENREGISTRER LE PROGRAMME
+                  </button>
+               </div>
+            }
+         >
+            <div className="space-y-5">
+               {/* Nom de la routine */}
+               <div className="space-y-2 rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 md:p-5">
+                  <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1 italic">INTITULÉ DU PROGRAMME</label>
+                  <input
+                     id="sport-routine-name"
+                     type="text"
+                     value={newRoutineName}
+                     onChange={e => setNewRoutineName(e.target.value)}
+                     placeholder="ENTRAÎNEMENT A, ENTRAÎNEMENT B..."
+                     className="ui-field w-full border rounded-2xl py-4 px-5 text-sm font-bold outline-none focus:border-rose-500/50 transition-all uppercase tracking-widest shadow-inner"
+                  />
+               </div>
 
-                  <div className="overflow-y-auto pr-1 md:pr-2 space-y-5 custom-scrollbar max-h-[68vh]">
-                     <div className="space-y-2 rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-4 md:p-5">
-                        <label className="text-[10px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1 italic">INTITULÉ DU PROGRAMME</label>
-                        <input id="sport-routine-name" type="text" value={newRoutineName} onChange={e => setNewRoutineName(e.target.value)} placeholder="ENTRAÎNEMENT A, ENTRAÎNEMENT B..." className="ui-field w-full border rounded-2xl py-4 px-5 md:px-6 text-sm font-bold outline-none focus:border-rose-500/50 transition-all uppercase tracking-widest shadow-inner" />
+               {/* Ajouter un exercice */}
+               <div className="glass rounded-[2.25rem] p-5">
+                  <h4 className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-5 italic">AJOUTER UN EXERCICE</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                     <div className="space-y-2 sm:col-span-2">
+                        <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">NOM EXERCICE</label>
+                        <input
+                           type="text"
+                           value={exName}
+                           onChange={e => setExName(e.target.value)}
+                           onKeyDown={e => e.key === 'Enter' && addExerciseToRoutine()}
+                           className="ui-field w-full border rounded-xl p-4 text-xs font-bold uppercase"
+                        />
                      </div>
-
-                     <div className="glass rounded-[2.25rem] p-5 md:p-6">
-                        <h4 className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-5 italic">AJOUTER UN EXERCICE</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 items-end">
-                           <div className="space-y-2 md:col-span-2">
-                              <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">NOM EXERCICE</label>
-                              <input type="text" value={exName} onChange={e => setExName(e.target.value)} className="ui-field w-full border rounded-xl p-4 text-xs font-bold uppercase" />
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">GROUPE MUSC.</label>
-                              <select value={exMuscle} onChange={e => setExMuscle(e.target.value)} className="ui-field w-full border rounded-xl p-4 text-[10px] font-black uppercase">
-                                 {['Pectoraux', 'Dos', 'Épaules', 'Jambes', 'Bras', 'Abdos', 'Cardio'].map(m => <option key={m} value={m}>{m.toUpperCase()}</option>)}
-                              </select>
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">SÉRIES</label>
-                              <input type="number" value={exSets} onChange={e => setExSets(Number(e.target.value))} className="ui-field w-full border rounded-xl p-4 text-xs font-bold" />
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">RÉPÉTITIONS</label>
-                              <input type="text" value={exReps} onChange={e => setExReps(e.target.value)} className="ui-field w-full border rounded-xl p-4 text-xs font-bold uppercase" />
-                           </div>
-                           <button onClick={addExerciseToRoutine} className="py-4 bg-[color:var(--surface-2)] border border-[color:var(--border)] rounded-xl text-[9px] font-black text-[color:var(--text-primary)] uppercase tracking-widest hover:bg-[color:var(--surface)] transition-all md:col-span-2">INTÉGRER</button>
+                     <div className="space-y-2">
+                        <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">GROUPE MUSC.</label>
+                        <select value={exMuscle} onChange={e => setExMuscle(e.target.value)} className="ui-field w-full border rounded-xl p-4 text-[10px] font-black uppercase">
+                           {['Pectoraux', 'Dos', 'Épaules', 'Jambes', 'Bras', 'Abdos', 'Cardio'].map(m => (
+                              <option key={m} value={m}>{m.toUpperCase()}</option>
+                           ))}
+                        </select>
+                     </div>
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                           <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">SÉRIES</label>
+                           <input type="number" value={exSets} onChange={e => setExSets(Number(e.target.value))} className="ui-field w-full border rounded-xl p-4 text-xs font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                           <label className="text-[8px] font-black text-[color:var(--text-muted)] uppercase tracking-widest ml-1">RÉPÉTITIONS</label>
+                           <input type="text" value={exReps} onChange={e => setExReps(e.target.value)} className="ui-field w-full border rounded-xl p-4 text-xs font-bold uppercase" />
                         </div>
                      </div>
-
-                     <div className="space-y-4">
-                        <h4 className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.32em] italic ml-1">INVENTAIRE ACTUEL</h4>
-                        {newRoutineEx.length === 0 ? (
-                           <div className="rounded-[2rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] px-6 py-8 text-center">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Aucun exercice ajouté pour le moment.</p>
-                           </div>
-                        ) : newRoutineEx.map((ex, i) => (
-                           <div key={ex.id} className="flex items-center justify-between gap-4 p-4 md:p-5 bg-[color:var(--surface)] rounded-[2rem] border border-[color:var(--border)] group">
-                              <div className="flex items-center gap-4">
-                                 <span className="text-[color:var(--text-muted)] font-black text-xs italic">{i + 1}</span>
-                                 <div>
-                                    <h5 className="font-bold text-[color:var(--text-primary)] uppercase tracking-wider leading-none">{ex.name}</h5>
-                                    <p className="text-[8px] text-[color:var(--text-muted)] uppercase mt-1 tracking-widest">{ex.muscle_group} • {ex.sets} séries • {ex.reps}</p>
-                                 </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                 <button onClick={() => setNewRoutineEx(newRoutineEx.filter(e => e.id !== ex.id))} className="text-[color:var(--text-muted)] hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
-                              </div>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
-
-                  <div className="mt-5 flex flex-col-reverse sm:flex-row gap-3 sm:justify-center">
-                     <button onClick={() => setIsModalOpen(false)} className="sm:min-w-[180px] px-8 py-4 border border-[color:var(--border)] bg-[color:var(--surface-2)] rounded-2xl text-[9px] font-black text-[color:var(--text-secondary)] uppercase tracking-widest hover:text-[color:var(--text-primary)] transition-all">ANNULER</button>
-                     <button onClick={handleSaveRoutine} disabled={!newRoutineName || newRoutineEx.length === 0} className="flex-1 sm:max-w-[360px] py-4 bg-rose-500 text-slate-950 font-black uppercase rounded-2xl shadow-3xl hover:scale-[1.01] active:scale-95 transition-all text-[10px] tracking-widest flex items-center justify-center gap-3">
-                        <ShieldCheck size={22} strokeWidth={3} /> ENREGISTRER LE PROGRAMME
+                     <button
+                        onClick={addExerciseToRoutine}
+                        disabled={!exName.trim()}
+                        className="sm:col-span-2 py-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[9px] font-black text-rose-400 uppercase tracking-widest hover:bg-rose-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                     >
+                        <Plus size={14} strokeWidth={3} /> INTÉGRER L'EXERCICE
                      </button>
                   </div>
                </div>
+
+               {/* Liste des exercices */}
+               <div className="space-y-3">
+                  <h4 className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-[0.32em] italic ml-1">
+                     EXERCICES DU PROGRAMME ({newRoutineEx.length})
+                  </h4>
+                  {newRoutineEx.length === 0 ? (
+                     <div className="rounded-[2rem] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] px-6 py-8 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-muted)]">Aucun exercice ajouté pour le moment.</p>
+                     </div>
+                  ) : newRoutineEx.map((ex, i) => (
+                     <div key={ex.id} className="flex items-center justify-between gap-4 p-4 bg-[color:var(--surface)] rounded-[2rem] border border-[color:var(--border)] group hover:border-rose-500/20 transition-all">
+                        <div className="flex items-center gap-4">
+                           <span className="w-7 h-7 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 font-black text-xs italic">{i + 1}</span>
+                           <div>
+                              <h5 className="font-bold text-[color:var(--text-primary)] uppercase tracking-wider leading-none text-sm">{ex.name}</h5>
+                              <p className="text-[8px] text-[color:var(--text-muted)] uppercase mt-1 tracking-widest">{ex.muscle_group} • {ex.sets} séries • {ex.reps} reps</p>
+                           </div>
+                        </div>
+                        <button
+                           onClick={() => setNewRoutineEx(newRoutineEx.filter(e => e.id !== ex.id))}
+                           className="p-2 text-[color:var(--text-muted)] hover:text-rose-500 transition-colors rounded-xl hover:bg-rose-500/10"
+                        >
+                           <Trash2 size={15} />
+                        </button>
+                     </div>
+                  ))}
+               </div>
             </div>
-         )}
+         </ModalShell>
       </div>
    );
 };

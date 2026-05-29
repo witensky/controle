@@ -1,5 +1,5 @@
 import { offlineRepository } from '@/data/offlineRepository';
-import { JournalEntry, CreateEntryDTO } from '../types';
+import { Bookmark, CreateBookmarkDTO, CreateEntryDTO, JournalEntry } from '../types';
 
 export class BibleService {
     static async getEntries() {
@@ -29,5 +29,21 @@ export class BibleService {
 
     static async createEntry(entry: CreateEntryDTO) {
         return offlineRepository.bible.createEntry(entry);
+    }
+
+    static async getBookmarks() {
+        return offlineRepository.bible.getBookmarks() as Promise<Bookmark[]>;
+    }
+
+    static async createBookmark(bookmark: CreateBookmarkDTO) {
+        return offlineRepository.bible.createBookmark(bookmark);
+    }
+
+    static async deleteBookmark(bookmarkId: string) {
+        return offlineRepository.bible.deleteBookmark(bookmarkId);
+    }
+
+    static async updateBookmark(bookmarkId: string, bookmark: CreateBookmarkDTO) {
+        return offlineRepository.bible.updateBookmark(bookmarkId, bookmark);
     }
 }

@@ -1,11 +1,35 @@
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  Cross, Book, PenTool, Flame, Calendar, CloudSun, ChevronRight, X, CheckCircle2, Heart, Star, ListChecks, History, Bold, Italic, Tag as TagIcon, Trash2, Loader2, Quote, Brain, Sparkles, Shield, Zap, Target, BookOpen, Eye, EyeOff, Scroll
+  BookOpen,
+  CheckCircle2,
+  Cross,
+  Eye,
+  History,
+  Loader2,
+  PenTool,
+  Quote,
+  Scroll,
+  Shield,
+  Tag as TagIcon,
+  Target,
+  X,
+  Bookmark as BookmarkIcon,
+  Trash2
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import { useAppDialog } from '../components/common/AppDialogProvider';
-import { useBibleEntries, useBibleProgress, useMarkChapterRead, useMarkChapterUnread, useCreateEntry } from '../features/bible/hooks/useBible';
-import { JournalEntry, ReadingItem } from '../features/bible/types';
+import {
+  useBibleEntries,
+  useBibleProgress,
+  useCreateEntry,
+  useMarkChapterRead,
+  useMarkChapterUnread,
+  useBookmarks,
+  useCreateBookmark,
+  useDeleteBookmark
+} from '../features/bible/hooks/useBible';
+import { ReadingItem } from '../features/bible/types';
+import ModalShell from '../components/common/ModalShell';
 
 // ── MEMORY TAB COMPONENT ──────────────────────────────────
 const MemoryTab: React.FC<{ readingPlan: ReadingItem[] }> = ({ readingPlan }) => {
@@ -114,21 +138,28 @@ const Bible: React.FC = () => {
   const { showAlert } = useAppDialog();
   const { data: entriesRaw, isLoading: entriesLoading } = useBibleEntries();
   const { data: progressRaw, isLoading: progressLoading } = useBibleProgress();
+  const { data: bookmarksRaw, isLoading: bookmarksLoading } = useBookmarks();
   const markRead = useMarkChapterRead();
   const markUnread = useMarkChapterUnread();
   const createEntry = useCreateEntry();
+  const createBookmark = useCreateBookmark();
+  const deleteBookmark = useDeleteBookmark();
 
   const entries = entriesRaw || [];
+  const bookmarks = bookmarksRaw || [];
   const checkedChapters = progressRaw || [];
-  const loading = entriesLoading || progressLoading;
+  const loading = entriesLoading || progressLoading || bookmarksLoading;
 
-  const [activeTab, setActiveTab] = useState<'reading' | 'memory' | 'journal'>('reading');
+  const [activeTab, setActiveTab] = useState<'reading' | 'memory' | 'journal' | 'bookmarks'>('reading');
   const [showJournal, setShowJournal] = useState(false);
   const [journalContent, setJournalContent] = useState("");
   const [journalTags, setJournalTags] = useState("");
   const [currentMood, setCurrentMood] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
+  const [showBookmarkForm, setShowBookmarkForm] = useState(false);
+  const [bookmarkVerse, setBookmarkVerse] = useState("");
+  const [bookmarkNote, setBookmarkNote] = useState("");
 
   const readingPlan: ReadingItem[] = [
     { id: 'Ps 23', title: 'Le Bon Berger', chapter: 'PSAUME 23', verse: "L'Éternel est mon berger: je ne manquerai de rien. Il me fait reposer dans de verts pâturages, Il me dirige près des eaux paisibles..." },
@@ -205,6 +236,7 @@ const Bible: React.FC = () => {
           {[
             { id: 'reading', label: 'Lecture', icon: BookOpen },
             { id: 'memory', label: 'Acquisition', icon: Target },
+            { id: 'bookmarks', label: 'Signets', icon: BookmarkIcon },
             { id: 'journal', label: 'Réflexions', icon: PenTool }
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center gap-3 px-6 py-4 rounded-3xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-white text-slate-950 shadow-lg scale-105' : 'text-slate-500 hover:text-white'}`}>
@@ -337,6 +369,51 @@ const Bible: React.FC = () => {
         <MemoryTab readingPlan={readingPlan} />
       )}
 
+      {/* ── BOOKMARKS TAB ── */}
+      {activeTab === 'bookmarks' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">MES <span className="text-amber-500">SIGNETS</span></h3>
+            <button onClick={() => setShowBookmarkForm(true)} className="px-6 py-3 bg-amber-500 text-slate-950 rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all">
+              <BookmarkIcon size={14} />NOUVEAU SIGNET
+            </button>
+          </div>
+          {bookmarks.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-slate-600 space-y-3">
+              <BookmarkIcon size={48} />
+              <p className="text-[10px] font-black uppercase tracking-widest">Aucun signet sauvegardé</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {bookmarks.map((bookmark: any) => (
+                <div key={bookmark.id} className="glass rounded-[2rem] p-8 border border-white/5 bg-slate-900/40 hover:border-amber-500/20 transition-all group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <BookmarkIcon size={16} className="text-amber-500" />
+                        <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest">{bookmark.verse}</p>
+                      </div>
+                      {bookmark.note && (
+                        <p className="text-slate-300 font-medium text-sm italic">"{bookmark.note}"</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => deleteBookmark.mutate(bookmark.id)}
+                      className="p-2 text-slate-600 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                  <p className="text-[8px] text-slate-600 uppercase tracking-widest">
+                    Signet du {new Date(bookmark.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── JOURNAL / REFLEXIONS TAB ── */}
       {activeTab === 'journal' && (
         <div className="space-y-6">
@@ -375,47 +452,96 @@ const Bible: React.FC = () => {
       )}
 
       {/* MODAL JOURNAL (HERITAGE DE L'ANCIENNE VERSION MAIS RE-STYLISE) */}
-      {showJournal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/98 backdrop-blur-[100px] animate-in zoom-in-95">
-          <div className="w-full max-w-3xl bg-slate-900 border border-white/10 rounded-[3.5rem] p-12 flex flex-col h-[85vh] shadow-3xl">
-            <div className="flex justify-between items-center mb-10">
-              <div>
-                <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter">MES <span className="text-amber-500 font-outfit">PENSÉES</span></h3>
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1 italic">Journal de réflexion personnelle</p>
-              </div>
-              <button onClick={() => setShowJournal(false)} className="p-4 bg-white/5 rounded-full text-slate-500 hover:text-white transition-all"><X size={24} /></button>
+      <ModalShell
+        isOpen={showJournal}
+        onClose={() => setShowJournal(false)}
+        title="Mes Pensées"
+        subtitle="Journal de réflexion personnelle"
+        icon={<Cross size={20} className="text-amber-500" />}
+        maxWidthClassName="max-w-3xl"
+        centered
+        footer={
+          <div className="flex w-full gap-4">
+            <div className="flex-1 bg-slate-950 border border-white/5 rounded-2xl p-2 flex items-center gap-3">
+              <TagIcon size={14} className="text-slate-700 ml-4" />
+              <input type="text" value={journalTags} onChange={e => setJournalTags(e.target.value)} placeholder="TAGS (SÉPARÉS PAR VIRGULE)" className="flex-1 bg-transparent text-[10px] font-black text-white uppercase outline-none placeholder:text-slate-800" />
             </div>
-
-            <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-              <div className="flex items-center gap-4 p-2 bg-slate-950 rounded-2xl border border-white/5">
-                <div className="flex flex-1 gap-2 overflow-x-auto p-1 custom-scrollbar">
-                  {moodEmojis.map((m, i) => (
-                    <button key={i} onClick={() => setCurrentMood(i)} className={`px-4 py-2 rounded-xl text-xs transition-all border ${currentMood === i ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{m.icon} {m.label}</button>
-                  ))}
-                </div>
-              </div>
-
-              <textarea
-                value={journalContent}
-                onChange={(e) => setJournalContent(e.target.value)}
-                placeholder="Écris ton flux de conscience..."
-                className="flex-1 bg-slate-950/50 rounded-[2.5rem] p-10 text-slate-200 font-serif text-xl leading-relaxed focus:outline-none border border-white/5 focus:border-amber-500/30 transition-all resize-none shadow-inner"
-              />
-            </div>
-
-            <div className="mt-10 flex gap-4">
-              <div className="flex-1 bg-slate-950 border border-white/5 rounded-2xl p-2 flex items-center gap-3">
-                <TagIcon size={14} className="text-slate-700 ml-4" />
-                <input type="text" value={journalTags} onChange={e => setJournalTags(e.target.value)} placeholder="TAGS (SÉPARÉS PAR VIRGULE)" className="flex-1 bg-transparent text-[10px] font-black text-white uppercase outline-none placeholder:text-slate-800" />
-              </div>
-              <button onClick={saveJournal} disabled={isSaving || !journalContent.trim()} className="px-12 py-6 bg-amber-500 text-slate-950 font-black uppercase tracking-[0.4em] text-xs rounded-3xl shadow-3xl hover:scale-105 transition-all flex items-center gap-3">
-                {isSaving ? <Loader2 className="animate-spin" /> : <Shield size={18} />}
-                ENREGISTRER
-              </button>
+            <button onClick={saveJournal} disabled={isSaving || !journalContent.trim()} className="px-12 py-6 bg-amber-500 text-slate-950 font-black uppercase tracking-[0.4em] text-xs rounded-3xl shadow-3xl hover:scale-105 transition-all flex items-center gap-3 disabled:opacity-50">
+              {isSaving ? <Loader2 className="animate-spin" /> : <Shield size={18} />}
+              ENREGISTRER
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 p-2 bg-slate-950 rounded-2xl border border-white/5">
+            <div className="flex flex-1 gap-2 overflow-x-auto p-1 custom-scrollbar">
+              {moodEmojis.map((m, i) => (
+                <button key={i} onClick={() => setCurrentMood(i)} className={`px-4 py-2 rounded-xl text-xs transition-all border ${currentMood === i ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-slate-900 border-white/5 text-slate-500'}`}>{m.icon} {m.label}</button>
+              ))}
             </div>
           </div>
+
+          <textarea
+            value={journalContent}
+            onChange={(e) => setJournalContent(e.target.value)}
+            placeholder="Écris ton flux de conscience..."
+            className="w-full bg-slate-950/50 rounded-[2.5rem] p-10 text-slate-200 font-serif text-xl leading-relaxed focus:outline-none border border-white/5 focus:border-amber-500/30 transition-all resize-none shadow-inner h-64"
+          />
         </div>
-      )}
+      </ModalShell>
+
+      {/* MODAL BOOKMARK FORM */}
+      <ModalShell
+        isOpen={showBookmarkForm}
+        onClose={() => setShowBookmarkForm(false)}
+        title="Nouveau Signet"
+        subtitle="Marquez un verset important"
+        icon={<BookmarkIcon size={20} className="text-amber-500" />}
+        maxWidthClassName="max-w-xl"
+        centered
+        footer={
+          <div className="flex gap-4 w-full">
+            <button
+              onClick={() => setShowBookmarkForm(false)}
+              className="flex-1 py-6 bg-slate-950/50 text-slate-400 font-black uppercase tracking-widest text-xs rounded-3xl border border-white/5 hover:border-white/10 transition-all"
+            >
+              ANNULER
+            </button>
+            <button
+              onClick={saveBookmark}
+              disabled={isSaving || !bookmarkVerse.trim()}
+              className="flex-1 py-6 bg-amber-500 text-slate-950 font-black uppercase tracking-[0.4em] text-xs rounded-3xl shadow-3xl hover:scale-105 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="animate-spin" /> : <BookmarkIcon size={18} />}
+              ENREGISTRER LE SIGNET
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Référence du verset</label>
+            <input
+              type="text"
+              value={bookmarkVerse}
+              onChange={(e) => setBookmarkVerse(e.target.value)}
+              placeholder="Ex: Psaume 23:1"
+              className="w-full bg-slate-950/50 rounded-[2rem] p-6 text-slate-200 font-serif text-lg focus:outline-none border border-white/5 focus:border-amber-500/30 transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Note personnelle (optionnel)</label>
+            <textarea
+              value={bookmarkNote}
+              onChange={(e) => setBookmarkNote(e.target.value)}
+              placeholder="Ajoute une note personnelle..."
+              className="w-full bg-slate-950/50 rounded-[2rem] p-6 text-slate-200 font-serif text-lg leading-relaxed focus:outline-none border border-white/5 focus:border-amber-500/30 transition-all resize-none h-32"
+            />
+          </div>
+        </div>
+      </ModalShell>
     </div>
   );
 };

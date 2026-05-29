@@ -79,7 +79,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
             <motion.button
               key="fab-backdrop"
               aria-label="Fermer le menu d'actions rapides"
-              className="pointer-events-auto fixed inset-0 bg-[color:var(--overlay)]/70 backdrop-blur-[6px]"
+              className="pointer-events-auto fixed inset-0 z-0 bg-[color:var(--overlay)]/70 backdrop-blur-[6px]"
               onClick={() => setIsOpen(false)}
               type="button"
               initial={{ opacity: 0 }}
@@ -93,7 +93,7 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
         {/* Action items */}
         <AnimatePresence>
           {isOpen && (
-            <div className="pointer-events-auto flex flex-col gap-3">
+            <div className="pointer-events-auto relative z-10 flex flex-col gap-3">
               {quickActions.map((item, index) => {
                 const Icon = item.icon;
                 const tone = toneClassNames[item.tone];
@@ -151,10 +151,10 @@ const QuickActionsFab: React.FC<QuickActionsFabProps> = ({ onAction }) => {
           transition={{ duration: 0.22, ease: FAB_EASE }}
           className={cx(
             uiRecipes.primaryButton,
-            'pointer-events-auto h-16 w-16 rounded-full px-0 py-0 text-[#18212d] shadow-premium',
+            'pointer-events-auto relative z-20 h-16 w-16 rounded-full px-0 py-0 text-[#18212d] shadow-premium',
           )}
         >
-          {isOpen ? <X size={24} strokeWidth={2.5} /> : <Plus size={26} strokeWidth={3} />}
+          <Plus size={26} strokeWidth={3} />
         </motion.button>
       </div>
     </div>

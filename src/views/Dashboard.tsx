@@ -12,6 +12,7 @@ import SecurityDetailModal from '../components/dashboard/SecurityDetailModal';
 import FocusOverlay from '../components/common/FocusOverlay';
 import ChartErrorBoundary from '../components/common/ChartErrorBoundary';
 import ThemeToggle from '../components/common/ThemeToggle';
+import ModalShell from '../components/common/ModalShell';
 import { DualSparklineChart, HorizontalBarsChart, StackedBarsChart } from '../components/common/InlineCharts';
 import { AppView } from '../types';
 import { useProfile } from '../features/profile/hooks/useProfile';
@@ -906,100 +907,89 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
 
       {/* DAY DETAILS MODAL */}
-      {selectedDate && dayDetails && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[color:var(--overlay)] backdrop-blur-2xl animate-in zoom-in-95 duration-200">
-          <div className="w-full max-w-xl rounded-[2.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_30px_120px_var(--shadow-strong)] relative overflow-hidden flex flex-col max-h-[85vh] md:p-8">
-            <button
-              onClick={() => setSelectedDate(null)}
-              className="absolute top-8 right-8 p-3 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--muted)] transition-all"
-              aria-label="Fermer"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="mb-8">
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Rapport Journalier</p>
-              <h2 className="text-3xl font-black text-[color:var(--text-primary)] italic uppercase">
-                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </h2>
+      <ModalShell
+        isOpen={!!(selectedDate && dayDetails)}
+        onClose={() => setSelectedDate(null)}
+        title={selectedDate ? selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : ""}
+        subtitle="Rapport Journalier"
+        maxWidthClassName="max-w-xl"
+        centered
+        footer={
+          <div className="flex gap-4 w-full">
+            <button onClick={() => { onNavigate('DISCIPLINE'); setSelectedDate(null); }} className="flex-1 py-4 bg-amber-500 text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-400 transition-colors">Gérer les Tâches</button>
+            <button onClick={() => { onNavigate('FINANCE'); setSelectedDate(null); }} className="flex-1 py-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-primary)] font-black uppercase text-[10px] tracking-widest hover:bg-[color:var(--muted)] transition-colors">Ajouter Dépense</button>
+          </div>
+        }
+      >
+        {dayDetails && (
+          <div className="space-y-8">
+            {/* FINANCES */}
+            <div>
+              <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Wallet size={14} /> Flux Financiers</h3>
+              {dayDetails.expenses.length > 0 ? (
+                <div className="space-y-3">
+                  {dayDetails.expenses.map((t: any) => (
+                    <div key={t.id} className="flex justify-between items-center p-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)]">
+                      <div>
+                        <p className="font-bold text-[color:var(--text-primary)] text-sm">{t.title}</p>
+                        <p className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-wider">{t.category}</p>
+                      </div>
+                      <span className="font-black text-rose-600 dark:text-rose-500 italic">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune dépense enregistrée.</p>}
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
-
-              {/* FINANCES */}
-              <div>
-                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Wallet size={14} /> Flux Financiers</h3>
-                {dayDetails.expenses.length > 0 ? (
-                  <div className="space-y-3">
-                    {dayDetails.expenses.map((t: any) => (
-                      <div key={t.id} className="flex justify-between items-center p-4 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)]">
-                        <div>
-                          <p className="font-bold text-[color:var(--text-primary)] text-sm">{t.title}</p>
-                          <p className="text-[9px] font-black text-[color:var(--text-muted)] uppercase tracking-wider">{t.category}</p>
-                        </div>
-                        <span className="font-black text-rose-600 dark:text-rose-500 italic">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune dépense enregistrée.</p>}
-              </div>
-
-              {/* MISSIONS DONE */}
-              <div>
-                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Missions Accomplies</h3>
-                {dayDetails.missionsDone.length > 0 ? (
-                  <div className="space-y-3">
-                    {dayDetails.missionsDone.map((m: any) => (
-                      <div key={m.id} className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex items-center gap-4">
-                        <div className="p-2 bg-emerald-500/20 rounded-full text-emerald-500"><Trophy size={14} /></div>
-                        <div>
-                          <p className="font-bold text-[color:var(--text-primary)] text-sm">{m.title}</p>
-                          <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-wider">XP ACQUISE</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune mission terminée ce jour.</p>}
-              </div>
-
-              {/* LEARNING */}
-              <div>
-                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><BrainCircuit size={14} /> Acquisition Savoir</h3>
-                {dayDetails.wordsLearned.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {dayDetails.wordsLearned.map((w: any) => (
-                      <span key={w.id} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-black text-blue-400 uppercase tracking-wide">
-                        {w.word}
-                      </span>
-                    ))}
-                  </div>
-                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucun concept mémorisé.</p>}
-              </div>
-
-              {/* PLANNED */}
-              <div>
-                <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Clock size={14} /> Programmation</h3>
-                {dayDetails.missionsPlanned.length > 0 ? (
-                  <div className="space-y-3">
-                    {dayDetails.missionsPlanned.map((m: any) => (
-                      <div key={m.id} className="flex justify-between items-center p-4 rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] opacity-80 hover:opacity-100 transition-opacity">
+            {/* MISSIONS DONE */}
+            <div>
+              <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Missions Accomplies</h3>
+              {dayDetails.missionsDone.length > 0 ? (
+                <div className="space-y-3">
+                  {dayDetails.missionsDone.map((m: any) => (
+                    <div key={m.id} className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex items-center gap-4">
+                      <div className="p-2 bg-emerald-500/20 rounded-full text-emerald-500"><Trophy size={14} /></div>
+                      <div>
                         <p className="font-bold text-[color:var(--text-primary)] text-sm">{m.title}</p>
-                        <span className="text-[9px] font-black text-amber-500 uppercase">PRÉVU</span>
+                        <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-wider">XP ACQUISE</p>
                       </div>
-                    ))}
-                  </div>
-                ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Rien de prévu.</p>}
-              </div>
-
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucune mission terminée ce jour.</p>}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[color:var(--border)] flex gap-4">
-              <button onClick={() => { onNavigate('DISCIPLINE'); }} className="flex-1 py-4 bg-amber-500 text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-amber-400 transition-colors">Gérer les Tâches</button>
-              <button onClick={() => { onNavigate('FINANCE'); }} className="flex-1 py-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-primary)] font-black uppercase text-[10px] tracking-widest hover:bg-[color:var(--muted)] transition-colors">Ajouter Dépense</button>
+            {/* LEARNING */}
+            <div>
+              <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><BrainCircuit size={14} /> Acquisition Savoir</h3>
+              {dayDetails.wordsLearned.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {dayDetails.wordsLearned.map((w: any) => (
+                    <span key={w.id} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-black text-blue-400 uppercase tracking-wide">
+                      {w.word}
+                    </span>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Aucun concept mémorisé.</p>}
+            </div>
+
+            {/* PLANNED */}
+            <div>
+              <h3 className="text-xs font-black text-[color:var(--text-secondary)] uppercase tracking-widest mb-4 flex items-center gap-2"><Clock size={14} /> Programmation</h3>
+              {dayDetails.missionsPlanned.length > 0 ? (
+                <div className="space-y-3">
+                  {dayDetails.missionsPlanned.map((m: any) => (
+                    <div key={m.id} className="flex justify-between items-center p-4 rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-2)] opacity-80 hover:opacity-100 transition-opacity">
+                      <p className="font-bold text-[color:var(--text-primary)] text-sm">{m.title}</p>
+                      <span className="text-[9px] font-black text-amber-500 uppercase">PRÉVU</span>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-[color:var(--text-muted)] italic pl-4 border-l-2 border-[color:var(--border)] ml-1 py-1">Rien de prévu.</p>}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ModalShell>
 
       {/* WIDGET DETAIL MODAL */}
       {activeDetail === 'SECURITE' && (
@@ -1020,249 +1010,120 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         />
       )}
 
-      {activeDetail && activeDetail !== 'SECURITE' && (
-        <div className={`fixed inset-0 flex items-center justify-center bg-[color:rgba(247,249,252,0.88)] backdrop-blur-xl animate-in fade-in duration-200 ${activeDetail === 'SECURITE' ? 'z-[320] p-0 sm:p-4' : 'z-[320] p-4'}`}>
-          <div className={`relative flex w-full flex-col overflow-hidden border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_24px_70px_rgba(15,23,42,0.12)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${activeDetail === 'SECURITE' ? 'min-h-[100dvh] rounded-none border-0 px-4 pb-5 pt-4 sm:min-h-0 sm:max-w-md sm:rounded-[1.5rem] sm:border sm:p-5' : 'max-w-[28rem] rounded-2xl px-5 pb-5 pt-6 max-h-[85vh] sm:px-6 sm:pb-6'}`}>
-            {activeDetail === 'SECURITE' ? (
-              <button
-                onClick={() => setActiveDetail(null)}
-                className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-secondary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] hover:text-[color:var(--text-primary)]"
-              >
-                <ChevronLeft size={20} />
-              </button>
-            ) : (
-              <button onClick={() => setActiveDetail(null)} className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-2)] text-[color:var(--text-muted)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--muted)] hover:text-[color:var(--text-primary)]"><X size={20} /></button>
-            )}
-
-            <div className={activeDetail === 'SECURITE' ? 'mb-4' : 'mb-6 space-y-2'}>
-              <p className="mb-1.5 text-xs font-semibold text-[color:var(--primary)]">Détails</p>
-              <h2 className="pr-12 text-xl leading-tight font-black italic uppercase tracking-tight text-[color:var(--text-primary)]">
-                {activeDetail === 'DEPENSES_JOUR' && "Dépenses du Jour"}
-                {activeDetail === 'PROVISIONS' && "Dépenses à Venir"}
-                {activeDetail === 'SECURITE' && "Solde Disponible"}
-                {activeDetail === 'MISSIONS' && "Objectifs en Cours"}
-              </h2>
-            </div>
-
-            <div className={activeDetail === 'SECURITE' ? 'flex-1 overflow-y-auto space-y-3 pr-0' : 'flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-4'}>
-              {activeDetail === 'DEPENSES_JOUR' && (
-                <div className="space-y-3">
-                  {todayExpenseTransactions.length > 0 ? (
-                    todayExpenseTransactions.map((t: any) => (
-                      <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all hover:border-amber-500/30">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
-                            <TrendingDown size={14} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-black uppercase text-[color:var(--text-primary)]">{t.title}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{t.category}</span>
-                              <span className="h-1 w-1 rounded-full bg-[color:var(--border-strong)]" />
-                              <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">
-                                {t.created_at ? new Date(t.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Heure inconnue'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-xl font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
-                      <TrendingDown size={26} className="mb-3 text-[color:var(--text-muted)]" />
-                      <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense aujourd'hui</p>
-                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les dépenses du jour apparaîtront ici.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeDetail === 'PROVISIONS' && (
-                <div className="space-y-3">
-                  {futureExpenseTransactions.length > 0 ? (
-                    futureExpenseTransactions.map((t: any) => (
-                      <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
-                            <Wallet size={14} />
-                          </div>
-                          <div>
-                            <p className="text-base font-black text-[color:var(--text-primary)]">{t.title}</p>
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1">{t.category} — {new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
-                          </div>
-                        </div>
-                        <span className="text-[1.55rem] font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
-                      <Wallet size={26} className="mb-3 text-[color:var(--text-muted)]" />
-                      <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense à venir</p>
-                      <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les provisions futures apparaîtront ici.</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeDetail === 'SECURITE' && (
-                <div className="space-y-3">
-                  <div className="relative overflow-hidden rounded-[1.35rem] border border-[color:var(--border)] bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.98))] dark:shadow-[0_20px_70px_rgba(2,6,23,0.45)]">
-                    <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-emerald-500/10 blur-3xl" />
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
-
-                    <div className="relative z-10 space-y-4">
-                      <div className="space-y-2.5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1.5">
-                            <Shield size={12} className="text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.28em] text-emerald-700 dark:text-emerald-300">Projection</span>
-                          </div>
-                          <div className={`rounded-full border px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] ${securityToneMeta.badgeClass}`}>
-                            {securityToneMeta.badge}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <h3 className="max-w-[10ch] text-[1.7rem] leading-[0.9] font-black uppercase italic tracking-[-0.06em] text-[color:var(--text-primary)] font-outfit dark:text-white sm:max-w-none sm:text-[2.1rem]">
-                            Solde <span className="text-emerald-600 dark:text-emerald-400">projete</span>
-                          </h3>
-                          <p className="max-w-md text-[13px] leading-relaxed text-[color:var(--text-secondary)] dark:text-slate-400">
-                            Lecture instantanee du budget actuel, des charges deja engagees et du reste reel apres provisions.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                        <DetailValueCard
-                          eyebrow="Budget actif"
-                          value={formatCurrencyAmount(financeTotals.totalAvailable, activeCurrency)}
-                          helper="Montant disponible au depart"
-                        />
-                        <DetailValueCard
-                          eyebrow="Consomme"
-                          value={`-${formatCurrencyAmount(securitySnapshot.consumedPast, activeCurrency)}`}
-                          tone="negative"
-                          helper="Charges deja enregistrees"
-                        />
-                        <DetailValueCard
-                          eyebrow="A venir"
-                          value={`-${formatCurrencyAmount(stats.futureTotal, activeCurrency)}`}
-                          tone="warning"
-                          helper={`${stats.futureCount} charge${stats.futureCount > 1 ? 's' : ''} planifiee${stats.futureCount > 1 ? 's' : ''}`}
-                        />
-                      </div>
-
-                      <div className="rounded-[1.2rem] border border-[color:var(--border)] bg-[color:var(--surface-2)] p-3 dark:border-white/10 dark:bg-slate-950/45">
-                        <div className="space-y-2.5">
-                          <DetailSummaryRow
-                            label="Solde actuel"
-                            value={formatCurrencyAmount(financeTotals.currentBalance, activeCurrency)}
-                          />
-                          <div className={`overflow-hidden rounded-[1.2rem] border p-3.5 transition-all duration-300 active:scale-[0.99] sm:hover:-translate-y-0.5 ${securityToneMeta.summaryClass}`}>
-                            <div className="flex items-end justify-between gap-4">
-                              <div className="max-w-[10rem]">
-                                <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[color:var(--text-muted)] dark:text-slate-500">Solde final projete</p>
-                                <p className="mt-2 text-xs leading-relaxed text-[color:var(--text-secondary)] dark:text-slate-300/80">
-                                  Valeur restante apres deduction des depenses futures.
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className={`text-[2rem] font-black italic leading-none tracking-[-0.06em] font-outfit sm:text-[2.3rem] ${
-                                  securityToneMeta.finalTone === 'positive'
-                                    ? 'text-emerald-400'
-                                    : securityToneMeta.finalTone === 'warning'
-                                      ? 'text-amber-300'
-                                      : 'text-rose-400'
-                                }`}>
-                                  {securitySnapshot.finalBalance.toLocaleString()}
-                                </p>
-                                <span className="mt-1 block text-[11px] font-black uppercase tracking-[0.24em] text-[color:var(--text-muted)] dark:text-slate-500">{currencyLabel}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {false && activeDetail === 'SECURITE' && (
-                <div className="space-y-3">
-                  <div className="p-5 md:p-6 bg-slate-950 rounded-[2rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden">
-                    <div className="relative z-10">
-                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.24em] mb-4">Simulation Trésorerie Post-Provisions</p>
-                      <div className="space-y-2.5">
-                        <div className="flex justify-between items-center text-sm gap-3">
-                          <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">Budget AMCI</span>
-                          <span className="text-white font-black">{formatCurrencyAmount(userProfile.budget, activeCurrency)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm gap-3">
-                          <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">Consommé (Passé)</span>
-                          <span className="text-rose-500 font-black">-{formatCurrencyAmount(userProfile.budget - stats.financeRemaining, activeCurrency)}</span>
-                        </div>
-                        <div className="h-px bg-white/5 my-1" />
-                        <div className="flex justify-between items-center text-sm font-outfit gap-3">
-                          <span className="text-slate-500 font-bold uppercase italic font-outfit text-xs">SOLDE ESTIMÉ</span>
-                          <span className="text-white font-black">{formatCurrencyAmount(stats.financeRemaining, activeCurrency)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm font-outfit gap-3">
-                          <span className="text-amber-500 font-bold uppercase italic font-outfit text-xs">Dépenses Planifiées</span>
-                          <span className="text-amber-500 font-black">-{formatCurrencyAmount(stats.futureTotal, activeCurrency)}</span>
-                        </div>
-                        <div className="h-px bg-white/10 my-2" />
-                        <div className="rounded-[1.5rem] border border-emerald-500/10 bg-emerald-500/[0.04] px-4 py-3.5 flex items-center justify-between gap-4">
-                          <span className="text-emerald-500 font-black uppercase italic text-base tracking-tighter font-outfit">SOLDE FINAL</span>
-                          <span className="text-emerald-500 font-black text-2xl md:text-[2rem] italic tracking-tighter font-outfit">{formatCurrencyAmount(stats.projectedRemaining, activeCurrency)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeDetail === 'MISSIONS' && (
-                <div className="space-y-3">
-                  {missions.filter(m => m.status !== 'Terminé').length > 0 ? (
-                    missions.filter(m => m.status !== 'Terminé').map((m: any) => (
-                      <div key={m.id} className="rounded-2xl border border-[color:var(--border)] border-l-4 border-l-blue-500 bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/5 dark:bg-slate-950 dark:shadow-none">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-sm font-bold uppercase text-[color:var(--text-primary)] dark:text-white">{m.title}</p>
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 font-outfit">{m.category} — Priorité {m.priority === 'high' ? 'Importante' : m.priority === 'critical' ? 'Critique' : 'Standard'}</p>
-                          </div>
-                          <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase rounded-md">{m.status}</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-500 italic text-center py-10">Tous les objectifs sont accomplis.</p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className={`${activeDetail === 'SECURITE' ? 'mt-3 pt-3' : 'mt-6 pt-5'} border-t border-[color:var(--border)]`}>
-              <button
-                onClick={() => {
-                  const target = activeDetail === 'MISSIONS' ? 'DISCIPLINE' : 'FINANCE';
-                  onNavigate(target as AppView);
-                  setActiveDetail(null);
-                }}
-                className={`flex w-full items-center justify-center gap-2 rounded-[1rem] border px-4 py-3.5 text-xs font-semibold transition-all active:scale-[0.99] ${
-                  activeDetail === 'SECURITE'
-                    ? 'border-[color:var(--tone-success-border)] bg-[color:var(--tone-success-surface)] text-[color:var(--tone-success-text)] hover:bg-[color:var(--surface-muted)]'
-                    : 'border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-primary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]'
-                }`}
-              >
-                Ouvrir module complet
-                <ArrowRight size={15} />
-              </button>
-            </div>
+      <ModalShell
+        isOpen={!!activeDetail && activeDetail !== 'SECURITE'}
+        onClose={() => setActiveDetail(null)}
+        title={
+          activeDetail === 'DEPENSES_JOUR' ? "Dépenses du Jour" :
+          activeDetail === 'PROVISIONS' ? "Dépenses à Venir" :
+          activeDetail === 'MISSIONS' ? "Objectifs en Cours" : ""
+        }
+        subtitle="Détails"
+        icon={
+          activeDetail === 'DEPENSES_JOUR' ? <TrendingDown size={20} /> :
+          activeDetail === 'PROVISIONS' ? <Wallet size={20} /> :
+          activeDetail === 'MISSIONS' ? <Activity size={20} /> : undefined
+        }
+        maxWidthClassName="max-w-md"
+        centered
+        footer={
+          <div className="flex w-full gap-3">
+            <button
+              onClick={() => {
+                const target = activeDetail === 'MISSIONS' ? 'DISCIPLINE' : 'FINANCE';
+                onNavigate(target as AppView);
+                setActiveDetail(null);
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-3.5 text-xs font-semibold text-[color:var(--text-primary)] transition-all hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]"
+            >
+              Ouvrir module complet
+              <ArrowRight size={15} />
+            </button>
           </div>
+        }
+      >
+        <div className="space-y-4">
+          {activeDetail === 'DEPENSES_JOUR' && (
+            <div className="space-y-3">
+              {todayExpenseTransactions.length > 0 ? (
+                todayExpenseTransactions.map((t: any) => (
+                  <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all hover:border-amber-500/30">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
+                        <TrendingDown size={14} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black uppercase text-[color:var(--text-primary)]">{t.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{t.category}</span>
+                          <span className="h-1 w-1 rounded-full bg-[color:var(--border-strong)]" />
+                          <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">
+                            {t.created_at ? new Date(t.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Heure inconnue'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xl font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
+                  <TrendingDown size={26} className="mb-3 text-[color:var(--text-muted)]" />
+                  <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense aujourd'hui</p>
+                  <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les dépenses du jour apparaîtront ici.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeDetail === 'PROVISIONS' && (
+            <div className="space-y-3">
+              {futureExpenseTransactions.length > 0 ? (
+                futureExpenseTransactions.map((t: any) => (
+                  <div key={t.id} className="flex items-center justify-between rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-amber-500/12 text-amber-500">
+                        <Wallet size={14} />
+                      </div>
+                      <div>
+                        <p className="text-base font-black text-[color:var(--text-primary)]">{t.title}</p>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mt-1">{t.category} — {new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
+                      </div>
+                    </div>
+                    <span className="text-[1.55rem] font-black italic text-amber-500">-{formatCurrencyAmount(t.amount, activeCurrency)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-5 py-8 text-center">
+                  <Wallet size={26} className="mb-3 text-[color:var(--text-muted)]" />
+                  <p className="text-sm font-semibold text-[color:var(--heading)]">Aucune dépense à venir</p>
+                  <p className="mt-1 text-xs text-[color:var(--text-muted)]">Les provisions futures apparaîtront ici.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeDetail === 'MISSIONS' && (
+            <div className="space-y-3">
+              {missions.filter(m => m.status !== 'Terminé').length > 0 ? (
+                missions.filter(m => m.status !== 'Terminé').map((m: any) => (
+                  <div key={m.id} className="rounded-2xl border border-[color:var(--border)] border-l-4 border-l-blue-500 bg-[color:var(--surface)] p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:border-white/5 dark:bg-slate-950 dark:shadow-none">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-bold uppercase text-[color:var(--text-primary)] dark:text-white">{m.title}</p>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 font-outfit">{m.category} — Priorité {m.priority === 'high' ? 'Importante' : m.priority === 'critical' ? 'Critique' : 'Standard'}</p>
+                      </div>
+                      <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase rounded-md">{m.status}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500 italic text-center py-10">Tous les objectifs sont accomplis.</p>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </ModalShell>
 
       {/* WIDGET DETAIL MODAL ... (existing code) */}
 

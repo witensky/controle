@@ -23,6 +23,7 @@ import { useProfile, useUpdateProfile } from '../features/profile/hooks/useProfi
 import { resolveProfileRankTitle } from '../utils/profileRank';
 import { cx, uiRecipes } from '../theme/recipes';
 import { toneClassNames } from '../theme/tokens';
+import ModalShell from '../components/common/ModalShell';
 
 type ProfileView = {
     onNavigate: (view: any) => void;
@@ -415,115 +416,110 @@ const Profile: React.FC<ProfileView> = ({ onNavigate }) => {
                 </div>
             </div>
 
-            {isEditModalOpen ? (
-                <div className="fixed inset-0 z-[600] flex items-center justify-center bg-slate-950/86 p-4 backdrop-blur-xl animate-in fade-in duration-300">
-                    <div className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900 shadow-3xl animate-in zoom-in-95 duration-500">
-                        <div className="flex items-center justify-between border-b border-white/5 p-5 md:p-6">
-                            <h2 className="flex items-center gap-3 text-lg font-black uppercase italic tracking-widest text-white md:text-xl">
-                                <Edit3 size={20} className="text-amber-500" />
-                                Modifier le profil
-                            </h2>
-                            <button onClick={() => setIsEditModalOpen(false)} className="text-slate-500 transition-colors hover:text-white">
-                                <X size={24} />
-                            </button>
+            <ModalShell
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Modifier le profil"
+                subtitle="Détails"
+                icon={<Edit3 size={20} className="text-amber-500" />}
+                maxWidthClassName="max-w-xl"
+                centered
+                footer={
+                    <div className="flex flex-col-reverse gap-3 w-full md:flex-row">
+                        <button
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="flex-1 rounded-2xl py-4 text-[10px] font-black uppercase text-slate-500 transition-all hover:text-white"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={updateProfile.isPending}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950 shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] disabled:opacity-50"
+                        >
+                            {updateProfile.isPending ? 'Sauvegarde locale...' : 'Enregistrer'}
+                        </button>
+                    </div>
+                }
+            >
+                <div className="space-y-5">
+                    <div className="flex flex-col items-center gap-4 rounded-[1.5rem] border border-white/5 bg-slate-950/50 p-5 text-center">
+                        <div className="h-24 w-24 overflow-hidden rounded-[1.6rem] border-4 border-slate-950 bg-amber-500 text-3xl font-black text-slate-950 shadow-2xl shadow-amber-500/20">
+                            {previewAvatar ? (
+                                <img src={previewAvatar} alt="Apercu profil" className="h-full w-full object-cover" />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                    {editForm.username?.charAt(0) || profile?.username?.charAt(0) || 'U'}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="space-y-5 p-5 md:p-6">
-                            <div className="flex flex-col items-center gap-4 rounded-[1.5rem] border border-white/5 bg-slate-950/50 p-5 text-center">
-                                <div className="h-24 w-24 overflow-hidden rounded-[1.6rem] border-4 border-slate-950 bg-amber-500 text-3xl font-black text-slate-950 shadow-2xl shadow-amber-500/20">
-                                    {previewAvatar ? (
-                                        <img src={previewAvatar} alt="Apercu profil" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center">
-                                            {editForm.username?.charAt(0) || profile?.username?.charAt(0) || 'U'}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">Photo de profil</p>
-                                    <button
-                                        type="button"
-                                        onClick={() => avatarInputRef.current?.click()}
-                                        className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-950 transition-all hover:bg-slate-200"
-                                    >
-                                        <Camera size={15} />
-                                        Choisir une image
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Identifiant</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.username}
-                                        onChange={(event) => setEditForm({ ...editForm, username: event.target.value })}
-                                        className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Localisation</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.location}
-                                        onChange={(event) => setEditForm({ ...editForm, location: event.target.value })}
-                                        className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Domaine d'etude</label>
-                                <input
-                                    type="text"
-                                    value={editForm.studyDomain}
-                                    onChange={(event) => setEditForm({ ...editForm, studyDomain: event.target.value })}
-                                    placeholder="Ex: Marketing digital"
-                                    className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Devise personnelle</label>
-                                <input
-                                    type="text"
-                                    value={editForm.motto}
-                                    onChange={(event) => setEditForm({ ...editForm, motto: event.target.value })}
-                                    className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Resume biographique</label>
-                                <textarea
-                                    value={editForm.bio}
-                                    onChange={(event) => setEditForm({ ...editForm, bio: event.target.value })}
-                                    rows={4}
-                                    className="w-full resize-none rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col-reverse gap-3 border-t border-white/5 bg-slate-950/50 p-5 md:flex-row md:p-6">
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">Photo de profil</p>
                             <button
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1 rounded-2xl py-4 text-[10px] font-black uppercase text-slate-500 transition-all hover:text-white"
+                                type="button"
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-slate-950 transition-all hover:bg-slate-200"
                             >
-                                Annuler
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={updateProfile.isPending}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-[10px] font-black uppercase tracking-widest text-slate-950 shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] disabled:opacity-50"
-                            >
-                                {updateProfile.isPending ? 'Sauvegarde locale...' : 'Enregistrer'}
+                                <Camera size={15} />
+                                Choisir une image
                             </button>
                         </div>
                     </div>
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Identifiant</label>
+                            <input
+                                type="text"
+                                value={editForm.username}
+                                onChange={(event) => setEditForm({ ...editForm, username: event.target.value })}
+                                className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Localisation</label>
+                            <input
+                                type="text"
+                                value={editForm.location}
+                                onChange={(event) => setEditForm({ ...editForm, location: event.target.value })}
+                                className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Domaine d'etude</label>
+                        <input
+                            type="text"
+                            value={editForm.studyDomain}
+                            onChange={(event) => setEditForm({ ...editForm, studyDomain: event.target.value })}
+                            placeholder="Ex: Marketing digital"
+                            className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Devise personnelle</label>
+                        <input
+                            type="text"
+                            value={editForm.motto}
+                            onChange={(event) => setEditForm({ ...editForm, motto: event.target.value })}
+                            className="w-full rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Resume biographique</label>
+                        <textarea
+                            value={editForm.bio}
+                            onChange={(event) => setEditForm({ ...editForm, bio: event.target.value })}
+                            rows={4}
+                            className="w-full resize-none rounded-2xl border border-white/5 bg-slate-950 p-4 text-white font-bold outline-none transition-all focus:border-amber-500/50 shadow-inner"
+                        />
+                    </div>
                 </div>
-            ) : null}
+            </ModalShell>
         </div>
     );
 };

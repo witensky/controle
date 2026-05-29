@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cx, uiRecipes } from '../../theme/recipes';
 
 interface ModalShellProps {
@@ -66,7 +67,13 @@ const ModalShell: React.FC<ModalShellProps> = ({
     return () => document.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  return (
+  const [portalNode, setPortalNode] = useState<Element | null>(null);
+
+  useEffect(() => {
+    setPortalNode(document.getElementById('modal-root') || document.body);
+  }, []);
+
+  const modalContent = (
     <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
@@ -156,6 +163,9 @@ const ModalShell: React.FC<ModalShellProps> = ({
       )}
     </AnimatePresence>
   );
+
+  if (!portalNode) return <>{modalContent}</>;
+  return createPortal(modalContent, portalNode);
 };
 
 export default ModalShell;
